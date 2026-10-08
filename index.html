@@ -61,7 +61,7 @@
         <!-- ================= 1. GİRİŞ VE SEÇİM EKRANI ================= -->
         <div id="screen-home" class="screen space-y-6 hidden">
             <div class="text-center py-6">
-                <h2 class="text-3xl font-black text-slate-800 mb-2">Sisteme Giriş Yapın</h2>
+                <h2 class="text-3xl font-black text-slate-800 mb-2">Bonus Bag Sistemine Hoş Geldiniz 🚀</h2>
                 <p class="text-slate-500">Görüntülemek istediğiniz paneli yetkinize göre seçiniz.</p>
             </div>
 
@@ -493,7 +493,6 @@
         let targetInput = document.getElementById('store-target-input');
         if (document.activeElement !== targetInput) targetInput.value = stats.storeTarget;
         
-        // HEDEFİ KİLİTLEME MANTIĞI: Eğer kilitliyse veya Bölge Müdürü hedef girmişse INPUT DEVRE DIŞI BIRAKILIR.
         let isTargetLocked = stats.isLocked || (stats.targetBy === "BM" && stats.storeTarget > 0);
         targetInput.disabled = isTargetLocked;
         
@@ -587,7 +586,6 @@
         let v = parseInt(val) || 0;
         if(v < 0) v = 0;
         
-        // Güvenlik: Eğer işlem yapan mağaza ise ve daha önceden Bölge Müdürü bir hedef atamışsa, engelle!
         const stats = getStoreDailyStats(currentId, ACTIVE_DATE);
         if (role === 'MM' && stats.targetBy === 'BM' && stats.storeTarget > 0) {
             return alert('Bölge Müdürü tarafından verilen hedef değiştirilemez!');
