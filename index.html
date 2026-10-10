@@ -381,6 +381,10 @@
     let currentId = ''; 
     let globalData = {}; 
 
+    // === GLOBAL TOP 3 DEĞİŞKENLERİ ===
+    window.top3Staff = [];
+    window.generalTop3Staff = [];
+
     // === GÜVENLİ ŞİFRE MODALI MANTIĞI ===
     let passwordSuccessCallback = null;
     let expectedPassword = "";
@@ -445,4 +449,779 @@
             html += `<div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[150px]">
                 <div class="flex items-center justify-center w-6">${medals[idx]}</div>
                 <div class="flex flex-col">
-                    <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-pink-600 ml-1">${st.
+                    <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-pink-600 ml-1">${st.sales}</span></span>
+                    <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1">${st.store}</span>
+                </div>
+            </div>`;
+        });
+        html += `</div></div>`;
+        container.innerHTML = html;
+    }
+
+    // === TEMEL YÜKLEME ===
+    window.onload = () => {
+        document.getElementById('modal-password-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') verifyPassword();
+        });
+        document.getElementById('modal-submit-btn').onclick = verifyPassword;
+
+        const storeSelect = document.getElementById('select-store');
+        storeSelect.innerHTML = '<option value="">-- Mağaza Seçiniz --</option>';
+        allStoresList.forEach(s => storeSelect.add(new Option(s.name, s.name)));
+
+        const regionSelect = document.getElementById('select-region');
+        regionSelect.innerHTML = '<option value="">-- Bölge Müdürü Seçiniz --</option>';
+        Object.keys(hierarchy).forEach(bm => regionSelect.add(new Option(bm, bm)));
+
+        document.getElementById('active-date-badge').innerText = "Vardiya: " + ACTIVE_DATE;
+        document.getElementById('start-date-picker').value = ACTIVE_DATE;
+        document.getElementById('end-date-picker').value = ACTIVE_DATE;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('store')) loginAsStore(urlParams.get('store'));
+        else if (urlParams.get('region')) loginAsRegion(urlParams.get('region'));
+        else if (urlParams.get('general')) loginAsGeneral(true);
+        else document.getElementById('screen-home').classList.remove('hidden');
+
+        dbRoot.on('value', snap => {
+            globalData = snap.val() || {};
+            
+            // CANLI GÜNÜN TOP 3 PERSONELİNİ HESAPLA
+            window.top3Staff = [];
+            let dailyData = globalData.daily?.[ACTIVE_DATE] || {};
+            let allStaff = [];
+            Object.keys(hierarchy).forEach(bm => {
+                hierarchy[bm].forEach(store => {
+                    let staffObj = dailyData[store]?.staff || {};
+                    Object.keys(staffObj).forEach(stfId => {
+                        let sales = staffObj[stfId].sales || 0;
+                        if(sales > 0) {
+                            let staffName = globalData.master_staff?.[store]?.[stfId]?.name || "İsimsiz";
+                            allStaff.push({ id: stfId, name: staffName, store: store, bm: bm, sales: sales });
+                        }
+                    });
+                });
+            });
+            allStaff.sort((a, b) => b.sales - a.sales);
+            window.top3Staff = allStaff.slice(0, 3);
+            
+            updateTop3Banners('store-top3-banner', window.top3Staff, 'GÜNÜN YILDIZLARI', 'Tüm Mağazalar Arası Top 3 Personel');
+            updateTop3Banners('region-top3-banner', window.top3Staff, 'GÜNÜN YILDIZLARI', 'Tüm Mağazalar Arası Top 3 Personel');
+
+            if (currentRole === 'store') renderStoreUI();
+            if (currentRole === 'region') renderRegionUI();
+            if (currentRole === 'general') {
+                const sStr = document.getElementById('start-date-picker').value;
+                const eStr = document.getElementById('end-date-picker').value;
+                if(sStr === ACTIVE_DATE && eStr === ACTIVE_DATE) {
+                    processGeneralData({ [ACTIVE_DATE]: dailyData });
+                }
+            }
+        });
+    };
+
+    function setURLParam(key, value) {
+        try {
+            const url = new URL(window.location.href);
+            url.search = ''; 
+            if (key && value) url.searchParams.set(key, value);
+            window.history.pushState({}, '', url.toString());
+        } catch (e) { }
+    }
+
+    window.goHome = function() {
+        currentRole = ''; currentId = ''; setURLParam('', '');
+        document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
+        document.getElementById('screen-home').classList.remove('hidden');
+    }
+
+    function getStoreDailyStats(storeName, dateStr) {
+        let masterStaff = globalData.master_staff?.[storeName] || {};
+        let sData = globalData.daily?.[dateStr]?.[storeName] || {};
+        
+        let staffObj = {};
+        for(let id in masterStaff) {
+            staffObj[id] = { name: masterStaff[id].name, sales: sData.staff?.[id]?.sales || 0, target: sData.staff?.[id]?.target || 0 };
+        }
+        return { isLocked: sData.isLocked || false, storeTarget: sData.target || 0, targetBy: sData.targetBy || '', staff: staffObj };
+    }
+
+    // === MAĞAZA EKRANI ===
+    window.loginAsStore = function(directId) {
+        const sel = directId || document.getElementById('select-store').value;
+        if (!sel) return alert('Lütfen bir mağaza seçin.');
+        currentRole = 'store'; currentId = sel;
+        setURLParam('store', currentId);
+        document.getElementById('store-title').innerText = currentId;
+        document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
+        document.getElementById('screen-store').classList.remove('hidden');
+        renderStoreUI();
+    }
+
+    function renderStoreUI() {
+        if (currentRole !== 'store') return;
+        const stats = getStoreDailyStats(currentId, ACTIVE_DATE);
+        
+        let totalSales = 0, distTarget = 0;
+        let staffArray = Object.keys(stats.staff).map(id => ({ id, ...stats.staff[id] }));
+        
+        staffArray.forEach(p => { totalSales += p.sales; distTarget += p.target; });
+
+        let targetInput = document.getElementById('store-target-input');
+        if (document.activeElement !== targetInput) targetInput.value = stats.storeTarget;
+        
+        let isTargetLocked = stats.isLocked || (stats.targetBy === "BM" && stats.storeTarget > 0);
+        targetInput.disabled = isTargetLocked;
+        
+        if (isTargetLocked) {
+            targetInput.classList.add('bg-slate-100', 'text-slate-400', 'cursor-not-allowed');
+            targetInput.classList.remove('bg-white', 'text-indigo-600');
+            targetInput.title = stats.targetBy === "BM" ? "Bölge Müdürü tarafından verilen hedef değiştirilemez." : "";
+        } else {
+            targetInput.classList.remove('bg-slate-100', 'text-slate-400', 'cursor-not-allowed');
+            targetInput.classList.add('bg-white', 'text-indigo-600');
+            targetInput.title = "";
+        }
+
+        let infoText = "";
+        if (stats.storeTarget === 0) {
+            infoText = `<span class="text-amber-500 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> Herhangi bir hedef belirlenmedi</span>`;
+        } else if (stats.targetBy === "BM") {
+            infoText = `<span class="text-indigo-600 font-bold"><i class="fa-solid fa-user-tie"></i> Bölge Müdürü Tarafından Hedefiniz Verildi</span>`;
+        } else if (stats.targetBy === "MM") {
+            infoText = `<span class="text-emerald-600 font-bold"><i class="fa-solid fa-user-check"></i> Mağaza Kendi Hedefini Verdi</span>`;
+        } else {
+            infoText = `<span class="text-amber-500 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> Herhangi bir hedef belirlenmedi</span>`;
+        }
+        document.getElementById('store-target-info').innerHTML = infoText;
+
+        document.getElementById('store-total-sales').innerText = totalSales;
+        
+        let perc = stats.storeTarget > 0 ? Math.round((totalSales / stats.storeTarget) * 100) : 0;
+        document.getElementById('store-progress-bar').style.width = (perc > 100 ? 100 : perc) + "%";
+        document.getElementById('store-progress-text').innerText = perc;
+
+        document.getElementById('distributed-target').innerText = distTarget;
+        document.getElementById('remaining-target').innerText = stats.storeTarget - distTarget;
+        document.getElementById('remaining-target').className = (stats.storeTarget - distTarget) < 0 ? "text-rose-600 font-black" : "text-indigo-700 font-black";
+
+        const tbody = document.getElementById('store-staff-list');
+        tbody.innerHTML = '';
+        
+        if (stats.isLocked) {
+            document.getElementById('store-add-panel').classList.add('hidden');
+            document.getElementById('store-wa-btn').classList.remove('hidden');
+            document.getElementById('store-lock-status').innerHTML = `<i class="fa-solid fa-lock text-rose-500"></i> <span class="font-bold text-slate-700 text-sm">Kilitli (Sadece Satış Girilebilir)</span>`;
+            document.getElementById('store-lock-btn').innerText = "Kilidi Aç ve Düzenle";
+            document.getElementById('store-lock-btn').className = "flex-1 sm:flex-none px-4 py-2 bg-rose-100 text-rose-700 font-bold rounded-xl text-xs transition";
+            document.getElementById('store-lock-btn').onclick = unlockStore;
+        } else {
+            document.getElementById('store-add-panel').classList.remove('hidden');
+            document.getElementById('store-wa-btn').classList.add('hidden');
+            document.getElementById('store-lock-status').innerHTML = `<i class="fa-solid fa-pen text-amber-500"></i> <span class="font-bold text-slate-700 text-sm">Düzenleme Modu</span>`;
+            document.getElementById('store-lock-btn').innerText = "Personeli Kilitle";
+            document.getElementById('store-lock-btn').className = "flex-1 sm:flex-none px-4 py-2 bg-slate-800 text-white font-bold rounded-xl text-xs transition";
+            document.getElementById('store-lock-btn').onclick = lockStore;
+        }
+
+        staffArray.sort((a, b) => b.sales - a.sales);
+
+        if (staffArray.length === 0) {
+            document.getElementById('empty-staff-msg').classList.remove('hidden');
+        } else {
+            document.getElementById('empty-staff-msg').classList.add('hidden');
+            staffArray.forEach(p => {
+                let pPerc = p.target > 0 ? Math.round((p.sales / p.target) * 100) : 0;
+                
+                let rankIndex = (window.top3Staff || []).findIndex(t => t.id === p.id);
+                let rowClass = "hover:bg-slate-50 border-b border-slate-100 transition-colors";
+                let nameBadge = "";
+                
+                if (rankIndex === 0) {
+                    rowClass = "bg-amber-50/70 border-b border-amber-200 shadow-[inset_4px_0_0_0_#f59e0b]";
+                    nameBadge = `<span class="block mt-1 w-max px-2 py-0.5 rounded text-[9px] font-black bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 shadow-sm animate-pulse border border-amber-300"><i class="fa-solid fa-crown text-[10px]"></i> BÖLGE 1.Sİ</span>`;
+                } else if (rankIndex === 1) {
+                    rowClass = "bg-slate-100/70 border-b border-slate-300 shadow-[inset_4px_0_0_0_#94a3b8]";
+                    nameBadge = `<span class="block mt-1 w-max px-2 py-0.5 rounded text-[9px] font-black bg-slate-300 text-slate-800 shadow-sm border border-slate-400"><i class="fa-solid fa-medal text-[10px]"></i> BÖLGE 2.Sİ</span>`;
+                } else if (rankIndex === 2) {
+                    rowClass = "bg-orange-50/70 border-b border-orange-200 shadow-[inset_4px_0_0_0_#fb923c]";
+                    nameBadge = `<span class="block mt-1 w-max px-2 py-0.5 rounded text-[9px] font-black bg-orange-300 text-orange-900 shadow-sm border border-orange-400"><i class="fa-solid fa-medal text-[10px]"></i> BÖLGE 3.SÜ</span>`;
+                }
+
+                let targetEl = stats.isLocked ? `<span class="font-bold text-slate-500">${p.target}</span>` : `<input type="number" min="0" value="${p.target}" onchange="updateStaffTarget('${p.id}', this.value)" class="w-9 sm:w-12 p-0.5 sm:p-1 text-center font-bold text-indigo-600 bg-white border border-slate-300 rounded text-xs focus:outline-none">`;
+                let btnMinus = `<button type="button" onclick="updateStoreSale('${p.id}', -1)" class="w-6 h-6 sm:w-7 sm:h-7 bg-white border border-slate-200 rounded-md font-bold text-slate-600 hover:bg-slate-100 shadow-sm leading-none">-</button>`;
+                let btnPlus = `<button type="button" onclick="updateStoreSale('${p.id}', 1)" class="w-6 h-6 sm:w-7 sm:h-7 bg-pink-600 rounded-md font-bold text-white hover:bg-pink-700 shadow-sm leading-none">+</button>`;
+                let btnDelete = `<button type="button" onclick="deleteStaff('${p.id}')" class="w-6 h-6 sm:w-7 sm:h-7 bg-rose-100 text-rose-600 rounded-md font-bold hover:bg-rose-200 ml-0.5 sm:ml-1 leading-none" title="Sil"><i class="fa-solid fa-trash text-[9px] sm:text-xs"></i></button>`;
+
+                let actions = stats.isLocked ? `<div class="inline-flex gap-0.5 sm:gap-1 justify-end">${btnMinus}${btnPlus}</div>` : `<div class="inline-flex gap-0.5 sm:gap-1 justify-end">${btnMinus}${btnPlus}${btnDelete}</div>`;
+
+                tbody.innerHTML += `
+                <tr class="${rowClass}">
+                    <td class="py-2.5 px-2 sm:px-4 font-bold text-[10px] sm:text-sm text-slate-700 max-w-[65px] sm:max-w-none break-words leading-tight">${p.name}${nameBadge}</td>
+                    <td class="py-2.5 px-1 sm:px-4 text-center">${targetEl}</td>
+                    <td class="py-2.5 px-1 sm:px-4 text-center"><span class="inline-block font-black text-xs sm:text-sm text-pink-600 bg-white px-1.5 sm:px-2 py-0.5 rounded border border-pink-200 shadow-sm">${p.sales}</span></td>
+                    <td class="py-2.5 px-1 sm:px-4 text-center">
+                        <div class="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2">
+                            <div class="w-full bg-slate-200/80 rounded-full h-1.5 hidden sm:block"><div class="bg-indigo-500 h-1.5 rounded-full progress-bar" style="width: ${pPerc>100?100:pPerc}%"></div></div>
+                            <span class="text-[9px] sm:text-[10px] font-bold text-slate-500 whitespace-nowrap">%${pPerc}</span>
+                        </div>
+                    </td>
+                    <td class="py-2.5 px-1 sm:px-4 text-right">${actions}</td>
+                </tr>`;
+            });
+        }
+    }
+
+    window.addStaff = function() {
+        const input = document.getElementById('new-staff-name');
+        const name = input.value.trim().toUpperCase();
+        if (!name) return alert('Lütfen isim girin.');
+        dbRoot.child('master_staff').child(currentId).child('staff_' + Date.now()).set({ name: name });
+        input.value = '';
+    }
+    
+    window.deleteStaff = function(id) { 
+        if(confirm('Personeli kalıcı olarak silmek istiyor musunuz?')) {
+            dbRoot.child('master_staff').child(currentId).child(id).remove(); 
+            dbRoot.child('daily').child(ACTIVE_DATE).child(currentId).child('staff').child(id).remove();
+        }
+    }
+    
+    window.updateStoreTarget = function(val, role) {
+        let v = parseInt(val) || 0;
+        if(v < 0) v = 0;
+        
+        const stats = getStoreDailyStats(currentId, ACTIVE_DATE);
+        if (role === 'MM' && stats.targetBy === 'BM' && stats.storeTarget > 0) {
+            return alert('Bölge Müdürü tarafından verilen hedef değiştirilemez!');
+        }
+        
+        dbRoot.child('daily').child(ACTIVE_DATE).child(currentId).update({ target: v, targetBy: role });
+    }
+
+    window.updateStaffTarget = function(id, val) {
+        let v = parseInt(val) || 0;
+        if(v < 0) v = 0;
+        dbRoot.child('daily').child(ACTIVE_DATE).child(currentId).child('staff').child(id).update({ target: v });
+    }
+    
+    window.updateStoreSale = function(id, change) {
+        let current = globalData.daily?.[ACTIVE_DATE]?.[currentId]?.staff?.[id]?.sales || 0;
+        let next = current + change;
+        if (next < 0) next = 0;
+        dbRoot.child('daily').child(ACTIVE_DATE).child(currentId).child('staff').child(id).update({ sales: next });
+    }
+    
+    window.lockStore = function() { 
+        const stats = getStoreDailyStats(currentId, ACTIVE_DATE);
+        if (Object.keys(stats.staff).length === 0) return alert('Personel eklemediniz!');
+        if(confirm('Kilitlendikten sonra hedef ve personeller sabitlenir. Onaylıyor musunuz?')) {
+            dbRoot.child('daily').child(ACTIVE_DATE).child(currentId).child('isLocked').set(true); 
+        }
+    }
+    
+    window.unlockStore = function() { 
+        openPasswordModal(
+            "Kilidi Aç", 
+            "Personel eklemek/silmek için şifre girin.", 
+            "fa-solid fa-unlock text-rose-500", 
+            "1234", 
+            () => {
+                dbRoot.child('daily').child(ACTIVE_DATE).child(currentId).child('isLocked').set(false); 
+            }
+        );
+    }
+
+    window.shareStoreTargets = function() {
+        const stats = getStoreDailyStats(currentId, ACTIVE_DATE);
+        let staffArr = Object.values(stats.staff);
+        let text = `🎯 *BONUS BAG HEDEFLERİ - ${currentId}* 🎯\n📅 *Tarih:* ${ACTIVE_DATE}\n\nArkadaşlar bugünkü hedeflerimiz:\n`;
+        staffArr.forEach(p => { text += `▫️ *${p.name}*:${p.target} adet\n`; });
+        text += `\n📊 *MAĞAZA TOPLAM HEDEF:* *${stats.storeTarget}*\n🚀 Herkese bol satışlar!\n🔗 *Giriş Linki:*\n${window.location.href.split('?')[0]}?store=${encodeURIComponent(currentId)}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }
+    
+    window.shareToWhatsApp = function() {
+        const stats = getStoreDailyStats(currentId, ACTIVE_DATE);
+        let staffArr = Object.values(stats.staff).sort((a,b) => b.sales - a.sales);
+        let totalSales = staffArr.reduce((s, p) => s + p.sales, 0);
+        let perc = stats.storeTarget > 0 ? Math.round((totalSales / stats.storeTarget) * 100) : 0;
+        
+        let text = `📊 *BONUS BAG GÜN SONU - ${currentId}* 📊\n📅 *Tarih:* ${ACTIVE_DATE}\n`;
+        text += `🎯 Hedef: *${stats.storeTarget}* \vert{} 🚀 Başarı: *\%${perc}*\n\n`;
+        staffArr.forEach((p, i) => { 
+            let emoji = i===0&&p.sales>0?"👑":i===1&&p.sales>0?"🥈":i===2&&p.sales>0?"🥉":"▫";
+            let pPerc = p.target > 0 ? Math.round((p.sales/p.target)*100) : 0;
+            text += `${emoji} *${p.name}*:${p.sales} (H: ${p.target} / \%${pPerc})\n`; 
+        });
+        text += `\n📊 *MAĞAZA TOPLAM SATIŞ:* *${totalSales}*\n🔗 *Giriş Linki:*\n${window.location.href.split('?')[0]}?store=${encodeURIComponent(currentId)}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    // === BÖLGE MÜDÜRÜ EKRANI ===
+    window.loginAsRegion = function(directId) {
+        const sel = directId || document.getElementById('select-region').value;
+        if (!sel) return alert('Lütfen bir Bölge Müdürü seçin.');
+
+        let currentRegionPass = globalData.settings?.regionPassword || "0000";
+
+        openPasswordModal(
+            "Bölge Müdürü Girişi", 
+            "Giriş yapmak için lütfen şifrenizi girin.", 
+            "fa-solid fa-map-location-dot text-indigo-500", 
+            currentRegionPass, 
+            () => {
+                currentRole = 'region'; 
+                currentId = sel;
+                setURLParam('region', currentId);
+                document.getElementById('region-title').innerText = currentId;
+                document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
+                document.getElementById('screen-region').classList.remove('hidden');
+                renderRegionUI();
+            }
+        );
+    }
+
+    function renderRegionUI() {
+        if (currentRole !== 'region') return;
+        const container = document.getElementById('region-stores-container');
+        container.innerHTML = '';
+        
+        let regSales = 0, regTarget = 0;
+
+        let statsArr = hierarchy[currentId].map(storeName => {
+            const stats = getStoreDailyStats(storeName, ACTIVE_DATE);
+            let sTotal = 0, sStaffTargetSum = 0;
+            Object.values(stats.staff).forEach(p => { sTotal += p.sales; sStaffTargetSum += p.target; });
+            return { name: storeName, sales: sTotal, target: stats.storeTarget, targetBy: stats.targetBy, staffTargetSum: sStaffTargetSum, data: stats };
+        }).sort((a, b) => b.sales - a.sales);
+
+        statsArr.forEach(st => {
+            regSales += st.sales; regTarget += st.target;
+
+            let staffArr = Object.values(st.data.staff).sort((a, b) => b.sales - a.sales);
+            let staffHTML = staffArr.length === 0 ? `<div class="text-xs text-slate-400 text-center py-2">Personel yok.</div>` 
+                : staffArr.map(p => {
+                    let pp = p.target > 0 ? Math.round((p.sales/p.target)*100) : 0;
+                    return `<div class="flex justify-between items-center py-1 border-b border-slate-50"><span class="text-[11px] font-bold text-slate-600">${p.name}</span><div class="flex items-center gap-2"><span class="text-[10px] text-slate-400">H: ${p.target}</span><span class="text-xs font-black text-pink-600 bg-pink-50 px-1.5 rounded">${p.sales}</span></div></div>`;
+                }).join('');
+            
+            let perc = st.target > 0 ? Math.round((st.sales / st.target) * 100) : 0;
+            let barW = perc > 100 ? 100 : perc;
+            
+            let icon = st.data.isLocked ? `<i class="fa-solid fa-lock text-emerald-500"></i>` : `<i class="fa-solid fa-lock-open text-amber-500"></i>`;
+            let byBadge = st.targetBy === 'BM' ? `<span class="text-[9px] bg-indigo-100 text-indigo-700 px-1 rounded ml-1">BM</span>` : st.targetBy === 'MM' ? `<span class="text-[9px] bg-emerald-100 text-emerald-700 px-1 rounded ml-1">MM</span>` : ``;
+
+            let distBadge = '';
+            if (st.target === 0) distBadge = `<span class="bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded text-[9px] font-bold ml-2 whitespace-nowrap">HEDEF GİRİLMEDİ</span>`;
+            else if (st.staffTargetSum < st.target) distBadge = `<span class="bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded text-[9px] font-bold animate-pulse ml-2 whitespace-nowrap"><i class="fa-solid fa-triangle-exclamation"></i> EKİBE DAĞITILMADI</span>`;
+            else distBadge = `<span class="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded text-[9px] font-bold ml-2 whitespace-nowrap"><i class="fa-solid fa-check-double"></i> EKİBE DAĞITILDI</span>`;
+
+            container.innerHTML += `
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
+                    <div class="p-3 bg-slate-50 border-b flex justify-between items-start gap-2">
+                        <div>
+                            <div class="font-bold text-sm text-slate-800 flex items-center flex-wrap gap-1">${icon} ${st.name} ${distBadge}</div>
+                            <div class="flex items-center gap-1 mt-2">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">Hedef:</span>
+                                <input type="number" min="0" value="${st.target}" onchange="updateBMTarget('${st.name}', this.value)" class="w-14 p-0.5 text-center text-xs font-bold text-indigo-600 border border-slate-300 rounded focus:outline-none bg-white">
+                                ${byBadge}
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] font-bold text-slate-500 block uppercase">Gerçekleşen</span>
+                            <span class="text-2xl font-black text-pink-600">${st.sales}</span>
+                        </div>
+                    </div>
+                    <div class="px-3 py-2 bg-slate-100/50 border-b border-slate-100 flex items-center gap-2">
+                        <div class="w-full bg-slate-200 rounded-full h-1.5"><div class="bg-gradient-to-r from-indigo-400 to-indigo-600 h-1.5 rounded-full progress-bar" style="width: ${barW}%"></div></div>
+                        <span class="text-xs font-black text-slate-600 w-8 text-right">%${perc}</span>
+                    </div>
+                    <div class="p-3 flex-1 custom-scrollbar max-h-40 overflow-y-auto">${staffHTML}</div>
+                </div>`;
+        });
+        
+        document.getElementById('region-total-sales').innerText = regSales;
+        document.getElementById('region-total-target').innerText = regTarget;
+    }
+
+    window.updateBMTarget = function(storeName, val) {
+        let v = parseInt(val) || 0;
+        if(v < 0) v = 0;
+        dbRoot.child('daily').child(ACTIVE_DATE).child(storeName).update({ target: v, targetBy: 'BM' });
+    }
+
+    window.shareRegionTargets = function() {
+        let text = `🎯 *BONUS BAG BÖLGE HEDEFLERİ - ${currentId}* 🎯\n📅 *Tarih:* ${ACTIVE_DATE}\n\nEkipler günaydın, bugünkü mağaza hedeflerimiz aşağıdaki gibidir:\n\n`;
+        let total = 0;
+        hierarchy[currentId].forEach(storeName => {
+            const stats = getStoreDailyStats(storeName, ACTIVE_DATE);
+            text += `▫️ *${storeName}*: ${stats.storeTarget} adet\n`;
+            total += stats.storeTarget;
+        });
+        text += `\n📊 *BÖLGE TOPLAM HEDEFİ:* *${total}*\n🚀 Tüm mağazalara bol satışlar!\n🔗 *Bölge Paneli:*\n${window.location.href.split('?')[0]}?region=${encodeURIComponent(currentId)}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    window.shareRegionReport = function() {
+        let text = `📊 *BONUS BAG GÜN SONU DURUMU - ${currentId}* 📊\n📅 *Tarih:* ${ACTIVE_DATE}\n\n`;
+        let regSales = 0, regTarget = 0;
+
+        let statsArr = hierarchy[currentId].map(storeName => {
+            const stats = getStoreDailyStats(storeName, ACTIVE_DATE);
+            let sTotal = Object.values(stats.staff).reduce((s, p) => s + p.sales, 0);
+            return { name: storeName, sales: sTotal, target: stats.storeTarget };
+        }).sort((a, b) => b.sales - a.sales);
+
+        statsArr.forEach((st, i) => {
+            regSales += st.sales; regTarget += st.target;
+            let perc = st.target > 0 ? Math.round((st.sales/st.target)*100) : 0;
+            let emoji = i===0&&st.sales>0?"🥇":i===1&&st.sales>0?"🥈":i===2&&st.sales>0?"🥉":"▫";
+            text += `${emoji} *${st.name}*: ${st.sales} (H: ${st.target} / %${perc})\n`;
+        });
+
+        let rPerc = regTarget > 0 ? Math.round((regSales/regTarget)*100) : 0;
+        text += `\n━━━━━━━━━━━━━━━\n🎯 *BÖLGE HEDEFİ:* ${regTarget}\n✅ *GERÇEKLEŞEN:* ${regSales} (%${rPerc})\n🔗 *Panel Linki:*\n${window.location.href.split('?')[0]}?region=${encodeURIComponent(currentId)}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    // === GENEL YÖNETİM (GÜLİZ ATİK) EKRANI VE BÖLGE ŞİFRESİ DEĞİŞTİRME ===
+    window.loginAsGeneral = function(isDirect = false) {
+        openPasswordModal(
+            "Güliz Atik Bölge Yönetimi", 
+            "Giriş yapmak için lütfen şifrenizi girin.", 
+            "fa-solid fa-crown text-emerald-500", 
+            "1244", 
+            () => {
+                currentRole = 'general';
+                if(!isDirect) setURLParam('general', 'true');
+                document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
+                document.getElementById('screen-general').classList.remove('hidden');
+                loadHistoricalGeneral();
+            }
+        );
+    }
+
+    window.changeRegionPassword = function() {
+        openPasswordModal(
+            "Yetki Doğrulaması",
+            "Bu işlemi yapmak için Genel Yönetim şifresini girmelisiniz.",
+            "fa-solid fa-shield-halved text-rose-500",
+            "1244",
+            () => {
+                const newPass = prompt("Lütfen yeni 'Bölge Müdürü' şifresini belirleyin:");
+                if (newPass && newPass.trim() !== "") {
+                    dbRoot.child('settings').update({ regionPassword: newPass.trim() });
+                    alert("Bölge Müdürü şifresi başarıyla güncellendi!");
+                } else {
+                    alert("Geçersiz şifre girdiniz, işlem iptal edildi.");
+                }
+            }
+        );
+    }
+
+    window.loadHistoricalGeneral = function() {
+        const startStr = document.getElementById('start-date-picker').value;
+        const endStr = document.getElementById('end-date-picker').value;
+        if(startStr > endStr) return alert("Başlangıç tarihi bitiş tarihinden büyük olamaz.");
+
+        reportDateRangeStr = (startStr === endStr) ? startStr : `${startStr} - ${endStr}`;
+
+        dbRoot.child('daily').orderByKey().startAt(startStr).endAt(endStr).once('value').then(snap => {
+            const rangeData = snap.val() || {};
+            processGeneralData(rangeData);
+        });
+    }
+
+    function processGeneralData(rangeData) {
+        let aggData = {};
+        
+        Object.keys(hierarchy).forEach(bm => {
+            hierarchy[bm].forEach(store => {
+                aggData[store] = { staff: {}, target: 0, targetBy: 'Genel', isLocked: false };
+            });
+        });
+
+        Object.values(rangeData).forEach(dayData => {
+            Object.keys(dayData).forEach(store => {
+                if(aggData[store]) {
+                    aggData[store].target += (dayData[store].target || 0);
+                    let dailyStaff = dayData[store].staff || {};
+                    Object.keys(dailyStaff).forEach(stfId => {
+                        if(!aggData[store].staff[stfId]) aggData[store].staff[stfId] = { sales: 0, target: 0 };
+                        aggData[store].staff[stfId].sales += (dailyStaff[stfId].sales || 0);
+                        aggData[store].staff[stfId].target += (dailyStaff[stfId].target || 0);
+                    });
+                    
+                    if(dayData[store].target > 0 && dayData[store].targetBy) {
+                        aggData[store].targetBy = dayData[store].targetBy;
+                    }
+                }
+            });
+        });
+
+        renderGeneralUI(aggData);
+    }
+
+    function renderGeneralUI(aggData) {
+        let grandSales = 0, grandTarget = 0;
+        let regionStats = [], allStores = [];
+        let ai_noTargetStores = 0, ai_undistributed = 0;
+        let generalAllStaff = [];
+
+        Object.keys(hierarchy).forEach(bm => {
+            let bmSales = 0, bmTarget = 0;
+            let bmTargetCount = 0, bmDistCount = 0;
+            let totalStores = hierarchy[bm].length;
+            
+            hierarchy[bm].forEach(storeName => {
+                let sData = aggData[storeName];
+                let sSales = 0, sStaffTargetSum = 0;
+                
+                Object.values(sData.staff).forEach(p => { sSales += p.sales; sStaffTargetSum += p.target; });
+                
+                Object.keys(sData.staff).forEach(stfId => {
+                    let p = sData.staff[stfId];
+                    if (p.sales > 0) {
+                        let staffName = globalData.master_staff?.[storeName]?.[stfId]?.name || "İsimsiz";
+                        generalAllStaff.push({ id: stfId, name: staffName, store: storeName, bm: bm, sales: p.sales });
+                    }
+                });
+                
+                bmSales += sSales; bmTarget += sData.target;
+                grandSales += sSales; grandTarget += sData.target;
+                
+                let distStatus = "YOK";
+                if (sData.target === 0) {
+                    ai_noTargetStores++;
+                } else {
+                    bmTargetCount++;
+                    if (sStaffTargetSum < sData.target) {
+                        ai_undistributed++;
+                        distStatus = "KIRMIZI";
+                    } else {
+                        bmDistCount++;
+                        distStatus = "YEŞİL";
+                    }
+                }
+
+                allStores.push({ name: storeName, bm: bm, sales: sSales, target: sData.target, targetBy: sData.targetBy, distStatus });
+            });
+            regionStats.push({ bm: bm, sales: bmSales, target: bmTarget, tCount: bmTargetCount, dCount: bmDistCount, totalStores: totalStores });
+        });
+
+        generalAllStaff.sort((a, b) => b.sales - a.sales);
+        window.generalTop3Staff = generalAllStaff.slice(0, 3);
+        updateTop3Banners('general-top3-banner', window.generalTop3Staff, 'PERFORMANS YILDIZLARI', 'Seçili Aralık Top 3 Personel');
+
+        document.getElementById('gen-total-sales').innerText = grandSales;
+        document.getElementById('gen-total-target').innerText = grandTarget;
+        
+        let genPerc = grandTarget > 0 ? Math.round((grandSales / grandTarget) * 100) : 0;
+        document.getElementById('gen-progress-bar').style.width = (genPerc > 100 ? 100 : genPerc) + "%";
+        document.getElementById('gen-progress-text').innerText = genPerc;
+
+        // --- YAPAY ZEKA VE LİDERLİK ANALİZİ ---
+        regionStats.sort((a, b) => b.sales - a.sales);
+        allStores.sort((a, b) => b.sales - a.sales);
+
+        let topBMText = regionStats.length > 0 && regionStats[0].sales > 0 
+            ? `${regionStats[0].bm} (<strong class="text-white">${regionStats[0].sales}</strong> adet)` : "Henüz satış kaydedilmedi";
+
+        let topStoreText = allStores.length > 0 && allStores[0].sales > 0 
+            ? `${allStores[0].name} (<strong class="text-white">${allStores[0].sales}</strong> adet - ${allStores[0].bm})` : "Henüz satış kaydedilmedi";
+
+        let overachievers = allStores.filter(s => s.target > 0).map(s => {
+            let p = Math.round((s.sales / s.target) * 100);
+            return { ...s, perc: p };
+        }).sort((a, b) => b.perc - a.perc);
+
+        let topTargetStoreText = "Hedefini aşan mağaza yok";
+        if (overachievers.length > 0 && overachievers[0].perc > 100) {
+            let best = overachievers[0];
+            topTargetStoreText = `${best.name} (<strong class="text-emerald-400">%${best.perc}</strong> - Hedef: ${best.target}, Satış: ${best.sales} - ${best.bm})`;
+        } else if (overachievers.length > 0 && overachievers[0].sales > 0) {
+            let best = overachievers[0];
+            topTargetStoreText = `${best.name} (<strong class="text-indigo-400">%${best.perc}</strong> hedefe en yakın - Hedef: ${best.target}, Satış: ${best.sales} - ${best.bm})`;
+        }
+
+        let zeroSalesStores = allStores.filter(s => s.sales === 0);
+
+        let aiText = `<p><strong>${reportDateRangeStr}</strong> tarih aralığı performans analizi:</p>
+            <ul class="mt-2 space-y-1.5 ml-2">
+                <li>🎯 <strong>Bölge Geneli:</strong> Toplam ${grandTarget} adet hedefe karşılık ${grandSales} adet satış gerçekleşti. <strong>Başarı oranı %${genPerc}.</strong></li>
+                <li>👑 <strong>En Çok Satan Bölge Müdürü:</strong> ${topBMText}</li>
+                <li>🏆 <strong>En Çok Satan Mağaza:</strong> ${topStoreText}</li>
+                <li>🚀 <strong>Hedefini En Çok Aşan Mağaza:</strong> ${topTargetStoreText}</li>
+                <li class="pt-1 text-amber-300">⚠️ <strong>Takip Gerekenler (Hedefsiz):</strong> Bu aralıkta <strong class="text-white">${ai_noTargetStores}</strong> mağaza günü hiçbir hedef tanımlanmadan geçirmiş.</li>
+                <li class="text-amber-300">⚠️ <strong>Dağıtım Sorunu:</strong> Kendisine verilen hedefi alt ekibe dağıtmayan <strong class="text-white">${ai_undistributed}</strong> mağaza tespit edildi.</li>
+                <li class="text-rose-300">🚫 <strong>Satışı Olmayan Mağazalar:</strong> Toplam <strong class="text-white">${zeroSalesStores.length}</strong> mağazada 0 satış kaydedilmiş durumda.</li>
+            </ul>`;
+        document.getElementById('ai-summary-content').innerHTML = aiText;
+
+        const rList = document.getElementById('general-regions-list');
+        rList.innerHTML = '';
+        regionStats.forEach((r, idx) => {
+            let rPerc = r.target > 0 ? Math.round((r.sales / r.target) * 100) : 0;
+            let distColor = r.tCount === r.totalStores ? 'text-emerald-600' : 'text-rose-500';
+            rList.innerHTML += `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="py-2.5 px-4 font-bold text-slate-400 text-center">${idx+1}</td>
+                    <td class="py-2.5 px-4 font-bold text-slate-700">${r.bm}</td>
+                    <td class="py-2.5 px-4 text-center font-bold text-slate-600">${r.target}</td>
+                    <td class="py-2.5 px-4 text-center">
+                        <div class="flex flex-col items-center">
+                            <span class="${distColor} font-bold text-xs">${r.tCount} / ${r.totalStores}</span>
+                            <span class="text-[9px] text-slate-400">Hedefli</span>
+                        </div>
+                    </td>
+                    <td class="py-2.5 px-4 text-center font-black text-emerald-600">${r.sales}</td>
+                    <td class="py-2.5 px-4">
+                        <div class="flex items-center gap-2"><div class="w-full bg-slate-200 rounded-full h-2"><div class="bg-emerald-500 h-2 rounded-full progress-bar" style="width: ${rPerc>100?100:rPerc}%"></div></div><span class="text-xs font-black text-slate-500 w-8">%${rPerc}</span></div>
+                    </td>
+                </tr>`;
+        });
+
+        const sList = document.getElementById('general-stores-list');
+        sList.innerHTML = '';
+        allStores.forEach(s => {
+            let sPerc = s.target > 0 ? Math.round((s.sales / s.target) * 100) : 0;
+            
+            let targetSourceBadge = '';
+            if (s.target === 0) {
+                targetSourceBadge = `<span class="bg-slate-200 text-slate-500 px-2 py-0.5 rounded text-[10px] font-bold">Hedef Yok</span>`;
+            } else if (s.targetBy === 'BM') {
+                targetSourceBadge = `<span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-[10px] font-bold">Bölge M. Verdi</span>`;
+            } else if (s.targetBy === 'MM') {
+                targetSourceBadge = `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold">Mağaza Verdi</span>`;
+            } else {
+                targetSourceBadge = `<span class="bg-slate-200 text-slate-500 px-2 py-0.5 rounded text-[10px] font-bold">Hedef Yok</span>`;
+            }
+
+            let distBadge = s.distStatus === 'YEŞİL' ? '<span class="bg-emerald-100 text-emerald-700 px-2 rounded text-[10px] font-bold">Dağıtıldı</span>' : 
+                            s.distStatus === 'KIRMIZI' ? '<span class="bg-rose-100 text-rose-700 px-2 rounded text-[10px] font-bold">Dağıtılmadı</span>' : 
+                            '<span class="bg-slate-200 text-slate-500 px-2 rounded text-[10px] font-bold">Hedef Yok</span>';
+            
+            sList.innerHTML += `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="py-2.5 px-4 text-xs font-bold text-slate-500">${s.bm}</td>
+                    <td class="py-2.5 px-4 font-bold text-slate-800">${s.name}</td>
+                    <td class="py-2.5 px-4 text-center">
+                        <span class="font-bold text-slate-600 block">${s.target}</span>
+                        <span class="inline-block mt-1">${targetSourceBadge}</span>
+                    </td>
+                    <td class="py-2.5 px-4 text-center">${distBadge}</td>
+                    <td class="py-2.5 px-4 text-center font-black text-pink-600">${s.sales}</td>
+                    <td class="py-2.5 px-4 font-black ${sPerc>=100?'text-emerald-500':sPerc>50?'text-amber-500':'text-rose-500'}">%${sPerc}</td>
+                </tr>`;
+        });
+
+        window.lastGenReport = { grandSales, grandTarget, genPerc, regionStats, topBMText, topStoreText, topTargetStoreText };
+        window.lastZeroSalesList = zeroSalesStores;
+        window.lastNoTargetList = allStores.filter(s => s.target === 0);
+        window.lastUndistributedList = allStores.filter(s => s.target > 0 && s.distStatus === 'KIRMIZI');
+    }
+
+    window.shareGeneralReport = function() {
+        if(!window.lastGenReport) return;
+        let { grandSales, grandTarget, genPerc, regionStats, topBMText, topStoreText, topTargetStoreText } = window.lastGenReport;
+        
+        let cleanBM = topBMText.replace(/<[^>]*>?/gm, '');
+        let cleanStore = topStoreText.replace(/<[^>]*>?/gm, '');
+        let cleanTarget = topTargetStoreText.replace(/<[^>]*>?/gm, '');
+
+        let text = `👑 *GÜLİZ ATİK BÖLGESİ PERFORMANS RAPORU* 👑\n🗓️ *Tarih:* ${reportDateRangeStr}\n\n`;
+        text += `🎯 Bölge Hedefi: *${grandTarget}*\n✅ Gerçekleşen: *${grandSales}*\n📈 Başarı Oranı: *%${genPerc}*\n\n`;
+        text += `🌟 *LİDERLER KÜRSÜSÜ:*\n`;
+        text += `👑 *En Çok Satan BM:* ${cleanBM}\n`;
+        text += `🏆 *En Çok Satan Mağaza:* ${cleanStore}\n`;
+        text += `🚀 *Hedefini En Çok Aşan:* ${cleanTarget}\n\n`;
+        text += `📊 *BÖLGE MÜDÜRÜ SIRALAMASI:*\n`;
+        
+        regionStats.forEach((r, i) => {
+            let rPerc = r.target > 0 ? Math.round((r.sales / r.target) * 100) : 0;
+            let emoji = i===0?"🥇":i===1?"🥈":i===2?"🥉":"▫";
+            text += `${emoji} *${r.bm}* - Hedef: ${r.target} | Satış: ${r.sales} (%${rPerc}) | Hedefli Mgz: ${r.tCount}/${r.totalStores}\n`;
+        });
+        
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    window.shareZeroSalesStores = function() {
+        if(!window.lastZeroSalesList || window.lastZeroSalesList.length === 0) {
+            return alert("Bu tarih aralığında satışı 0 olan mağaza bulunmuyor!");
+        }
+        
+        let text = `🚨 *BONUS BAG - SIFIR SATIŞ YAPAN MAĞAZALAR* 🚨\n🗓️ *Tarih:* ${reportDateRangeStr}\n\nToplam *${window.lastZeroSalesList.length}* mağazada henüz satış kaydedilmemiştir:\n\n`;
+
+        let byBM = {};
+        window.lastZeroSalesList.forEach(s => {
+            if(!byBM[s.bm]) byBM[s.bm] = [];
+            byBM[s.bm].push(s);
+        });
+
+        Object.keys(byBM).forEach(bm => {
+            text += `👤 *${bm}* (${byBM[bm].length} Mağaza):\n`;
+            byBM[bm].forEach(s => {
+                text += `  ▫️ ${s.name} (Hedef: ${s.target})\n`;
+            });
+            text += `\n`;
+        });
+
+        text += `⚠️ İlgili mağaza yöneticilerimizin acil aksiyon alması rica olunur.`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    window.shareNoTargetStores = function() {
+        if(!window.lastNoTargetList || window.lastNoTargetList.length === 0) {
+            return alert("Bu tarih aralığında hedefsiz mağaza bulunmuyor!");
+        }
+        
+        let text = `⚠️ *BONUS BAG - HEDEF GİRİLMEYEN MAĞAZALAR* ⚠️\n🗓️ *Tarih:* ${reportDateRangeStr}\n\nToplam *${window.lastNoTargetList.length}* mağazaya henüz hedef tanımlanmamıştır:\n\n`;
+
+        let byBM = {};
+        window.lastNoTargetList.forEach(s => {
+            if(!byBM[s.bm]) byBM[s.bm] = [];
+            byBM[s.bm].push(s);
+        });
+
+        Object.keys(byBM).forEach(bm => {
+            text += `👤 *${bm}* (${byBM[bm].length} Mağaza):\n`;
+            byBM[bm].forEach(s => {
+                text += `  ▫️ ${s.name}\n`;
+            });
+            text += `\n`;
+        });
+
+        text += `⚠️ İlgili mağaza ve bölge yöneticilerimizin acil aksiyon alması rica olunur.`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    window.shareUndistributedStores = function() {
+        if(!window.lastUndistributedList || window.lastUndistributedList.length === 0) {
+            return alert("Bu tarih aralığında hedefini dağıtmayan mağaza bulunmuyor!");
+        }
+        
+        let text = `⚠️ *BONUS BAG - HEDEFİ EKİBE DAĞITMAYAN MAĞAZALAR* ⚠️\n🗓️ *Tarih:* ${reportDateRangeStr}\n\nToplam *${window.lastUndistributedList.length}* mağaza, verilen hedefi personeline eksiksiz dağıtmamıştır:\n\n`;
+
+        let byBM = {};
+        window.lastUndistributedList.forEach(s => {
+            if(!byBM[s.bm]) byBM[s.bm] = [];
+            byBM[s.bm].push(s);
+        });
+
+        Object.keys(byBM).forEach(bm => {
+            text += `👤 *${bm}* (${byBM[bm].length} Mağaza):\n`;
+            byBM[bm].forEach(s => {
+                text += `  ▫️ ${s.name} (Verilen Hedef: ${s.target})\n`;
+            });
+            text += `\n`;
+        });
+
+        text += `⚠️ İlgili mağaza yöneticilerimizin hedefleri personellere tanımlaması rica olunur.`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+</script>
+</body>
+</html>
