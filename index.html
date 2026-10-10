@@ -162,7 +162,7 @@
                 </div>
             </div>
 
-            <!-- Personel Tablosu (MOBİL İÇİN DÜZENLENDİ) -->
+            <!-- Personel Tablosu -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
@@ -268,7 +268,6 @@
                     <div id="ai-summary-content" class="text-slate-300 text-sm leading-relaxed space-y-2"></div>
                 </div>
                 
-                <!-- YENİ EKLENEN 4'LÜ BUTON IZGARASI -->
                 <div class="grid grid-cols-2 gap-2 w-full md:w-max relative z-10 mt-4 md:mt-0">
                     <button type="button" onclick="shareGeneralReport()" class="w-full px-3 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-[11px] transition shadow-md flex items-center justify-center gap-1.5 whitespace-nowrap">
                         <i class="fa-brands fa-whatsapp text-sm"></i> Özet Rapor
@@ -297,7 +296,7 @@
                                 <th class="py-3 px-4 font-bold w-12 text-center">#</th>
                                 <th class="py-3 px-4 font-bold">Bölge Müdürü</th>
                                 <th class="py-3 px-4 font-bold text-center">Toplam Hedef</th>
-                                <th class="py-3 px-4 font-bold text-center">Dağıtım</th>
+                                <th class="py-3 px-4 font-bold text-center">Hedef Durumu</th>
                                 <th class="py-3 px-4 font-bold text-center">Satış</th>
                                 <th class="py-3 px-4 font-bold">Başarı Grafiği</th>
                             </tr>
@@ -886,6 +885,7 @@
         Object.keys(hierarchy).forEach(bm => {
             let bmSales = 0, bmTarget = 0;
             let bmTargetCount = 0, bmDistCount = 0;
+            let totalStores = hierarchy[bm].length;
             
             hierarchy[bm].forEach(storeName => {
                 let sData = aggData[storeName];
@@ -912,7 +912,7 @@
 
                 allStores.push({ name: storeName, bm: bm, sales: sSales, target: sData.target, targetBy: sData.targetBy, distStatus });
             });
-            regionStats.push({ bm: bm, sales: bmSales, target: bmTarget, tCount: bmTargetCount, dCount: bmDistCount });
+            regionStats.push({ bm: bm, sales: bmSales, target: bmTarget, tCount: bmTargetCount, dCount: bmDistCount, totalStores: totalStores });
         });
 
         document.getElementById('gen-total-sales').innerText = grandSales;
@@ -964,7 +964,8 @@
         rList.innerHTML = '';
         regionStats.forEach((r, idx) => {
             let rPerc = r.target > 0 ? Math.round((r.sales / r.target) * 100) : 0;
-            let distColor = r.tCount > 0 && r.dCount === r.tCount ? 'text-emerald-600' : 'text-rose-500';
+            // EĞER BÖLGEDEKİ TÜM MAĞAZALAR HEDEF GİRDİYSE YEŞİL, EKSİK VARSA KIRMIZI OLACAK
+            let distColor = r.tCount === r.totalStores ? 'text-emerald-600' : 'text-rose-500';
             rList.innerHTML += `
                 <tr class="hover:bg-slate-50 transition">
                     <td class="py-2.5 px-4 font-bold text-slate-400 text-center">${idx+1}</td>
@@ -972,8 +973,8 @@
                     <td class="py-2.5 px-4 text-center font-bold text-slate-600">${r.target}</td>
                     <td class="py-2.5 px-4 text-center">
                         <div class="flex flex-col items-center">
-                            <span class="${distColor} font-bold text-xs">${r.dCount} / ${r.tCount}</span>
-                            <span class="text-[9px] text-slate-400">Dağıttı</span>
+                            <span class="${distColor} font-bold text-xs">${r.tCount} / ${r.totalStores}</span>
+                            <span class="text-[9px] text-slate-400">Hedefli</span>
                         </div>
                     </td>
                     <td class="py-2.5 px-4 text-center font-black text-emerald-600">${r.sales}</td>
@@ -1044,7 +1045,7 @@
         regionStats.forEach((r, i) => {
             let rPerc = r.target > 0 ? Math.round((r.sales / r.target) * 100) : 0;
             let emoji = i===0?"🥇":i===1?"🥈":i===2?"🥉":"▫";
-            text += `${emoji} *${r.bm}* - Hedef: ${r.target} | Satış: ${r.sales} (%${rPerc}) | Dağıtım: ${r.dCount}/${r.tCount}\n`;
+            text += `${emoji} *${r.bm}* - Hedef: ${r.target} | Satış: ${r.sales} (%${rPerc}) | Hedefli Mgz: ${r.tCount}/${r.totalStores}\n`;
         });
         
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
