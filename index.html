@@ -133,7 +133,6 @@
                 </div>
             </div>
 
-            <!-- Personel Ekleme Alanı -->
             <div id="store-add-panel" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
                 <div class="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-3">
                     <div>
@@ -150,7 +149,6 @@
                 </div>
             </div>
 
-            <!-- Kilitleme ve WhatsApp Barı -->
             <div class="bg-slate-100 p-4 rounded-2xl border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div class="flex items-center gap-2" id="store-lock-status"></div>
                 <div class="flex flex-wrap gap-2 w-full sm:w-auto">
@@ -164,7 +162,6 @@
                 </div>
             </div>
 
-            <!-- Personel Tablosu (ÖZEL TOP 3 ÇERÇEVELERİ İLE) -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
@@ -186,19 +183,23 @@
 
         <!-- ================= 3. BÖLGE MÜDÜRÜ EKRANI ================= -->
         <div id="screen-region" class="screen hidden space-y-5">
-            <div id="region-top3-banner" class="hidden"></div>
+            <div id="region-top5-banner" class="hidden"></div>
             
             <div class="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-2xl shadow-md p-5 sm:p-6 text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
                 <div class="absolute right-0 bottom-0 text-white/10 text-9xl font-black pointer-events-none transform translate-y-4"><i class="fa-solid fa-map-location-dot"></i></div>
                 <div class="relative z-10 w-full md:w-auto">
                     <span class="px-3 py-1 bg-white/20 rounded-full text-[11px] font-bold tracking-wider uppercase backdrop-blur-sm border border-white/30">Bölge Yönetimi</span>
                     <h2 class="text-2xl sm:text-3xl font-black mt-2" id="region-title">Bölge Müdürü Adı</h2>
-                    <div class="flex gap-2 mt-3">
+                    
+                    <div class="flex gap-2 mt-3 flex-wrap">
                         <button type="button" onclick="shareRegionTargets()" class="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5 backdrop-blur-md border border-white/30">
                             <i class="fa-brands fa-whatsapp text-sm"></i> Hedefleri İlet
                         </button>
                         <button type="button" onclick="shareRegionReport()" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow">
                             <i class="fa-brands fa-whatsapp text-sm"></i> Durum Raporu
+                        </button>
+                        <button type="button" onclick="shareRegionTop5()" class="px-3 py-1.5 bg-pink-500 hover:bg-pink-400 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow">
+                            <i class="fa-brands fa-whatsapp text-sm"></i> Yıldızları Paylaş
                         </button>
                     </div>
                 </div>
@@ -273,7 +274,6 @@
                     <div id="ai-summary-content" class="text-slate-300 text-sm leading-relaxed space-y-2"></div>
                 </div>
                 
-                <!-- 4'LÜ BUTON IZGARASI -->
                 <div class="grid grid-cols-2 gap-2 w-full md:w-max relative z-10 mt-4 md:mt-0">
                     <button type="button" onclick="shareGeneralReport()" class="w-full px-3 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-[11px] transition shadow-md flex items-center justify-center gap-1.5 whitespace-nowrap">
                         <i class="fa-brands fa-whatsapp text-sm"></i> Özet Rapor
@@ -381,7 +381,7 @@
     let currentId = ''; 
     let globalData = {}; 
 
-    // === GLOBAL TOP 3 DEĞİŞKENLERİ ===
+    // === GLOBAL TOP LİSTELERİ ===
     window.top3Staff = [];
     window.generalTop3Staff = [];
 
@@ -393,13 +393,10 @@
         document.getElementById('modal-title').innerText = title;
         document.getElementById('modal-desc').innerText = desc;
         document.getElementById('modal-icon').className = iconClass;
-
         document.getElementById('modal-password-input').value = '';
         document.getElementById('modal-password-error').classList.add('hidden');
-        
         expectedPassword = correctPass;
         passwordSuccessCallback = onSuccess;
-
         document.getElementById('password-modal').classList.remove('hidden');
         setTimeout(() => document.getElementById('modal-password-input').focus(), 100);
     }
@@ -418,7 +415,7 @@
         }
     }
 
-    // === TOP 3 PANO OLUŞTURUCU FONKSİYON ===
+    // === STANDART TOP 3 PANO OLUŞTURUCU (Mağaza ve Genel Ekran İçin) ===
     function updateTop3Banners(containerId, staffArr, mainTitle, subTitle) {
         const container = document.getElementById(containerId);
         if(!container) return;
@@ -440,7 +437,7 @@
                     <div class="text-[10px] text-amber-200/80 font-bold uppercase tracking-wider">${subTitle}</div>
                 </div>
             </div>
-            <div class="flex flex-col sm:flex-row justify-center lg:justify-end gap-2 sm:gap-3 w-full lg:w-auto relative z-10">`;
+            <div class="flex flex-wrap justify-center lg:justify-end gap-2 sm:gap-3 w-full lg:w-auto relative z-10">`;
         
         const medals = ['<i class="fa-solid fa-crown text-amber-500 text-lg"></i>', '<i class="fa-solid fa-medal text-slate-400 text-lg"></i>', '<i class="fa-solid fa-medal text-orange-400 text-lg"></i>'];
         const colors = ['bg-gradient-to-br from-amber-100 to-amber-50 border-amber-300 ring-2 ring-amber-400/50', 'bg-gradient-to-br from-slate-100 to-slate-50 border-slate-300', 'bg-gradient-to-br from-orange-100 to-orange-50 border-orange-300'];
@@ -450,6 +447,70 @@
                 <div class="flex items-center justify-center w-6">${medals[idx]}</div>
                 <div class="flex flex-col">
                     <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-pink-600 ml-1">${st.sales}</span></span>
+                    <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1">${st.store}</span>
+                </div>
+            </div>`;
+        });
+        html += `</div></div>`;
+        container.innerHTML = html;
+    }
+
+    // === BÖLGE MÜDÜRÜ İÇİN ÖZEL TOP 5 PANO OLUŞTURUCU ===
+    function updateRegionTop5Banner(containerId, staffArr, globalTop3) {
+        const container = document.getElementById(containerId);
+        if(!container) return;
+        if (!staffArr || staffArr.length === 0) {
+            container.innerHTML = '';
+            container.classList.add('hidden');
+            return;
+        }
+        container.classList.remove('hidden');
+        
+        let html = `<div class="bg-gradient-to-r from-indigo-900 to-slate-800 rounded-2xl shadow-lg p-3 sm:p-4 mb-5 flex flex-col lg:flex-row items-center gap-4 justify-between border border-indigo-500/30 relative overflow-hidden">
+            <div class="absolute right-0 top-0 text-white/5 text-6xl font-black transform translate-x-2 -translate-y-2"><i class="fa-solid fa-ranking-star"></i></div>
+            <div class="flex items-center gap-3 relative z-10 w-full lg:w-auto justify-center lg:justify-start">
+                <div class="w-10 h-10 rounded-full bg-indigo-400/20 flex items-center justify-center border border-indigo-400/50 shadow-[0_0_15px_rgba(99,102,241,0.3)]">
+                    <i class="fa-solid fa-star text-xl text-indigo-400 animate-pulse"></i>
+                </div>
+                <div class="text-center lg:text-left">
+                    <div class="font-black text-sm text-white tracking-wide">BÖLGE YILDIZLARI (İLK 5)</div>
+                    <div class="text-[10px] text-indigo-200/80 font-bold uppercase tracking-wider">Kendi Bölgenizdeki En İyi Personeller</div>
+                </div>
+            </div>
+            <div class="flex flex-wrap justify-center lg:justify-end gap-2 sm:gap-3 w-full lg:w-auto relative z-10">`;
+        
+        const medals = [
+            '<i class="fa-solid fa-crown text-amber-500 text-lg"></i>', 
+            '<i class="fa-solid fa-medal text-slate-400 text-lg"></i>', 
+            '<i class="fa-solid fa-medal text-orange-400 text-lg"></i>',
+            '<span class="font-black text-indigo-400 text-sm">4.</span>',
+            '<span class="font-black text-indigo-400 text-sm">5.</span>'
+        ];
+        const colors = [
+            'bg-gradient-to-br from-amber-100 to-amber-50 border-amber-300 ring-2 ring-amber-400/50', 
+            'bg-gradient-to-br from-slate-100 to-slate-50 border-slate-300', 
+            'bg-gradient-to-br from-orange-100 to-orange-50 border-orange-300',
+            'bg-white border-indigo-100',
+            'bg-white border-indigo-100'
+        ];
+
+        staffArr.slice(0, 5).forEach((st, idx) => {
+            let globalRank = globalTop3 ? globalTop3.findIndex(g => g.id === st.id) : -1;
+            let globalBadge = '';
+            
+            if (globalRank === 0) {
+                globalBadge = `<span class="absolute -top-3 -right-2 bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-amber-300 animate-bounce whitespace-nowrap z-20">👑 EGE BÖLGE 1.Sİ</span>`;
+            } else if (globalRank === 1) {
+                globalBadge = `<span class="absolute -top-3 -right-2 bg-slate-200 text-slate-800 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-slate-400 animate-bounce whitespace-nowrap z-20">🥈 EGE BÖLGE 2.Sİ</span>`;
+            } else if (globalRank === 2) {
+                globalBadge = `<span class="absolute -top-3 -right-2 bg-orange-300 text-orange-900 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-orange-400 animate-bounce whitespace-nowrap z-20">🥉 EGE BÖLGE 3.SÜ</span>`;
+            }
+
+            html += `<div class="relative flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[130px]">
+                ${globalBadge}
+                <div class="flex items-center justify-center w-6">${medals[idx]}</div>
+                <div class="flex flex-col">
+                    <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-indigo-600 ml-1">${st.sales}</span></span>
                     <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1">${st.store}</span>
                 </div>
             </div>`;
@@ -486,7 +547,7 @@
         dbRoot.on('value', snap => {
             globalData = snap.val() || {};
             
-            // CANLI GÜNÜN TOP 3 PERSONELİNİ HESAPLA
+            // CANLI GÜNÜN GENEL TOP 3 PERSONELİNİ HESAPLA (Tüm Bölge)
             window.top3Staff = [];
             let dailyData = globalData.daily?.[ACTIVE_DATE] || {};
             let allStaff = [];
@@ -505,8 +566,8 @@
             allStaff.sort((a, b) => b.sales - a.sales);
             window.top3Staff = allStaff.slice(0, 3);
             
+            // Sadece Mağaza Ekranı İçin Genel Top 3'ü Yükle
             updateTop3Banners('store-top3-banner', window.top3Staff, 'GÜNÜN YILDIZLARI', 'Tüm Mağazalar Arası Top 3 Personel');
-            updateTop3Banners('region-top3-banner', window.top3Staff, 'GÜNÜN YILDIZLARI', 'Tüm Mağazalar Arası Top 3 Personel');
 
             if (currentRole === 'store') renderStoreUI();
             if (currentRole === 'region') renderRegionUI();
@@ -538,7 +599,6 @@
     function getStoreDailyStats(storeName, dateStr) {
         let masterStaff = globalData.master_staff?.[storeName] || {};
         let sData = globalData.daily?.[dateStr]?.[storeName] || {};
-        
         let staffObj = {};
         for(let id in masterStaff) {
             staffObj[id] = { name: masterStaff[id].name, sales: sData.staff?.[id]?.sales || 0, target: sData.staff?.[id]?.target || 0 };
@@ -639,13 +699,13 @@
                 
                 if (rankIndex === 0) {
                     rowClass = "bg-amber-50/70 border-b border-amber-200 shadow-[inset_4px_0_0_0_#f59e0b]";
-                    nameBadge = `<span class="block mt-1 w-max px-2 py-0.5 rounded text-[9px] font-black bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 shadow-sm animate-pulse border border-amber-300"><i class="fa-solid fa-crown text-[10px]"></i> BÖLGE 1.Sİ</span>`;
+                    nameBadge = `<span class="block mt-1 w-max px-2 py-0.5 rounded text-[9px] font-black bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 shadow-sm animate-pulse border border-amber-300"><i class="fa-solid fa-crown text-[10px]"></i> EGE BÖLGE 1.Sİ</span>`;
                 } else if (rankIndex === 1) {
                     rowClass = "bg-slate-100/70 border-b border-slate-300 shadow-[inset_4px_0_0_0_#94a3b8]";
-                    nameBadge = `<span class="block mt-1 w-max px-2 py-0.5 rounded text-[9px] font-black bg-slate-300 text-slate-800 shadow-sm border border-slate-400"><i class="fa-solid fa-medal text-[10px]"></i> BÖLGE 2.Sİ</span>`;
+                    nameBadge = `<span class="block mt-1 w-max px-2 py-0.5 rounded text-[9px] font-black bg-slate-300 text-slate-800 shadow-sm border border-slate-400"><i class="fa-solid fa-medal text-[10px]"></i> EGE BÖLGE 2.Sİ</span>`;
                 } else if (rankIndex === 2) {
                     rowClass = "bg-orange-50/70 border-b border-orange-200 shadow-[inset_4px_0_0_0_#fb923c]";
-                    nameBadge = `<span class="block mt-1 w-max px-2 py-0.5 rounded text-[9px] font-black bg-orange-300 text-orange-900 shadow-sm border border-orange-400"><i class="fa-solid fa-medal text-[10px]"></i> BÖLGE 3.SÜ</span>`;
+                    nameBadge = `<span class="block mt-1 w-max px-2 py-0.5 rounded text-[9px] font-black bg-orange-300 text-orange-900 shadow-sm border border-orange-400"><i class="fa-solid fa-medal text-[10px]"></i> EGE BÖLGE 3.SÜ</span>`;
                 }
 
                 let targetEl = stats.isLocked ? `<span class="font-bold text-slate-500">${p.target}</span>` : `<input type="number" min="0" value="${p.target}" onchange="updateStaffTarget('${p.id}', this.value)" class="w-9 sm:w-12 p-0.5 sm:p-1 text-center font-bold text-indigo-600 bg-white border border-slate-300 rounded text-xs focus:outline-none">`;
@@ -788,13 +848,26 @@
         container.innerHTML = '';
         
         let regSales = 0, regTarget = 0;
+        let regionStaffList = [];
 
         let statsArr = hierarchy[currentId].map(storeName => {
             const stats = getStoreDailyStats(storeName, ACTIVE_DATE);
             let sTotal = 0, sStaffTargetSum = 0;
-            Object.values(stats.staff).forEach(p => { sTotal += p.sales; sStaffTargetSum += p.target; });
+            
+            Object.keys(stats.staff).forEach(stfId => {
+                let p = stats.staff[stfId];
+                sTotal += p.sales;
+                sStaffTargetSum += p.target;
+                if(p.sales > 0) {
+                    regionStaffList.push({ id: stfId, name: p.name, store: storeName, sales: p.sales });
+                }
+            });
             return { name: storeName, sales: sTotal, target: stats.storeTarget, targetBy: stats.targetBy, staffTargetSum: sStaffTargetSum, data: stats };
         }).sort((a, b) => b.sales - a.sales);
+
+        regionStaffList.sort((a, b) => b.sales - a.sales);
+        window.currentRegionTop5 = regionStaffList.slice(0, 5);
+        updateRegionTop5Banner('region-top5-banner', window.currentRegionTop5, window.top3Staff);
 
         statsArr.forEach(st => {
             regSales += st.sales; regTarget += st.target;
@@ -882,6 +955,28 @@
 
         let rPerc = regTarget > 0 ? Math.round((regSales/regTarget)*100) : 0;
         text += `\n━━━━━━━━━━━━━━━\n🎯 *BÖLGE HEDEFİ:* ${regTarget}\n✅ *GERÇEKLEŞEN:* ${regSales} (%${rPerc})\n🔗 *Panel Linki:*\n${window.location.href.split('?')[0]}?region=${encodeURIComponent(currentId)}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    window.shareRegionTop5 = function() {
+        if(!window.currentRegionTop5 || window.currentRegionTop5.length === 0) {
+            return alert("Bölgenizde henüz satış yapan personel bulunmuyor!");
+        }
+        
+        let text = `🌟 *${currentId} - GÜNÜN YILDIZLARI* 🌟\n📅 *Tarih:* ${ACTIVE_DATE}\n\nŞu anki satış liderlerimiz:\n\n`;
+        
+        const emojis = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"];
+        window.currentRegionTop5.forEach((st, idx) => {
+            let globalRank = (window.top3Staff || []).findIndex(g => g.id === st.id);
+            let globalStatus = "";
+            if (globalRank === 0) globalStatus = " 👑 *(EGE BÖLGE 1.Sİ)*";
+            else if (globalRank === 1) globalStatus = " 🥈 *(EGE BÖLGE 2.Sİ)*";
+            else if (globalRank === 2) globalStatus = " 🥉 *(EGE BÖLGE 3.SÜ)*";
+
+            text += `${emojis[idx]} *${st.name}*: ${st.sales} Adet - _${st.store}_${globalStatus}\n`;
+        });
+        
+        text += `\nHarika gidiyorsunuz, tebrikler! 🚀👏\n🔗 *Canlı Takip:*\n${window.location.href.split('?')[0]}?region=${encodeURIComponent(currentId)}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 
