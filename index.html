@@ -54,7 +54,7 @@
         </div>
     </div>
 
-    <!-- YENİ: TRANSFER & SİL MODALI -->
+    <!-- TRANSFER & SİL MODALI -->
     <div id="transfer-modal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all border border-indigo-200">
             <button type="button" onclick="closeTransferModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"><i class="fa-solid fa-xmark text-2xl"></i></button>
@@ -538,12 +538,19 @@
     let isRegionHistorical = false;
     let regionHistoricalData = null;
 
-    // === TRANSFER MANTIĞI İÇİN DEĞİŞKENLER ===
     let currentTransferStaffId = null;
     let currentTransferStaffName = null;
 
     window.top3Staff = [];
     window.generalTop3Staff = [];
+
+    // === KATALOG MODALI FONKSİYONLARI ===
+    window.openCatalogModal = function() {
+        document.getElementById('catalog-modal').classList.remove('hidden');
+    }
+    window.closeCatalogModal = function() {
+        document.getElementById('catalog-modal').classList.add('hidden');
+    }
 
     // === TRANSFER MODALI FONKSİYONLARI ===
     window.openTransferModal = function(id, name) {
@@ -579,18 +586,24 @@
         if(!targetStore) return alert('Lütfen transfer edilecek mağazayı seçin!');
         
         if(confirm(currentTransferStaffName + ' isimli personeli ' + targetStore + ' mağazasına transfer etmek istediğinize emin misiniz?')) {
-            // Hedef mağazaya ekle (master_staff'a)
             dbRoot.child('master_staff').child(targetStore).child(currentTransferStaffId).set({ name: currentTransferStaffName });
-            
-            // Eski mağazanın master_staff listesinden çıkar. (Geçmiş ve bugünkü satışları daily'de kalır)
             dbRoot.child('master_staff').child(currentId).child(currentTransferStaffId).remove(); 
-            
             closeTransferModal();
             alert(currentTransferStaffName + ' başarıyla ' + targetStore + ' mağazasına transfer edildi! Personelin bu mağazadaki satışları düşmedi, tüm kişisel satışları ise kendi profiline işlemeye devam edecek.');
         }
     }
 
-    // === YARDIMCI FONKSİYONLAR (Transfer Olanları Bulmak İçin) ===
+    // === YENİ: İSİM DÜZENLEME FONKSİYONU ===
+    window.editStaffName = function(id, currentName) {
+        let newName = prompt("Personelin yeni adını/soyadını girin:", currentName);
+        if (newName !== null) {
+            newName = newName.trim().toUpperCase();
+            if (newName !== "" && newName !== currentName) {
+                dbRoot.child('master_staff').child(currentId).child(id).update({ name: newName });
+            }
+        }
+    }
+
     function findStaffNameGlobal(id) {
         let allStores = globalData.master_staff || {};
         for(let store in allStores) {
@@ -605,14 +618,6 @@
             if(allStores[store][id]) return store;
         }
         return "Silinmiş Personel";
-    }
-
-    // === KATALOG MODALI FONKSİYONLARI ===
-    window.openCatalogModal = function() {
-        document.getElementById('catalog-modal').classList.remove('hidden');
-    }
-    window.closeCatalogModal = function() {
-        document.getElementById('catalog-modal').classList.add('hidden');
     }
 
     // === GÜVENLİ ŞİFRE MODALI ===
@@ -854,7 +859,7 @@
         dbRoot.on('value', snap => {
             globalData = snap.val() || {};
             
-            // CANLI GÜNÜN GENEL TOP 3 PERSONELİ (Transfer verileri dahil)
+            // CANLI GÜNÜN GENEL TOP 3 PERSONELİ
             window.top3Staff = [];
             let dailyData = globalData.daily?.[ACTIVE_DATE] || {};
             let allStaffMap = {};
@@ -968,12 +973,10 @@
         let sData = globalData.daily?.[dateStr]?.[storeName] || {};
         let staffObj = {};
         
-        // 1. O mağazanın mevcut personelleri (Aktif)
         for(let id in masterStaff) {
             staffObj[id] = { name: masterStaff[id].name, sales: sData.staff?.[id]?.sales || 0, target: sData.staff?.[id]?.target || 0, isTransfer: false };
         }
         
-        // 2. Transfer olmuş ama bugünkü verilere satışı veya hedefi yansımış personeller
         if (sData.staff) {
             for(let id in sData.staff) {
                 if (!staffObj[id]) {
@@ -1066,6 +1069,8 @@
             targetInput.classList.add('bg-white', 'text-indigo-600');
             targetInput.title = "";
         }
+        
+        let isStaffTargetLocked = isStoreHistorical ? true : stats.isLocked;
 
         let infoText = "";
         if(isStoreHistorical) {
@@ -1140,8 +1145,7 @@
                     nameBadge = `<span class="block mt-1 w-max px-2 py-0.5 rounded text-[9px] font-black bg-orange-300 text-orange-900 shadow-sm border border-orange-400"><i class="fa-solid fa-medal text-[10px]"></i> EGE BÖLGE 3.SÜ</span>`;
                 }
 
-                // Transfer edilen personel hedef düzenleyemez
-                let targetEl = (stats.isLocked || isStoreHistorical || p.isTransfer) ? `<span class="font-bold text-slate-500">${p.target}</span>` : `<input type="number" min="0" value="${p.target}" onchange="updateStaffTarget('${p.id}', this.value)" class="w-9 sm:w-12 p-0.5 sm:p-1 text-center font-bold text-indigo-600 bg-white border border-slate-300 rounded text-xs focus:outline-none">`;
+                let targetEl = isStaffTargetLocked ? `<span class="font-bold text-slate-500">${p.target}</span>` : `<input type="number" min="0" value="${p.target}" onchange="updateStaffTarget('${p.id}', this.value)" class="w-9 sm:w-12 p-0.5 sm:p-1 text-center font-bold text-indigo-600 bg-white border border-slate-300 rounded text-xs focus:outline-none">`;
                 
                 let actions = '';
                 if(!isStoreHistorical) {
@@ -1151,8 +1155,10 @@
                         let safeName = p.name.replace(/'/g, "\\'");
                         let btnMinus = `<button type="button" onclick="updateStoreSale('${p.id}', -1)" class="w-6 h-6 sm:w-7 sm:h-7 bg-white border border-slate-200 rounded-md font-bold text-slate-600 hover:bg-slate-100 shadow-sm leading-none">-</button>`;
                         let btnPlus = `<button type="button" onclick="updateStoreSale('${p.id}', 1)" class="w-6 h-6 sm:w-7 sm:h-7 bg-pink-600 rounded-md font-bold text-white hover:bg-pink-700 shadow-sm leading-none">+</button>`;
+                        // YENİ EKLENEN İSİM DÜZENLEME (KALEM) BUTONU
+                        let btnEdit = `<button type="button" onclick="editStaffName('${p.id}', '${safeName}')" class="w-6 h-6 sm:w-7 sm:h-7 bg-indigo-100 text-indigo-600 rounded-md font-bold hover:bg-indigo-200 ml-0.5 sm:ml-1 leading-none" title="İsmi Düzenle"><i class="fa-solid fa-pen text-[9px] sm:text-xs"></i></button>`;
                         let btnTransfer = `<button type="button" onclick="openTransferModal('${p.id}', '${safeName}')" class="w-6 h-6 sm:w-7 sm:h-7 bg-rose-100 text-rose-600 rounded-md font-bold hover:bg-rose-200 ml-0.5 sm:ml-1 leading-none" title="Sil / Transfer Et"><i class="fa-solid fa-trash text-[9px] sm:text-xs"></i></button>`;
-                        actions = `<td class="py-2.5 px-1 sm:px-4 text-right">` + (stats.isLocked ? `<div class="inline-flex gap-0.5 sm:gap-1 justify-end">${btnMinus}${btnPlus}</div>` : `<div class="inline-flex gap-0.5 sm:gap-1 justify-end">${btnMinus}${btnPlus}${btnTransfer}</div>`) + `</td>`;
+                        actions = `<td class="py-2.5 px-1 sm:px-4 text-right">` + (stats.isLocked ? `<div class="inline-flex gap-0.5 sm:gap-1 justify-end">${btnMinus}${btnPlus}</div>` : `<div class="inline-flex gap-0.5 sm:gap-1 justify-end">${btnMinus}${btnPlus}${btnEdit}${btnTransfer}</div>`) + `</td>`;
                     }
                 }
 
@@ -1173,15 +1179,6 @@
         }
     }
 
-    // === MAĞAZA VERİ GÜNCELLEMELERİ ===
-    window.addStaff = function() {
-        const input = document.getElementById('new-staff-name');
-        const name = input.value.trim().toUpperCase();
-        if (!name) return alert('Lütfen isim girin.');
-        dbRoot.child('master_staff').child(currentId).child('staff_' + Date.now()).set({ name: name });
-        input.value = '';
-    }
-    
     window.updateStoreTarget = function(val, role) {
         let v = parseInt(val) || 0;
         if(v < 0) v = 0;
@@ -1560,7 +1557,7 @@
         let grandSales = 0, grandTarget = 0;
         let regionStats = [], allStores = [];
         let ai_noTargetStores = 0, ai_undistributed = 0;
-        let generalStaffMap = {}; // Transferleri birleştirmek için map kullanıyoruz
+        let generalStaffMap = {}; 
 
         Object.keys(effectiveHierarchy).forEach(bm => {
             let bmSales = 0, bmTarget = 0;
