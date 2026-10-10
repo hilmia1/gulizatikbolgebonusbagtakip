@@ -133,7 +133,6 @@
                         
                         <div class="text-sm text-slate-500 mt-1" id="store-target-info">Yükleniyor...</div>
                         
-                        <!-- MOBİL UYUMLU TARİH FİLTRESİ (MAĞAZA) -->
                         <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shadow-sm mt-3 w-full lg:w-max">
                             <div class="flex items-center justify-between gap-2">
                                 <label class="text-[10px] text-slate-500 font-bold uppercase w-16 sm:w-auto">Başlangıç:</label>
@@ -802,7 +801,6 @@
         let targetInput = document.getElementById('store-target-input');
         if (document.activeElement !== targetInput) targetInput.value = stats.storeTarget;
         
-        // MAĞAZA ANA HEDEFİ KİLİT MANTIĞI
         let isStoreTargetLocked = isStoreHistorical ? true : (stats.isLocked || (stats.targetBy === "BM" && stats.storeTarget > 0));
         targetInput.disabled = isStoreTargetLocked;
         
@@ -816,7 +814,6 @@
             targetInput.title = "";
         }
         
-        // PERSONEL HEDEFLERİ KİLİT MANTIĞI (SORUNUN ÇÖZÜLDÜĞÜ YER)
         let isStaffTargetLocked = isStoreHistorical ? true : stats.isLocked;
 
         let infoText = "";
@@ -1127,7 +1124,7 @@
                         <div class="w-full bg-slate-200 rounded-full h-1.5"><div class="bg-gradient-to-r from-indigo-400 to-indigo-600 h-1.5 rounded-full progress-bar" style="width: ${barW}%"></div></div>
                         <span class="text-xs font-black text-slate-600 w-8 text-right">%${perc}</span>
                     </div>
-                    <div class="p-3 flex-1 custom-scrollbar max-h-40 overflow-y-auto">${staffHTML}</div>
+                    <div class="p-3 flex-1">${staffHTML}</div>
                 </div>`;
         });
         
@@ -1381,7 +1378,7 @@
         rList.innerHTML = '';
         regionStats.forEach((r, idx) => {
             let rPerc = r.target > 0 ? Math.round((r.sales / r.target) * 100) : 0;
-            let distColor = r.tCount === r.totalStores ? 'text-emerald-600' : 'text-rose-500';
+            let distColor = r.tCount === r.totalStores ? 'textemerald-600' : 'text-rose-500';
             rList.innerHTML += `
                 <tr class="hover:bg-slate-50 transition">
                     <td class="py-2.5 px-4 font-bold text-slate-400 text-center">${idx+1}</td>
