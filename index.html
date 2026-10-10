@@ -10,6 +10,10 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- 🎉 Konfeti Efekti Kütüphanesi -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
     <style>
         .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
@@ -543,6 +547,25 @@
 
     window.top3Staff = [];
     window.generalTop3Staff = [];
+    
+    // KONFETİ TAKİBİ (Oturum boyunca aynı hedef için 1 kez patlasın diye)
+    window.firedConfetti = { store: false, staff: {} };
+
+    // === 🎉 KONFETİ FONKSİYONU ===
+    window.fireConfetti = function() {
+        if(typeof confetti !== 'undefined') {
+            var duration = 3 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+            var interval = setInterval(function() {
+                var timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) { return clearInterval(interval); }
+                var particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: Math.random(), y: Math.random() - 0.2 } }));
+            }, 250);
+        }
+    }
 
     // === KATALOG MODALI FONKSİYONLARI ===
     window.openCatalogModal = function() {
@@ -593,7 +616,7 @@
         }
     }
 
-    // === YENİ: İSİM DÜZENLEME FONKSİYONU ===
+    // === İSİM DÜZENLEME FONKSİYONU ===
     window.editStaffName = function(id, currentName) {
         let newName = prompt("Personelin yeni adını/soyadını girin:", currentName);
         if (newName !== null) {
@@ -859,7 +882,6 @@
         dbRoot.on('value', snap => {
             globalData = snap.val() || {};
             
-            // CANLI GÜNÜN GENEL TOP 3 PERSONELİ
             window.top3Staff = [];
             let dailyData = globalData.daily?.[ACTIVE_DATE] || {};
             let allStaffMap = {};
@@ -916,6 +938,7 @@
     window.goHome = function() {
         currentRole = ''; currentId = ''; 
         isStoreHistorical = false; isRegionHistorical = false;
+        window.firedConfetti = { store: false, staff: {} }; // Konfetiyi sıfırla
         setURLParam('', '');
         document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
         document.getElementById('screen-home').classList.remove('hidden');
@@ -925,6 +948,7 @@
         document.getElementById('store-start-date').value = ACTIVE_DATE;
         document.getElementById('store-end-date').value = ACTIVE_DATE;
         isStoreHistorical = false;
+        window.firedConfetti = { store: false, staff: {} }; // Konfetiyi sıfırla
         document.getElementById('store-top3-banner').classList.remove('hidden');
         renderStoreUI();
     }
@@ -997,6 +1021,7 @@
         if (!sel) return alert('Lütfen bir mağaza seçin.');
         currentRole = 'store'; currentId = sel;
         isStoreHistorical = false;
+        window.firedConfetti = { store: false, staff: {} }; // Konfetiyi sıfırla
         setURLParam('store', currentId);
         document.getElementById('store-title').innerText = currentId;
         document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
@@ -1010,9 +1035,7 @@
         if(startStr > endStr) return alert("Başlangıç tarihi bitiş tarihinden büyük olamaz.");
 
         if(startStr === ACTIVE_DATE && endStr === ACTIVE_DATE) {
-            isStoreHistorical = false;
-            document.getElementById('store-top3-banner').classList.remove('hidden');
-            renderStoreUI();
+            returnToTodayStore();
             return;
         }
 
@@ -1069,8 +1092,6 @@
             targetInput.classList.add('bg-white', 'text-indigo-600');
             targetInput.title = "";
         }
-        
-        let isStaffTargetLocked = isStoreHistorical ? true : stats.isLocked;
 
         let infoText = "";
         if(isStoreHistorical) {
@@ -1091,6 +1112,16 @@
         let perc = stats.storeTarget > 0 ? Math.round((totalSales / stats.storeTarget) * 100) : 0;
         document.getElementById('store-progress-bar').style.width = (perc > 100 ? 100 : perc) + "%";
         document.getElementById('store-progress-text').innerText = perc;
+
+        // --- YENİ: MAĞAZA KONFETİ KONTROLÜ ---
+        if (!isStoreHistorical && stats.storeTarget > 0) {
+            if (perc >= 100 && !window.firedConfetti.store) {
+                fireConfetti();
+                window.firedConfetti.store = true;
+            } else if (perc < 100) {
+                window.firedConfetti.store = false;
+            }
+        }
 
         document.getElementById('distributed-target').innerText = distTarget;
         document.getElementById('remaining-target').innerText = stats.storeTarget - distTarget;
@@ -1130,6 +1161,19 @@
             staffArray.forEach(p => {
                 let pPerc = p.target > 0 ? Math.round((p.sales / p.target) * 100) : 0;
                 
+                // --- YENİ: PERSONEL KONFETİ KONTROLÜ ---
+                if (!isStoreHistorical && p.target > 0) {
+                    if (pPerc >= 100 && !window.firedConfetti.staff[p.id]) {
+                        fireConfetti();
+                        window.firedConfetti.staff[p.id] = true;
+                    } else if (pPerc < 100) {
+                        window.firedConfetti.staff[p.id] = false;
+                    }
+                }
+
+                // --- YENİ: ALEV (ON FIRE) ROZETİ ---
+                let fireBadge = pPerc >= 150 ? `<span class="ml-1 inline-block animate-pulse text-[12px] drop-shadow-md" title="%150 Üzeri Başarı! Mükemmel!">🔥</span>` : '';
+                
                 let rankIndex = isStoreHistorical ? -1 : (window.top3Staff || []).findIndex(t => t.id === p.id);
                 let rowClass = "hover:bg-slate-50 border-b border-slate-100 transition-colors";
                 let nameBadge = "";
@@ -1145,7 +1189,7 @@
                     nameBadge = `<span class="block mt-1 w-max px-2 py-0.5 rounded text-[9px] font-black bg-orange-300 text-orange-900 shadow-sm border border-orange-400"><i class="fa-solid fa-medal text-[10px]"></i> EGE BÖLGE 3.SÜ</span>`;
                 }
 
-                let targetEl = isStaffTargetLocked ? `<span class="font-bold text-slate-500">${p.target}</span>` : `<input type="number" min="0" value="${p.target}" onchange="updateStaffTarget('${p.id}', this.value)" class="w-9 sm:w-12 p-0.5 sm:p-1 text-center font-bold text-indigo-600 bg-white border border-slate-300 rounded text-xs focus:outline-none">`;
+                let targetEl = (stats.isLocked || isStoreHistorical || p.isTransfer) ? `<span class="font-bold text-slate-500">${p.target}</span>` : `<input type="number" min="0" value="${p.target}" onchange="updateStaffTarget('${p.id}', this.value)" class="w-9 sm:w-12 p-0.5 sm:p-1 text-center font-bold text-indigo-600 bg-white border border-slate-300 rounded text-xs focus:outline-none">`;
                 
                 let actions = '';
                 if(!isStoreHistorical) {
@@ -1155,7 +1199,6 @@
                         let safeName = p.name.replace(/'/g, "\\'");
                         let btnMinus = `<button type="button" onclick="updateStoreSale('${p.id}', -1)" class="w-6 h-6 sm:w-7 sm:h-7 bg-white border border-slate-200 rounded-md font-bold text-slate-600 hover:bg-slate-100 shadow-sm leading-none">-</button>`;
                         let btnPlus = `<button type="button" onclick="updateStoreSale('${p.id}', 1)" class="w-6 h-6 sm:w-7 sm:h-7 bg-pink-600 rounded-md font-bold text-white hover:bg-pink-700 shadow-sm leading-none">+</button>`;
-                        // YENİ EKLENEN İSİM DÜZENLEME (KALEM) BUTONU
                         let btnEdit = `<button type="button" onclick="editStaffName('${p.id}', '${safeName}')" class="w-6 h-6 sm:w-7 sm:h-7 bg-indigo-100 text-indigo-600 rounded-md font-bold hover:bg-indigo-200 ml-0.5 sm:ml-1 leading-none" title="İsmi Düzenle"><i class="fa-solid fa-pen text-[9px] sm:text-xs"></i></button>`;
                         let btnTransfer = `<button type="button" onclick="openTransferModal('${p.id}', '${safeName}')" class="w-6 h-6 sm:w-7 sm:h-7 bg-rose-100 text-rose-600 rounded-md font-bold hover:bg-rose-200 ml-0.5 sm:ml-1 leading-none" title="Sil / Transfer Et"><i class="fa-solid fa-trash text-[9px] sm:text-xs"></i></button>`;
                         actions = `<td class="py-2.5 px-1 sm:px-4 text-right">` + (stats.isLocked ? `<div class="inline-flex gap-0.5 sm:gap-1 justify-end">${btnMinus}${btnPlus}</div>` : `<div class="inline-flex gap-0.5 sm:gap-1 justify-end">${btnMinus}${btnPlus}${btnEdit}${btnTransfer}</div>`) + `</td>`;
@@ -1164,7 +1207,7 @@
 
                 tbody.innerHTML += `
                 <tr class="${rowClass}">
-                    <td class="py-2.5 px-2 sm:px-4 font-bold text-[10px] sm:text-sm text-slate-700 max-w-[65px] sm:max-w-none break-words leading-tight">${p.name} ${nameBadge}</td>
+                    <td class="py-2.5 px-2 sm:px-4 font-bold text-[10px] sm:text-sm text-slate-700 max-w-[65px] sm:max-w-none break-words leading-tight">${p.name} ${fireBadge} ${nameBadge}</td>
                     <td class="py-2.5 px-1 sm:px-4 text-center">${targetEl}</td>
                     <td class="py-2.5 px-1 sm:px-4 text-center"><span class="inline-block font-black text-xs sm:text-sm text-pink-600 bg-white px-1.5 sm:px-2 py-0.5 rounded border border-pink-200 shadow-sm">${p.sales}</span></td>
                     <td class="py-2.5 px-1 sm:px-4 text-center">
@@ -1179,6 +1222,15 @@
         }
     }
 
+    // === MAĞAZA VERİ GÜNCELLEMELERİ ===
+    window.addStaff = function() {
+        const input = document.getElementById('new-staff-name');
+        const name = input.value.trim().toUpperCase();
+        if (!name) return alert('Lütfen isim girin.');
+        dbRoot.child('master_staff').child(currentId).child('staff_' + Date.now()).set({ name: name });
+        input.value = '';
+    }
+    
     window.updateStoreTarget = function(val, role) {
         let v = parseInt(val) || 0;
         if(v < 0) v = 0;
@@ -1235,7 +1287,8 @@
         staffArr.forEach((p, i) => { 
             let emoji = i===0&&p.sales>0?"👑":i===1&&p.sales>0?"🥈":i===2&&p.sales>0?"🥉":"▫";
             let pPerc = p.target > 0 ? Math.round((p.sales/p.target)*100) : 0;
-            text += `${emoji} *${p.name}*: ${p.sales} (H: ${p.target} / %${pPerc})\n`; 
+            let fire = pPerc >= 150 ? "🔥" : "";
+            text += `${emoji} *${p.name}* ${fire}: ${p.sales} (H: ${p.target} / %${pPerc})\n`; 
         });
         text += `\n📊 *MAĞAZA TOPLAM SATIŞ:* *${totalSales}*\n🔗 *Giriş Linki:*\n${window.location.href.split('?')[0]}?store=${encodeURIComponent(currentId)}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
@@ -1272,9 +1325,7 @@
         if(startStr > endStr) return alert("Başlangıç tarihi bitiş tarihinden büyük olamaz.");
 
         if(startStr === ACTIVE_DATE && endStr === ACTIVE_DATE) {
-            isRegionHistorical = false;
-            if(currentId !== "GÜLÇİN FAKILAR") document.getElementById('region-top5-banner').classList.remove('hidden');
-            renderRegionUI();
+            returnToTodayRegion();
             return;
         }
 
@@ -1355,7 +1406,8 @@
                 : staffArr.map(p => {
                     let pp = p.target > 0 ? Math.round((p.sales/p.target)*100) : 0;
                     let transferBadge = p.isTransfer ? `<span class="text-[8px] bg-slate-200 text-slate-500 px-1 rounded ml-1">TRANSFER</span>` : '';
-                    return `<div class="flex justify-between items-center py-1 border-b border-slate-50"><span class="text-[11px] font-bold text-slate-600">${p.name} ${transferBadge}</span><div class="flex items-center gap-2"><span class="text-[10px] text-slate-400">H: ${p.target}</span><span class="text-xs font-black text-pink-600 bg-pink-50 px-1.5 rounded">${p.sales}</span></div></div>`;
+                    let fireBadge = pp >= 150 ? `<span class="ml-1 inline-block animate-pulse text-[10px]" title="%150 Başarı!">🔥</span>` : '';
+                    return `<div class="flex justify-between items-center py-1 border-b border-slate-50"><span class="text-[11px] font-bold text-slate-600">${p.name} ${fireBadge} ${transferBadge}</span><div class="flex items-center gap-2"><span class="text-[10px] text-slate-400">H: ${p.target}</span><span class="text-xs font-black text-pink-600 bg-pink-50 px-1.5 rounded">${p.sales}</span></div></div>`;
                 }).join('');
             
             let perc = st.target > 0 ? Math.round((st.sales / st.target) * 100) : 0;
@@ -1442,7 +1494,8 @@
             regSales += st.sales; regTarget += st.target;
             let perc = st.target > 0 ? Math.round((st.sales/st.target)*100) : 0;
             let emoji = i===0&&st.sales>0?"🥇":i===1&&st.sales>0?"🥈":i===2&&st.sales>0?"🥉":"▫";
-            text += `${emoji} *${st.name}*: ${st.sales} (H: ${st.target} / %${perc})\n`;
+            let fire = perc >= 150 ? "🔥" : "";
+            text += `${emoji} *${st.name}* ${fire}: ${st.sales} (H: ${st.target} / %${perc})\n`;
         });
 
         let rPerc = regTarget > 0 ? Math.round((regSales/regTarget)*100) : 0;
@@ -1703,10 +1756,13 @@
                             s.distStatus === 'KIRMIZI' ? '<span class="bg-rose-100 text-rose-700 px-2 rounded text-[10px] font-bold">Dağıtılmadı</span>' : 
                             '<span class="bg-slate-200 text-slate-500 px-2 rounded text-[10px] font-bold">Hedef Yok</span>';
             
+            // YENİ: GENEL RAPORDA MAĞAZA ALEV ROZETİ
+            let fireBadge = sPerc >= 150 ? `<span class="ml-1 inline-block animate-pulse text-[12px]" title="%150 Üzeri Başarı!">🔥</span>` : '';
+
             sList.innerHTML += `
                 <tr class="hover:bg-slate-50 transition">
                     <td class="py-2.5 px-4 text-xs font-bold text-slate-500">${s.bm}</td>
-                    <td class="py-2.5 px-4 font-bold text-slate-800">${s.name}</td>
+                    <td class="py-2.5 px-4 font-bold text-slate-800">${s.name} ${fireBadge}</td>
                     <td class="py-2.5 px-4 text-center">
                         <span class="font-bold text-slate-600 block">${s.target}</span>
                         <span class="inline-block mt-1">${targetSourceBadge}</span>
