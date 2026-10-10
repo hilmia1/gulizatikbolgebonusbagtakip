@@ -21,7 +21,7 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen font-sans relative">
 
-    <!-- ÖZEL ŞİFRE MODALI (KİLİT EKRANI) -->
+    <!-- ÖZEL ŞİFRE MODALI -->
     <div id="password-modal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all">
             <button type="button" onclick="closePasswordModal()" class="absolute top-4 right-4 text-slate-400 hover:text-rose-500 transition-colors"><i class="fa-solid fa-xmark text-2xl"></i></button>
@@ -230,7 +230,7 @@
                     
                     <h2 class="text-2xl sm:text-3xl font-black mt-2" id="region-title">Bölge Müdürü Adı</h2>
                     
-                    <div class="bg-white/10 p-2.5 rounded-xl backdrop-blur-md border border-white/20 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-3 w-full lg:w-max">
+                    <div class="bg-white/10 p-2.5 rounded-xl backdrop-blur-md border border-white/20 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-3 w-full lg:w-max" id="region-date-filters">
                         <div class="flex items-center justify-between gap-2">
                             <label class="text-[10px] text-indigo-100 font-bold uppercase w-16 sm:w-auto">Başlangıç:</label>
                             <input type="date" id="region-start-date" class="flex-1 sm:flex-none bg-indigo-900/50 text-white border border-indigo-400/30 rounded px-1.5 py-1 text-[11px] focus:outline-none">
@@ -412,7 +412,7 @@
     // Veritabanı Yolu
     const dbRoot = db.ref('watsons_v7'); 
 
-    // === MAĞAZA VE BÖLGE VERİLERİ ===
+    // === MAĞAZA VE BÖLGE VERİLERİ (GÜLÇİN FAKILAR'IN MAĞAZALARI DEĞİŞMEDİ, VEKALET SİSTEMİ EKLENDİ) ===
     const hierarchy = {
         "MÜGE IŞIKÖNDER": ["143-KİPA ÇİĞLİ", "251-NOVADA EDREMİT", "275-LİMAN AVM", "297-NOVADA MENEMEN", "327-AVLU BALIKESİR", "376-EFESUS OUTLET CENTER", "380-HİLLTOWN KARŞIYAKA", "399-KIRLANGIÇ", "433-AYVALIK", "435-BALIKESİR TİCARET MERKEZİ", "488-YASA AKÇAY", "551-10 BURDA"],
         "GÜLÇİN FAKILAR": ["101-KUŞADASI MARİNA", "154-KİPA SALİHLİ", "184-KUŞADASI AYM", "212-ŞAİR EŞREF", "267-MAVİBAHÇE", "283-EGE PERLA", "307-İZMİR PARK", "330-ALAYBEY", "342-ALPHARD ÇARŞI", "353-KONAK PİER", "378-KUŞADASI KALEİÇİ", "386-KARŞIYAKA ÇARŞI", "501-KUŞADASI İNÖNÜ BULVARI", "581-KARŞIYAKA İSKELE", "603-MANİSA TURGUTLU"],
@@ -422,8 +422,43 @@
         "SUAT BAŞPEHLİVAN": ["18-FORUM BORNOVA", "81-OPTİMUM GAZİEMİR", "89-FORUM MAGNESİA", "191-KİPA DİDİM", "192-BOSTANLI", "272-GİRNE BULVARI", "292-POİNT BORNOVA", "324-WESTPARK OUTLET", "344-ŞİRİNYER", "411-BORNOVA MEYDAN", "412-DİDİM", "529-TORBALI", "537-MANİSA PRİME", "599-SELÇUK OUTLET PARK"]
     };
 
+    // YENİ EKLENEN VEKALET SİSTEMİ
+    const delegations = {
+        "101-KUŞADASI MARİNA": "ÖMER AKSOY",
+        "154-KİPA SALİHLİ": "SUAT BAŞPEHLİVAN",
+        "184-KUŞADASI AYM": "ÖMER AKSOY",
+        "212-ŞAİR EŞREF": "ESRA AVCI",
+        "267-MAVİBAHÇE": "MÜGE IŞIKÖNDER",
+        "283-EGE PERLA": "SUAT BAŞPEHLİVAN",
+        "307-İZMİR PARK": "ESRA AVCI",
+        "330-ALAYBEY": "MÜGE IŞIKÖNDER",
+        "342-ALPHARD ÇARŞI": "SUAT BAŞPEHLİVAN",
+        "353-KONAK PİER": "ESRA AVCI",
+        "378-KUŞADASI KALEİÇİ": "ÖMER AKSOY",
+        "386-KARŞIYAKA ÇARŞI": "MÜGE IŞIKÖNDER",
+        "501-KUŞADASI İNÖNÜ BULVARI": "ÖMER AKSOY",
+        "581-KARŞIYAKA İSKELE": "MÜGE IŞIKÖNDER",
+        "603-MANİSA TURGUTLU": "SUAT BAŞPEHLİVAN"
+    };
+
+    // BÖLGE MÜDÜRLERİNİN FİİLİ (VEKALETLER DAHİL) MAĞAZA LİSTESİNİ OLUŞTUR
+    const effectiveHierarchy = JSON.parse(JSON.stringify(hierarchy));
+    effectiveHierarchy["GÜLÇİN FAKILAR"] = [];
+    Object.keys(delegations).forEach(store => {
+        let targetBM = delegations[store];
+        if (effectiveHierarchy[targetBM]) {
+            effectiveHierarchy[targetBM].push(store);
+        }
+    });
+    delete effectiveHierarchy["GÜLÇİN FAKILAR"]; // Genel Liderlik tablosundan çıkarıldı
+
     let allStoresList = [];
-    Object.keys(hierarchy).forEach(bm => hierarchy[bm].forEach(store => allStoresList.push({ name: store, bm: bm })));
+    Object.keys(hierarchy).forEach(bm => {
+        hierarchy[bm].forEach(store => {
+            let actualBM = delegations[store] || bm;
+            allStoresList.push({ name: store, bm: actualBM });
+        });
+    });
     allStoresList.sort((a, b) => (parseInt(a.name.split('-')[0]) || 0) - (parseInt(b.name.split('-')[0]) || 0));
 
     // === TARİH VE OTOMATİK SIFIRLAMA MANTIĞI ===
@@ -439,13 +474,11 @@
     let currentId = ''; 
     let globalData = {}; 
 
-    // === GEÇMİŞ TARİH İÇİN DEĞİŞKENLER ===
     let isStoreHistorical = false;
     let storeHistoricalData = null;
     let isRegionHistorical = false;
     let regionHistoricalData = null;
 
-    // === GLOBAL LİSTELER ===
     window.top3Staff = [];
     window.generalTop3Staff = [];
 
@@ -604,11 +637,13 @@
 
         const regionSelect = document.getElementById('select-region');
         regionSelect.innerHTML = '<option value="">-- Bölge Müdürü Seçiniz --</option>';
-        Object.keys(hierarchy).forEach(bm => regionSelect.add(new Option(bm, bm)));
+        Object.keys(hierarchy).forEach(bm => {
+            let label = bm === "GÜLÇİN FAKILAR" ? "GÜLÇİN FAKILAR (İZİNLİ)" : bm;
+            regionSelect.add(new Option(label, bm));
+        });
 
         document.getElementById('active-date-badge').innerText = "Vardiya: " + ACTIVE_DATE;
         
-        // Tarih Alanlarını Doldur
         document.getElementById('start-date-picker').value = ACTIVE_DATE;
         document.getElementById('end-date-picker').value = ACTIVE_DATE;
         document.getElementById('store-start-date').value = ACTIVE_DATE;
@@ -629,12 +664,12 @@
         dbRoot.on('value', snap => {
             globalData = snap.val() || {};
             
-            // CANLI GÜNÜN GENEL TOP 3 PERSONELİ
             window.top3Staff = [];
             let dailyData = globalData.daily?.[ACTIVE_DATE] || {};
             let allStaff = [];
-            Object.keys(hierarchy).forEach(bm => {
-                hierarchy[bm].forEach(store => {
+            
+            Object.keys(effectiveHierarchy).forEach(bm => {
+                effectiveHierarchy[bm].forEach(store => {
                     let staffObj = dailyData[store]?.staff || {};
                     Object.keys(staffObj).forEach(stfId => {
                         let sales = staffObj[stfId].sales || 0;
@@ -696,7 +731,7 @@
         renderRegionUI();
     }
 
-    // === TOPLU VERİ BİRLEŞTİRİCİ (Tarih Aralıkları İçin) ===
+    // === TOPLU VERİ BİRLEŞTİRİCİ ===
     function aggregateDataForStores(storeList, rangeData) {
         let agg = {};
         storeList.forEach(store => {
@@ -1026,14 +1061,14 @@
 
         if(startStr === ACTIVE_DATE && endStr === ACTIVE_DATE) {
             isRegionHistorical = false;
-            document.getElementById('region-top5-banner').classList.remove('hidden');
+            if(currentId !== "GÜLÇİN FAKILAR") document.getElementById('region-top5-banner').classList.remove('hidden');
             renderRegionUI();
             return;
         }
 
         dbRoot.child('daily').orderByKey().startAt(startStr).endAt(endStr).once('value').then(snap => {
             const rangeData = snap.val() || {};
-            let storeList = hierarchy[currentId];
+            let storeList = (currentId === "GÜLÇİN FAKILAR") ? hierarchy[currentId] : effectiveHierarchy[currentId];
             regionHistoricalData = aggregateDataForStores(storeList, rangeData);
             isRegionHistorical = true;
             document.getElementById('region-top5-banner').classList.add('hidden');
@@ -1044,12 +1079,29 @@
     function renderRegionUI() {
         if (currentRole !== 'region') return;
         
-        if (isRegionHistorical) {
+        let isReadOnlyBM = (currentId === "GÜLÇİN FAKILAR");
+
+        if (isReadOnlyBM) {
+            document.getElementById('region-mode-badge').innerText = "GÖZLEM MODU (İZİNLİ)";
+            document.getElementById('region-mode-badge').classList.replace('bg-white/20', 'bg-rose-500/20');
+            document.getElementById('region-mode-badge').classList.replace('border-white/30', 'border-rose-500/30');
+            document.getElementById('region-mode-badge').classList.add('text-rose-200');
+            document.getElementById('region-action-btns').classList.add('hidden');
+            document.getElementById('region-live-btn').classList.add('hidden');
+        } else if (isRegionHistorical) {
             document.getElementById('region-mode-badge').innerText = "GEÇMİŞ RAPOR MODU";
+            document.getElementById('region-mode-badge').classList.replace('bg-rose-500/20', 'bg-white/20');
+            document.getElementById('region-mode-badge').classList.replace('border-rose-500/30', 'border-white/30');
+            document.getElementById('region-mode-badge').classList.remove('text-rose-200');
             document.getElementById('region-live-btn').classList.remove('hidden');
+            document.getElementById('region-action-btns').classList.remove('hidden');
         } else {
             document.getElementById('region-mode-badge').innerText = "BÖLGE YÖNETİMİ";
+            document.getElementById('region-mode-badge').classList.replace('bg-rose-500/20', 'bg-white/20');
+            document.getElementById('region-mode-badge').classList.replace('border-rose-500/30', 'border-white/30');
+            document.getElementById('region-mode-badge').classList.remove('text-rose-200');
             document.getElementById('region-live-btn').classList.add('hidden');
+            document.getElementById('region-action-btns').classList.remove('hidden');
         }
 
         const container = document.getElementById('region-stores-container');
@@ -1058,7 +1110,9 @@
         let regSales = 0, regTarget = 0;
         let regionStaffList = [];
 
-        let statsArr = hierarchy[currentId].map(storeName => {
+        let storeList = isReadOnlyBM ? hierarchy[currentId] : effectiveHierarchy[currentId];
+
+        let statsArr = storeList.map(storeName => {
             const stats = isRegionHistorical ? regionHistoricalData[storeName] : getStoreDailyStats(storeName, ACTIVE_DATE);
             let sTotal = 0, sStaffTargetSum = 0;
             
@@ -1073,10 +1127,12 @@
             return { name: storeName, sales: sTotal, target: stats.storeTarget, targetBy: stats.targetBy, staffTargetSum: sStaffTargetSum, data: stats };
         }).sort((a, b) => b.sales - a.sales);
 
-        if (!isRegionHistorical) {
+        if (!isRegionHistorical && !isReadOnlyBM) {
             regionStaffList.sort((a, b) => b.sales - a.sales);
             window.currentRegionTop5 = regionStaffList.slice(0, 5);
             updateRegionTop5Banner('region-top5-banner', window.currentRegionTop5, window.top3Staff);
+        } else {
+            document.getElementById('region-top5-banner').classList.add('hidden');
         }
 
         statsArr.forEach(st => {
@@ -1092,7 +1148,7 @@
             let perc = st.target > 0 ? Math.round((st.sales / st.target) * 100) : 0;
             let barW = perc > 100 ? 100 : perc;
             
-            let icon = isRegionHistorical ? `<i class="fa-solid fa-clock-rotate-left text-indigo-500"></i>` : (st.data.isLocked ? `<i class="fa-solid fa-lock text-emerald-500"></i>` : `<i class="fa-solid fa-lock-open text-amber-500"></i>`);
+            let icon = (isRegionHistorical || isReadOnlyBM) ? `<i class="fa-solid fa-clock-rotate-left text-indigo-500"></i>` : (st.data.isLocked ? `<i class="fa-solid fa-lock text-emerald-500"></i>` : `<i class="fa-solid fa-lock-open text-amber-500"></i>`);
             let byBadge = st.targetBy === 'BM' ? `<span class="text-[9px] bg-indigo-100 text-indigo-700 px-1 rounded ml-1">BM</span>` : st.targetBy === 'MM' ? `<span class="text-[9px] bg-emerald-100 text-emerald-700 px-1 rounded ml-1">MM</span>` : `<span class="text-[9px] bg-slate-200 text-slate-500 px-1 rounded ml-1">${st.targetBy}</span>`;
 
             let distBadge = '';
@@ -1100,15 +1156,21 @@
             else if (st.staffTargetSum < st.target) distBadge = `<span class="bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded text-[9px] font-bold animate-pulse ml-2 whitespace-nowrap"><i class="fa-solid fa-triangle-exclamation"></i> EKİBE DAĞITILMADI</span>`;
             else distBadge = `<span class="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded text-[9px] font-bold ml-2 whitespace-nowrap"><i class="fa-solid fa-check-double"></i> EKİBE DAĞITILDI</span>`;
 
-            let targetInputHtml = isRegionHistorical 
+            let targetInputHtml = (isRegionHistorical || isReadOnlyBM) 
                 ? `<span class="font-bold text-indigo-600">${st.target}</span>` 
                 : `<input type="number" min="0" value="${st.target}" onchange="updateBMTarget('${st.name}', this.value)" class="w-14 p-0.5 text-center text-xs font-bold text-indigo-600 border border-slate-300 rounded focus:outline-none bg-white">`;
+
+            // Vekalet Verilen Mağazalar İçin Ekstra Etiket (Sadece Gülçin Fakılar ekranında görünür)
+            let storeTitleExtra = "";
+            if (isReadOnlyBM && delegations[st.name]) {
+                storeTitleExtra = `<span class="text-[9px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded ml-2 shadow-sm border border-rose-200"><i class="fa-solid fa-arrow-right-arrow-left"></i> Geçici BM: ${delegations[st.name]}</span>`;
+            }
 
             container.innerHTML += `
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
                     <div class="p-3 bg-slate-50 border-b flex justify-between items-start gap-2">
                         <div>
-                            <div class="font-bold text-sm text-slate-800 flex items-center flex-wrap gap-1">${icon} ${st.name} ${distBadge}</div>
+                            <div class="font-bold text-sm text-slate-800 flex items-center flex-wrap gap-1">${icon} ${st.name} ${distBadge} ${storeTitleExtra}</div>
                             <div class="flex items-center gap-1 mt-2">
                                 <span class="text-[10px] font-bold text-slate-500 uppercase">Hedef:</span>
                                 ${targetInputHtml}
@@ -1141,7 +1203,8 @@
     window.shareRegionTargets = function() {
         let text = `🎯 *BONUS BAG BÖLGE HEDEFLERİ - ${currentId}* 🎯\n📅 *Tarih:* ${ACTIVE_DATE}\n\nEkipler günaydın, bugünkü mağaza hedeflerimiz aşağıdaki gibidir:\n\n`;
         let total = 0;
-        hierarchy[currentId].forEach(storeName => {
+        let storeList = effectiveHierarchy[currentId];
+        storeList.forEach(storeName => {
             const stats = getStoreDailyStats(storeName, ACTIVE_DATE);
             text += `▫️ *${storeName}*: ${stats.storeTarget} adet\n`;
             total += stats.storeTarget;
@@ -1155,7 +1218,9 @@
         let text = `📊 *BONUS BAG BÖLGE DURUMU - ${currentId}* 📊\n📅 *Tarih:* ${dateLabel}\n\n`;
         let regSales = 0, regTarget = 0;
 
-        let statsArr = hierarchy[currentId].map(storeName => {
+        let storeList = isRegionHistorical ? Object.keys(regionHistoricalData) : effectiveHierarchy[currentId];
+
+        let statsArr = storeList.map(storeName => {
             const stats = isRegionHistorical ? regionHistoricalData[storeName] : getStoreDailyStats(storeName, ACTIVE_DATE);
             let sTotal = Object.values(stats.staff).reduce((s, p) => s + p.sales, 0);
             return { name: storeName, sales: sTotal, target: stats.storeTarget };
@@ -1198,7 +1263,7 @@
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 
-    // === GENEL YÖNETİM (GÜLİZ ATİK) EKRANI VE BÖLGE ŞİFRESİ DEĞİŞTİRME ===
+    // === GENEL YÖNETİM (GÜLİZ ATİK) EKRANI ===
     window.loginAsGeneral = function(isDirect = false) {
         openPasswordModal(
             "Güliz Atik Bölge Yönetimi", 
@@ -1249,8 +1314,8 @@
     function processGeneralData(rangeData) {
         let aggData = {};
         
-        Object.keys(hierarchy).forEach(bm => {
-            hierarchy[bm].forEach(store => {
+        Object.keys(effectiveHierarchy).forEach(bm => {
+            effectiveHierarchy[bm].forEach(store => {
                 aggData[store] = { staff: {}, target: 0, targetBy: 'Genel', isLocked: false };
             });
         });
@@ -1282,12 +1347,12 @@
         let ai_noTargetStores = 0, ai_undistributed = 0;
         let generalAllStaff = [];
 
-        Object.keys(hierarchy).forEach(bm => {
+        Object.keys(effectiveHierarchy).forEach(bm => {
             let bmSales = 0, bmTarget = 0;
             let bmTargetCount = 0, bmDistCount = 0;
-            let totalStores = hierarchy[bm].length;
+            let totalStores = effectiveHierarchy[bm].length;
             
-            hierarchy[bm].forEach(storeName => {
+            effectiveHierarchy[bm].forEach(storeName => {
                 let sData = aggData[storeName];
                 let sSales = 0, sStaffTargetSum = 0;
                 
@@ -1378,7 +1443,7 @@
         rList.innerHTML = '';
         regionStats.forEach((r, idx) => {
             let rPerc = r.target > 0 ? Math.round((r.sales / r.target) * 100) : 0;
-            let distColor = r.tCount === r.totalStores ? 'textemerald-600' : 'text-rose-500';
+            let distColor = r.tCount === r.totalStores ? 'text-emerald-600' : 'text-rose-500';
             rList.innerHTML += `
                 <tr class="hover:bg-slate-50 transition">
                     <td class="py-2.5 px-4 font-bold text-slate-400 text-center">${idx+1}</td>
