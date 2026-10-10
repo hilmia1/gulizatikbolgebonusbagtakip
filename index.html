@@ -412,7 +412,7 @@
     // Veritabanı Yolu
     const dbRoot = db.ref('watsons_v7'); 
 
-    // === MAĞAZA VE BÖLGE VERİLERİ (GÜLÇİN FAKILAR'IN MAĞAZALARI DEĞİŞMEDİ, VEKALET SİSTEMİ EKLENDİ) ===
+    // === MAĞAZA VE BÖLGE VERİLERİ ===
     const hierarchy = {
         "MÜGE IŞIKÖNDER": ["143-KİPA ÇİĞLİ", "251-NOVADA EDREMİT", "275-LİMAN AVM", "297-NOVADA MENEMEN", "327-AVLU BALIKESİR", "376-EFESUS OUTLET CENTER", "380-HİLLTOWN KARŞIYAKA", "399-KIRLANGIÇ", "433-AYVALIK", "435-BALIKESİR TİCARET MERKEZİ", "488-YASA AKÇAY", "551-10 BURDA"],
         "GÜLÇİN FAKILAR": ["101-KUŞADASI MARİNA", "154-KİPA SALİHLİ", "184-KUŞADASI AYM", "212-ŞAİR EŞREF", "267-MAVİBAHÇE", "283-EGE PERLA", "307-İZMİR PARK", "330-ALAYBEY", "342-ALPHARD ÇARŞI", "353-KONAK PİER", "378-KUŞADASI KALEİÇİ", "386-KARŞIYAKA ÇARŞI", "501-KUŞADASI İNÖNÜ BULVARI", "581-KARŞIYAKA İSKELE", "603-MANİSA TURGUTLU"],
@@ -638,8 +638,7 @@
         const regionSelect = document.getElementById('select-region');
         regionSelect.innerHTML = '<option value="">-- Bölge Müdürü Seçiniz --</option>';
         Object.keys(hierarchy).forEach(bm => {
-            let label = bm === "GÜLÇİN FAKILAR" ? "GÜLÇİN FAKILAR (İZİNLİ)" : bm;
-            regionSelect.add(new Option(label, bm));
+            regionSelect.add(new Option(bm, bm));
         });
 
         document.getElementById('active-date-badge').innerText = "Vardiya: " + ACTIVE_DATE;
@@ -1082,7 +1081,7 @@
         let isReadOnlyBM = (currentId === "GÜLÇİN FAKILAR");
 
         if (isReadOnlyBM) {
-            document.getElementById('region-mode-badge').innerText = "GÖZLEM MODU (İZİNLİ)";
+            document.getElementById('region-mode-badge').innerText = "GÖZLEM MODU";
             document.getElementById('region-mode-badge').classList.replace('bg-white/20', 'bg-rose-500/20');
             document.getElementById('region-mode-badge').classList.replace('border-white/30', 'border-rose-500/30');
             document.getElementById('region-mode-badge').classList.add('text-rose-200');
@@ -1160,7 +1159,6 @@
                 ? `<span class="font-bold text-indigo-600">${st.target}</span>` 
                 : `<input type="number" min="0" value="${st.target}" onchange="updateBMTarget('${st.name}', this.value)" class="w-14 p-0.5 text-center text-xs font-bold text-indigo-600 border border-slate-300 rounded focus:outline-none bg-white">`;
 
-            // Vekalet Verilen Mağazalar İçin Ekstra Etiket (Sadece Gülçin Fakılar ekranında görünür)
             let storeTitleExtra = "";
             if (isReadOnlyBM && delegations[st.name]) {
                 storeTitleExtra = `<span class="text-[9px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded ml-2 shadow-sm border border-rose-200"><i class="fa-solid fa-arrow-right-arrow-left"></i> Geçici BM: ${delegations[st.name]}</span>`;
