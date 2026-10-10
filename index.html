@@ -21,7 +21,7 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen font-sans relative">
 
-    <!-- ÖZEL ŞİFRE MODALI -->
+    <!-- ÖZEL ŞİFRE MODALI (KİLİT EKRANI) -->
     <div id="password-modal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all">
             <button type="button" onclick="closePasswordModal()" class="absolute top-4 right-4 text-slate-400 hover:text-rose-500 transition-colors"><i class="fa-solid fa-xmark text-2xl"></i></button>
@@ -79,6 +79,7 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Mağaza Girişi -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center">
                     <div class="w-16 h-16 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center text-2xl mb-4 shadow-inner">
                         <i class="fa-solid fa-store"></i>
@@ -89,6 +90,7 @@
                     <button type="button" onclick="loginAsStore()" class="w-full py-2.5 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-xl transition shadow">Mağazaya Git</button>
                 </div>
 
+                <!-- Bölge Müdürü Girişi -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center relative overflow-hidden">
                     <div class="absolute top-4 right-4 text-indigo-500"><i class="fa-solid fa-lock"></i></div>
                     <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-2xl mb-4 shadow-inner">
@@ -100,6 +102,7 @@
                     <button type="button" onclick="loginAsRegion()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow">Bölgeyi İzle</button>
                 </div>
 
+                <!-- Genel Yönetim Girişi -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center relative overflow-hidden">
                     <div class="absolute top-4 right-4 text-emerald-500"><i class="fa-solid fa-lock"></i></div>
                     <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-2xl mb-4 shadow-inner">
@@ -228,7 +231,6 @@
                     
                     <h2 class="text-2xl sm:text-3xl font-black mt-2" id="region-title">Bölge Müdürü Adı</h2>
                     
-                    <!-- MOBİL UYUMLU TARİH FİLTRESİ (BÖLGE) -->
                     <div class="bg-white/10 p-2.5 rounded-xl backdrop-blur-md border border-white/20 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-3 w-full lg:w-max">
                         <div class="flex items-center justify-between gap-2">
                             <label class="text-[10px] text-indigo-100 font-bold uppercase w-16 sm:w-auto">Başlangıç:</label>
@@ -283,7 +285,6 @@
                         <i class="fa-solid fa-key"></i> Bölge M. Şifresini Değiştir
                     </button>
                     
-                    <!-- MOBİL UYUMLU TARİH FİLTRESİ (GENEL) -->
                     <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-max">
                         <div class="flex items-center justify-between gap-2">
                             <label class="text-[10px] text-slate-400 font-bold uppercase w-16 sm:w-auto">Başlangıç:</label>
@@ -801,10 +802,11 @@
         let targetInput = document.getElementById('store-target-input');
         if (document.activeElement !== targetInput) targetInput.value = stats.storeTarget;
         
-        let isTargetLocked = isStoreHistorical ? true : (stats.isLocked || (stats.targetBy === "BM" && stats.storeTarget > 0));
-        targetInput.disabled = isTargetLocked;
+        // MAĞAZA ANA HEDEFİ KİLİT MANTIĞI
+        let isStoreTargetLocked = isStoreHistorical ? true : (stats.isLocked || (stats.targetBy === "BM" && stats.storeTarget > 0));
+        targetInput.disabled = isStoreTargetLocked;
         
-        if (isTargetLocked) {
+        if (isStoreTargetLocked) {
             targetInput.classList.add('bg-slate-100', 'text-slate-400', 'cursor-not-allowed');
             targetInput.classList.remove('bg-white', 'text-indigo-600');
             targetInput.title = isStoreHistorical ? "Geçmiş veriler değiştirilemez." : (stats.targetBy === "BM" ? "Bölge Müdürü tarafından verilen hedef değiştirilemez." : "");
@@ -813,6 +815,9 @@
             targetInput.classList.add('bg-white', 'text-indigo-600');
             targetInput.title = "";
         }
+        
+        // PERSONEL HEDEFLERİ KİLİT MANTIĞI (SORUNUN ÇÖZÜLDÜĞÜ YER)
+        let isStaffTargetLocked = isStoreHistorical ? true : stats.isLocked;
 
         let infoText = "";
         if(isStoreHistorical) {
@@ -887,7 +892,7 @@
                     nameBadge = `<span class="block mt-1 w-max px-2 py-0.5 rounded text-[9px] font-black bg-orange-300 text-orange-900 shadow-sm border border-orange-400"><i class="fa-solid fa-medal text-[10px]"></i> EGE BÖLGE 3.SÜ</span>`;
                 }
 
-                let targetEl = isTargetLocked ? `<span class="font-bold text-slate-500">${p.target}</span>` : `<input type="number" min="0" value="${p.target}" onchange="updateStaffTarget('${p.id}', this.value)" class="w-9 sm:w-12 p-0.5 sm:p-1 text-center font-bold text-indigo-600 bg-white border border-slate-300 rounded text-xs focus:outline-none">`;
+                let targetEl = isStaffTargetLocked ? `<span class="font-bold text-slate-500">${p.target}</span>` : `<input type="number" min="0" value="${p.target}" onchange="updateStaffTarget('${p.id}', this.value)" class="w-9 sm:w-12 p-0.5 sm:p-1 text-center font-bold text-indigo-600 bg-white border border-slate-300 rounded text-xs focus:outline-none">`;
                 
                 let actions = '';
                 if(!isStoreHistorical) {
