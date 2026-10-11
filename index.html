@@ -243,6 +243,7 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Mağaza Girişi -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center">
                     <div class="w-16 h-16 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center text-2xl mb-4 shadow-inner">
                         <i class="fa-solid fa-store"></i>
@@ -253,17 +254,19 @@
                     <button type="button" onclick="loginAsStore()" class="w-full py-2.5 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-xl transition shadow">Mağazaya Git</button>
                 </div>
 
+                <!-- Bölge Müdürü Girişi -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center relative overflow-hidden">
                     <div class="absolute top-4 right-4 text-indigo-500"><i class="fa-solid fa-lock"></i></div>
                     <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-2xl mb-4 shadow-inner">
                         <i class="fa-solid fa-map-location-dot"></i>
                     </div>
                     <h3 class="font-bold text-lg mb-1">Bölge Müdürü</h3>
-                    <p class="text-xs text-slate-400 mb-5">Mağazalara hedef ver ve dağıtımları kontrol.</p>
+                    <p class="text-xs text-slate-400 mb-5">Mağazalara hedef ver ve dağıtımları kontrol et.</p>
                     <select id="select-region" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium mb-3 focus:outline-none focus:border-indigo-500"></select>
                     <button type="button" onclick="loginAsRegion()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow">Bölgeyi İzle</button>
                 </div>
 
+                <!-- Genel Yönetim Girişi -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center relative overflow-hidden">
                     <div class="absolute top-4 right-4 text-emerald-500"><i class="fa-solid fa-lock"></i></div>
                     <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-2xl mb-4 shadow-inner">
@@ -766,8 +769,27 @@
         renderStoreUI();
     }
 
-    // Doğrudan Bölge Paneline Gitme Fonksiyonu
+    // Doğrudan Bölge Paneline Gitme Fonksiyonu (YETKİ KONTROLLÜ)
     window.goToRegion = function(regionId) {
+        // Eğer zaten Genel Müdür panelindeyse şifresiz geç
+        if (currentRole === 'general') {
+            executeGoToRegion(regionId);
+        } else {
+            // Mağazadan geçiş yapılmaya çalışılıyorsa şifre sor
+            let currentRegionPass = globalData.settings?.regionPassword || "0000";
+            openPasswordModal(
+                "Bölge Müdürü Yetkisi", 
+                "Bu panele geçiş yapmak için şifre gereklidir.", 
+                "fa-solid fa-shield-halved text-indigo-500", 
+                currentRegionPass, 
+                () => {
+                    executeGoToRegion(regionId);
+                }
+            );
+        }
+    }
+
+    function executeGoToRegion(regionId) {
         if(currentRole) navStack.push({role: currentRole, id: currentId});
         currentRole = 'region'; currentId = regionId;
         isRegionHistorical = false;
@@ -864,16 +886,6 @@
         createFloatingEmoji('👏', x, y);
         setTimeout(() => createFloatingEmoji('❤️', x + (Math.random()*20-10), y + (Math.random()*20-10)), 100);
         setTimeout(() => createFloatingEmoji('🔥', x + (Math.random()*20-10), y + (Math.random()*20-10)), 200);
-    }
-
-    function createFloatingEmoji(emojiStr, x, y) {
-        const el = document.createElement('div');
-        el.innerText = emojiStr;
-        el.className = 'floating-emoji text-3xl font-black';
-        el.style.left = (x - 15) + 'px';
-        el.style.top = (y - 15) + 'px';
-        document.body.appendChild(el);
-        setTimeout(() => { el.remove(); }, 1000);
     }
 
     window.openCatalogModal = function() { document.getElementById('catalog-modal').classList.remove('hidden'); }
@@ -986,6 +998,7 @@
         container.innerHTML = html;
     }
 
+    // MAĞAZALAR İÇİN EGE BÖLGESİ ŞAMPİYON MAĞAZALARI BANNERI
     function updateTop3StoresBanner(containerId, storeArr, mainTitle, subTitle) {
         const container = document.getElementById(containerId);
         if(!container) return;
