@@ -117,6 +117,79 @@
         </div>
     </div>
 
+    <!-- PERSONEL PERFORMANS KARNESİ MODALI -->
+    <div id="staff-profile-modal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[120] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all border border-pink-300">
+            <button type="button" onclick="closeStaffProfile()" class="absolute top-4 right-4 text-slate-400 hover:text-pink-600 transition-colors"><i class="fa-solid fa-xmark text-2xl"></i></button>
+            <div class="text-center mb-6 mt-2">
+                <div class="w-20 h-20 bg-pink-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-3 shadow-inner text-pink-500 border border-pink-200">
+                    <i class="fa-solid fa-id-badge"></i>
+                </div>
+                <h3 class="font-black text-2xl text-slate-800 uppercase" id="profile-name">Yükleniyor...</h3>
+                <p class="text-xs text-slate-500 mt-1 font-bold tracking-wider uppercase"><i class="fa-solid fa-ranking-star text-amber-500 mr-1"></i> Performans Karnesi</p>
+            </div>
+            
+            <div class="space-y-3">
+                <!-- Toplam Satış -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-500 flex items-center justify-center text-lg"><i class="fa-solid fa-boxes-stacked"></i></div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-500 uppercase">Tüm Zamanlar Toplam</div>
+                            <div class="font-black text-slate-800">Kariyer Satışı</div>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-black text-indigo-600" id="profile-total-sales">0</div>
+                </div>
+
+                <!-- Rekor Günü -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-500 flex items-center justify-center text-lg"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-500 uppercase">Rekor Günü</div>
+                            <div class="font-black text-slate-800 text-xs mt-0.5" id="profile-best-date">-</div>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-black text-emerald-600" id="profile-best-day">0</div>
+                </div>
+
+                <!-- Alev Rozeti -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm relative overflow-hidden">
+                    <div class="absolute right-[-10px] top-[-10px] opacity-10 text-6xl"><i class="fa-solid fa-fire"></i></div>
+                    <div class="flex items-center gap-3 relative z-10">
+                        <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-500 flex items-center justify-center text-lg"><i class="fa-solid fa-fire animate-pulse"></i></div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-500 uppercase">Alev Rozeti (🔥)</div>
+                            <div class="font-black text-slate-800 text-[10px] mt-0.5">%150'yi Aştığı Günler</div>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-black text-rose-600 relative z-10" id="profile-fire-count">0</div>
+                </div>
+
+                <!-- Alkış Butonu ve Sayaç -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm relative overflow-hidden mt-3">
+                    <div class="absolute right-[-10px] top-[-10px] opacity-10 text-6xl text-orange-500"><i class="fa-solid fa-hands-clapping"></i></div>
+                    <div class="flex items-center gap-3 relative z-10">
+                        <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center text-lg"><i class="fa-solid fa-hands-clapping"></i></div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-500 uppercase">Bugünkü Alkış</div>
+                            <div class="font-black text-slate-800 text-[10px] mt-0.5">Sadece Bugüne Özel Etkileşim</div>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-black text-orange-500 relative z-10" id="profile-applause-count">0</div>
+                </div>
+
+                <!-- Karneden Etkileşim Gönderme Tuşu -->
+                <div class="pt-2" id="profile-applause-btn-container">
+                    <button type="button" id="btn-send-applause" onclick="sendApplauseFromModal(event)" class="w-full py-3.5 bg-gradient-to-r from-orange-400 to-rose-400 hover:from-orange-500 hover:to-rose-500 text-white font-black rounded-2xl transition-all shadow-md active:scale-95 text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-hands-clapping animate-bounce"></i> Harika İş! Alkış Gönder
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- KATALOG MODALI -->
     <div id="catalog-modal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[110] flex items-center justify-center p-2 sm:p-6">
         <div class="bg-white rounded-2xl shadow-2xl relative w-full max-w-3xl max-h-[95vh] flex flex-col overflow-hidden border border-pink-500/30">
@@ -196,6 +269,10 @@
 
         <!-- ================= 2. MAĞAZA EKRANI ================= -->
         <div id="screen-store" class="screen hidden space-y-5">
+            <!-- 🏆 MAĞAZALAR TOP 3 BARI -->
+            <div id="store-top3-stores-banner" class="hidden"></div>
+            
+            <!-- MEVCUT PERSONEL TOP 3 BARI -->
             <div id="store-top3-banner" class="hidden"></div>
             
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 relative overflow-hidden">
@@ -575,8 +652,13 @@
     let currentTransferStaffId = null;
     let currentTransferStaffName = null;
 
+    // Profil İçin Küresel Değişkenler
+    window.currentProfileStaffId = null;
+    window.currentProfileStore = null;
+
     window.top3Staff = [];
     window.generalTop3Staff = [];
+    window.top3StoresGlobal = [];
     
     // CHART.JS INSTANCE
     let pieChartInstance = null;
@@ -618,9 +700,84 @@
         return "Silinmiş Personel";
     }
 
+    // === PERSONEL PERFORMANS KARNESİ (MODAL) YENİDEN AKTİF ===
+    window.openStaffProfile = function(stfId) {
+        if (!stfId || stfId === 'undefined') return;
+        
+        let name = findStaffNameGlobal(stfId);
+        let pStore = findStaffCurrentStore(stfId);
+        
+        let totalSales = 0, bestDaySales = 0, bestDayDate = "-", fireCount = 0, todayApplause = 0;
+        let daily = globalData.daily || {};
+        
+        Object.keys(daily).forEach(dateKey => {
+            let stores = daily[dateKey];
+            Object.keys(stores).forEach(store => {
+                let staffData = stores[store]?.staff?.[stfId];
+                if (staffData) {
+                    let s = staffData.sales || 0;
+                    let t = staffData.target || 0;
+                    if (s > 0) {
+                        totalSales += s;
+                        if (s > bestDaySales) {
+                            bestDaySales = s;
+                            bestDayDate = dateKey;
+                        }
+                        if (t > 0 && (s / t * 100) >= 150) fireCount++;
+                    }
+                    // Sadece BUGÜNÜN alkışını alıyoruz, geçmiş siliniyor/gösterilmiyor
+                    if (dateKey === ACTIVE_DATE) {
+                        todayApplause = staffData.applause || 0;
+                        pStore = store; 
+                    }
+                }
+            });
+        });
+
+        let formattedDate = bestDayDate;
+        if (bestDayDate !== "-") {
+            let parts = bestDayDate.split('-');
+            if(parts.length === 3) formattedDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
+        }
+
+        window.currentProfileStaffId = stfId;
+        window.currentProfileStore = pStore;
+
+        document.getElementById('profile-name').innerText = name;
+        document.getElementById('profile-total-sales').innerText = totalSales;
+        document.getElementById('profile-best-day').innerText = bestDaySales;
+        document.getElementById('profile-best-date').innerText = formattedDate;
+        document.getElementById('profile-fire-count').innerText = fireCount;
+        
+        let applauseEl = document.getElementById('profile-applause-count');
+        if(applauseEl) applauseEl.innerText = todayApplause;
+
+        // Geçmiş tarihe bakılıyorsa alkış atma butonunu gizle
+        let btnContainer = document.getElementById('profile-applause-btn-container');
+        if (isStoreHistorical || isRegionHistorical) {
+            btnContainer.classList.add('hidden');
+        } else {
+            btnContainer.classList.remove('hidden');
+        }
+
+        document.getElementById('staff-profile-modal').classList.remove('hidden');
+    }
+
+    window.closeStaffProfile = function() {
+        document.getElementById('staff-profile-modal').classList.add('hidden');
+        window.currentProfileStaffId = null;
+        window.currentProfileStore = null;
+    }
+
+    // Modal içinden çağrılan alkış fonksiyonu
+    window.sendApplauseFromModal = function(event) {
+        if (!window.currentProfileStaffId || !window.currentProfileStore || window.currentProfileStore === "Silinmiş Personel") return;
+        window.giveApplause(event, window.currentProfileStore, window.currentProfileStaffId);
+    }
+
     // === 👏 CANLI ALKIŞ GÖNDERME FONKSİYONU ===
     window.giveApplause = function(event, storeId, staffId) {
-        event.stopPropagation();
+        if(event) event.stopPropagation();
         if(!storeId || !staffId) return;
 
         let ref = dbRoot.child('daily').child(ACTIVE_DATE).child(storeId).child('staff').child(staffId).child('applause');
@@ -628,8 +785,13 @@
             return (current_value || 0) + 1;
         });
 
-        let x = event.clientX;
-        let y = event.clientY;
+        let x = window.innerWidth / 2;
+        let y = window.innerHeight / 2;
+        if(event && event.clientX) {
+            x = event.clientX;
+            y = event.clientY;
+        }
+
         createFloatingEmoji('👏', x, y);
         setTimeout(() => createFloatingEmoji('❤️', x + (Math.random()*20-10), y + (Math.random()*20-10)), 100);
         setTimeout(() => createFloatingEmoji('🔥', x + (Math.random()*20-10), y + (Math.random()*20-10)), 200);
@@ -746,8 +908,45 @@
             html += `<div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[150px]">
                 <div class="flex items-center justify-center w-6">${medals[idx]}</div>
                 <div class="flex flex-col">
-                    <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-pink-600 ml-1">${st.sales}</span></span>
+                    <span class="font-black text-xs text-slate-800 uppercase leading-none"><span class="clickable-name" onclick="openStaffProfile('${st.id}')" title="Karne için tıkla">${st.name}</span> <span class="text-pink-600 ml-1">${st.sales}</span></span>
                     <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1">${st.store}</span>
+                </div>
+            </div>`;
+        });
+        html += `</div></div>`;
+        container.innerHTML = html;
+    }
+
+    // MAĞAZALAR İÇİN EGE BÖLGESİ ŞAMPİYON MAĞAZALARI BANNERI
+    function updateTop3StoresBanner(containerId, storeArr, mainTitle, subTitle) {
+        const container = document.getElementById(containerId);
+        if(!container) return;
+        if (!storeArr || storeArr.length === 0) {
+            container.innerHTML = '';
+            container.classList.add('hidden');
+            return;
+        }
+        container.classList.remove('hidden');
+        let html = `<div class="bg-gradient-to-r from-emerald-900 to-teal-800 rounded-2xl shadow-lg p-3 sm:p-4 mb-5 flex flex-col lg:flex-row items-center gap-4 justify-between border border-emerald-500/30 relative overflow-hidden">
+            <div class="absolute right-0 top-0 text-white/5 text-6xl font-black transform translate-x-2 -translate-y-2"><i class="fa-solid fa-store"></i></div>
+            <div class="flex items-center gap-3 relative z-10 w-full lg:w-auto justify-center lg:justify-start">
+                <div class="w-10 h-10 rounded-full bg-emerald-400/20 flex items-center justify-center border border-emerald-400/50 shadow-[0_0_15px_rgba(52,211,153,0.3)]">
+                    <i class="fa-solid fa-trophy text-xl text-emerald-400 animate-pulse"></i>
+                </div>
+                <div class="text-center lg:text-left">
+                    <div class="font-black text-sm text-white tracking-wide">${mainTitle}</div>
+                    <div class="text-[10px] text-emerald-200/80 font-bold uppercase tracking-wider">${subTitle}</div>
+                </div>
+            </div>
+            <div class="flex flex-wrap justify-center lg:justify-end gap-2 sm:gap-3 w-full lg:w-auto relative z-10">`;
+        const medals = ['<i class="fa-solid fa-crown text-amber-500 text-lg"></i>', '<i class="fa-solid fa-medal text-slate-400 text-lg"></i>', '<i class="fa-solid fa-medal text-orange-400 text-lg"></i>'];
+        const colors = ['bg-gradient-to-br from-amber-100 to-amber-50 border-amber-300 ring-2 ring-amber-400/50', 'bg-gradient-to-br from-slate-100 to-slate-50 border-slate-300', 'bg-gradient-to-br from-orange-100 to-orange-50 border-orange-300'];
+        storeArr.slice(0, 3).forEach((st, idx) => {
+            html += `<div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[150px]">
+                <div class="flex items-center justify-center w-6">${medals[idx]}</div>
+                <div class="flex flex-col">
+                    <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-emerald-600 ml-1">${st.sales}</span></span>
+                    <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1">${st.bm}</span>
                 </div>
             </div>`;
         });
@@ -789,7 +988,7 @@
                 ${globalBadge}
                 <div class="flex items-center justify-center w-6">${medals[idx]}</div>
                 <div class="flex flex-col">
-                    <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-indigo-600 ml-1">${st.sales}</span></span>
+                    <span class="font-black text-xs text-slate-800 uppercase leading-none"><span class="clickable-name" onclick="openStaffProfile('${st.id}')" title="Karne için tıkla">${st.name}</span> <span class="text-indigo-600 ml-1">${st.sales}</span></span>
                     <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1">${st.store}</span>
                 </div>
             </div>`;
@@ -877,12 +1076,22 @@
         dbRoot.on('value', snap => {
             globalData = snap.val() || {};
             
+            // Eğer Karne modalı açıksa içindeki anlık alkış sayısını güncelle
+            if (!document.getElementById('staff-profile-modal').classList.contains('hidden') && window.currentProfileStaffId && window.currentProfileStore) {
+                 let updatedApplause = globalData.daily?.[ACTIVE_DATE]?.[window.currentProfileStore]?.staff?.[window.currentProfileStaffId]?.applause || 0;
+                 let applauseEl = document.getElementById('profile-applause-count');
+                 if(applauseEl) applauseEl.innerText = updatedApplause;
+            }
+
             window.top3Staff = [];
+            window.top3StoresGlobal = [];
             let dailyData = globalData.daily?.[ACTIVE_DATE] || {};
             let allStaffMap = {};
+            let allStoresSalesMap = {};
             
             Object.keys(effectiveHierarchy).forEach(bm => {
                 effectiveHierarchy[bm].forEach(store => {
+                    let sTotal = 0;
                     let staffObj = dailyData[store]?.staff || {};
                     Object.keys(staffObj).forEach(stfId => {
                         let sales = staffObj[stfId]?.sales || 0;
@@ -897,15 +1106,33 @@
                                 };
                             }
                             allStaffMap[stfId].sales += sales;
+                            sTotal += sales;
                         }
                     });
+
+                    // Mağaza Toplam Satışlarını Hesapla
+                    if (sTotal > 0) {
+                        allStoresSalesMap[store] = {
+                            name: store,
+                            sales: sTotal,
+                            bm: bm
+                        };
+                    }
                 });
             });
+
             let allStaff = Object.values(allStaffMap);
             allStaff.sort((a, b) => b.sales - a.sales);
             window.top3Staff = allStaff.slice(0, 3);
+
+            let allStoresTop = Object.values(allStoresSalesMap);
+            allStoresTop.sort((a, b) => b.sales - a.sales);
+            window.top3StoresGlobal = allStoresTop.slice(0, 3);
             
-            if(!isStoreHistorical) updateTop3Banners('store-top3-banner', window.top3Staff, 'GÜNÜN YILDIZLARI', 'Tüm Mağazalar Arası Top 3 Personel');
+            if(!isStoreHistorical) {
+                updateTop3StoresBanner('store-top3-stores-banner', window.top3StoresGlobal, '🏆 EGE BÖLGESİ ŞAMPİYON MAĞAZALARI', 'En Çok Satış Yapan İlk 3 Mağaza');
+                updateTop3Banners('store-top3-banner', window.top3Staff, 'GÜNÜN YILDIZ PERSONELLERİ', 'Tüm Mağazalar Arası Top 3 Personel');
+            }
 
             if (currentRole === 'store' && !isStoreHistorical) renderStoreUI();
             if (currentRole === 'region' && !isRegionHistorical) {
@@ -944,6 +1171,7 @@
         document.getElementById('store-end-date').value = ACTIVE_DATE;
         isStoreHistorical = false;
         window.firedConfetti = { store: false }; 
+        document.getElementById('store-top3-stores-banner').classList.remove('hidden');
         document.getElementById('store-top3-banner').classList.remove('hidden');
         renderStoreUI();
     }
@@ -1041,6 +1269,7 @@
             let agg = aggregateDataForStores([currentId], rangeData);
             isStoreHistorical = true;
             storeHistoricalData = agg[currentId];
+            document.getElementById('store-top3-stores-banner').classList.add('hidden');
             document.getElementById('store-top3-banner').classList.add('hidden');
             renderStoreUI();
         });
@@ -1156,7 +1385,6 @@
             document.getElementById('empty-staff-msg').classList.add('hidden');
             staffArray.forEach(p => {
                 let pPerc = p.target > 0 ? Math.round((p.sales / p.target) * 100) : 0;
-                
                 let fireBadge = pPerc >= 150 ? `<span class="ml-1 inline-block animate-pulse text-[12px] drop-shadow-md" title="%150 Üzeri Başarı! Mükemmel!">🔥</span>` : '';
                 
                 let rankIndex = isStoreHistorical ? -1 : (window.top3Staff || []).findIndex(t => t.id === p.id);
@@ -1192,19 +1420,12 @@
                     }
                 }
 
-                // 👏 YENİ: İSMİN YANINDAKİ ALKIŞ BUTONU VE SAYAÇ
-                let applauseButtonHtml = '';
-                if (!isStoreHistorical) {
-                    applauseButtonHtml = `<button onclick="giveApplause(event, '${currentId}', '${p.id}')" class="mt-1 inline-flex items-center gap-1 bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 px-1.5 py-0.5 rounded text-[10px] font-bold shadow-sm active:scale-95 transition-transform" title="Tebrik Et!"><i class="fa-solid fa-hands-clapping"></i> <span>${p.applause}</span></button>`;
-                } else if (p.applause > 0) {
-                    applauseButtonHtml = `<span class="mt-1 inline-flex items-center gap-1 bg-slate-100 text-slate-500 border border-slate-200 px-1.5 py-0.5 rounded text-[10px] font-bold"><i class="fa-solid fa-hands-clapping"></i> ${p.applause}</span>`;
-                }
-
+                // SADECE KARTA TIKLAMA (clickable-name), LİSTEDEN ALKIŞ BUTONU KALDIRILDI
                 tbody.innerHTML += `
                 <tr class="${rowClass}">
                     <td class="py-2.5 px-2 sm:px-4 font-bold text-[10px] sm:text-sm text-slate-700 max-w-[65px] sm:max-w-none break-words leading-tight">
-                        <span class="block">${safePName} ${fireBadge} ${nameBadge}</span>
-                        ${applauseButtonHtml}
+                        <span class="clickable-name" onclick="openStaffProfile('${p.id}')" title="Performans Karnesini Gör">${safePName}</span> 
+                        ${fireBadge} ${nameBadge}
                     </td>
                     <td class="py-2.5 px-1 sm:px-4 text-center">${targetEl}</td>
                     <td class="py-2.5 px-1 sm:px-4 text-center"><span class="inline-block font-black text-xs sm:text-sm text-pink-600 bg-white px-1.5 sm:px-2 py-0.5 rounded border border-pink-200 shadow-sm">${p.sales}</span></td>
@@ -1403,15 +1624,9 @@
                     let transferBadge = p.isTransfer ? `<span class="text-[8px] bg-slate-200 text-slate-500 px-1 rounded ml-1">TRANSFER</span>` : '';
                     let fireBadge = pp >= 150 ? `<span class="ml-1 inline-block animate-pulse text-[10px]" title="%150 Başarı!">🔥</span>` : '';
                     let safePName = p.name || "İsimsiz";
-                    
-                    let applauseBtn = '';
-                    if(!isRegionHistorical) {
-                        applauseBtn = `<button onclick="giveApplause(event, '${st.name}', '${p.id}')" class="ml-2 inline-flex items-center gap-1 bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 px-1 py-0.5 rounded text-[9px] font-bold shadow-sm active:scale-95 transition-transform" title="Tebrik Et!"><i class="fa-solid fa-hands-clapping"></i> <span>${p.applause}</span></button>`;
-                    } else if (p.applause > 0) {
-                        applauseBtn = `<span class="ml-2 inline-flex items-center gap-1 bg-slate-100 text-slate-500 border border-slate-200 px-1 py-0.5 rounded text-[9px] font-bold"><i class="fa-solid fa-hands-clapping"></i> ${p.applause}</span>`;
-                    }
 
-                    return `<div class="flex justify-between items-center py-1 border-b border-slate-50"><span class="text-[11px] font-bold text-slate-600 block sm:inline-block">${safePName} ${fireBadge} ${transferBadge} ${applauseBtn}</span><div class="flex items-center gap-2"><span class="text-[10px] text-slate-400">H: ${p.target}</span><span class="text-xs font-black text-pink-600 bg-pink-50 px-1.5 rounded">${p.sales}</span></div></div>`;
+                    // Bölge Müdürü ekranında da Karne tıklaması VAR, listede Alkış butonu YOK
+                    return `<div class="flex justify-between items-center py-1 border-b border-slate-50"><span class="text-[11px] font-bold text-slate-600 block sm:inline-block"><span class="clickable-name" onclick="openStaffProfile('${p.id}')" title="Karne için tıkla">${safePName}</span> ${fireBadge} ${transferBadge}</span><div class="flex items-center gap-2"><span class="text-[10px] text-slate-400">H: ${p.target}</span><span class="text-xs font-black text-pink-600 bg-pink-50 px-1.5 rounded">${p.sales}</span></div></div>`;
                 }).join('');
             
             let perc = st.target > 0 ? Math.round((st.sales / st.target) * 100) : 0;
