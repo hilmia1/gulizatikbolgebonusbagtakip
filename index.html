@@ -138,6 +138,7 @@
             </div>
             
             <div class="space-y-3">
+                <!-- Toplam Satış -->
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-500 flex items-center justify-center text-lg"><i class="fa-solid fa-boxes-stacked"></i></div>
@@ -148,6 +149,8 @@
                     </div>
                     <div class="text-3xl font-black text-indigo-600" id="profile-total-sales">0</div>
                 </div>
+
+                <!-- Rekor Günü -->
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-500 flex items-center justify-center text-lg"><i class="fa-solid fa-arrow-trend-up"></i></div>
@@ -158,6 +161,8 @@
                     </div>
                     <div class="text-3xl font-black text-emerald-600" id="profile-best-day">0</div>
                 </div>
+
+                <!-- Alev Rozeti -->
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm relative overflow-hidden">
                     <div class="absolute right-[-10px] top-[-10px] opacity-10 text-6xl"><i class="fa-solid fa-fire"></i></div>
                     <div class="flex items-center gap-3 relative z-10">
@@ -169,7 +174,8 @@
                     </div>
                     <div class="text-3xl font-black text-rose-600 relative z-10" id="profile-fire-count">0</div>
                 </div>
-                
+
+                <!-- Alkış Butonu ve Sayaç -->
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm relative overflow-hidden mt-3">
                     <div class="absolute right-[-10px] top-[-10px] opacity-10 text-6xl text-orange-500"><i class="fa-solid fa-hands-clapping"></i></div>
                     <div class="flex items-center gap-3 relative z-10">
@@ -182,6 +188,7 @@
                     <div class="text-3xl font-black text-orange-500 relative z-10" id="profile-applause-count">0</div>
                 </div>
 
+                <!-- Karneden Etkileşim Gönderme Tuşu -->
                 <div class="pt-2" id="profile-applause-btn-container">
                     <button type="button" id="btn-send-applause" onclick="sendApplauseFromModal(event)" class="w-full py-3.5 bg-gradient-to-r from-orange-400 to-rose-400 hover:from-orange-500 hover:to-rose-500 text-white font-black rounded-2xl transition-all shadow-md active:scale-95 text-sm flex items-center justify-center gap-2">
                         <i class="fa-solid fa-hands-clapping animate-bounce"></i> Harika İş! Alkış Gönder
@@ -209,12 +216,18 @@
         <div class="max-w-6xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <i class="fa-solid fa-bullseye text-pink-500 text-xl"></i>
-                <h1 class="font-black tracking-wide text-lg">Bonus Bag <span class="text-slate-400 font-normal text-sm ml-1 hidden sm:inline">Performans & Hedef Sistemi</span></h1>
+                <h1 class="font-black tracking-wide text-lg">Bonus Bag <span class="text-slate-400 font-normal text-sm ml-1 hidden sm:inline">Performans Sistemi</span></h1>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 sm:gap-3">
                 <span id="active-date-badge" class="hidden sm:inline-block px-3 py-1 bg-slate-800 rounded-lg text-xs font-bold text-slate-300 border border-slate-700"></span>
-                <button type="button" onclick="goHome()" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold transition flex items-center gap-2 border border-slate-700">
-                    <i class="fa-solid fa-home"></i> Ana Menü
+                
+                <!-- ↩️ YENİ: GERİ BUTONU -->
+                <button type="button" id="back-btn" onclick="goBack()" class="hidden px-3 py-1.5 bg-pink-600 hover:bg-pink-500 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm border border-pink-500">
+                    <i class="fa-solid fa-arrow-left"></i> <span class="hidden sm:inline">Geri</span>
+                </button>
+                
+                <button type="button" onclick="goHome()" class="px-3 sm:px-4 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 border border-slate-700">
+                    <i class="fa-solid fa-house"></i> <span class="hidden sm:inline">Ana Menü</span>
                 </button>
             </div>
         </div>
@@ -246,7 +259,7 @@
                         <i class="fa-solid fa-map-location-dot"></i>
                     </div>
                     <h3 class="font-bold text-lg mb-1">Bölge Müdürü</h3>
-                    <p class="text-xs text-slate-400 mb-5">Mağazalara hedef ver ve dağıtımları kontrol et.</p>
+                    <p class="text-xs text-slate-400 mb-5">Mağazalara hedef ver ve dağıtımları kontrol.</p>
                     <select id="select-region" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium mb-3 focus:outline-none focus:border-indigo-500"></select>
                     <button type="button" onclick="loginAsRegion()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow">Bölgeyi İzle</button>
                 </div>
@@ -661,6 +674,9 @@
     window.generalTop3Staff = [];
     window.top3StoresGlobal = []; 
     
+    // Geri Dönüş Hafızası (History Stack)
+    let navStack = [];
+
     // CHART.JS INSTANCE
     let pieChartInstance = null;
 
@@ -699,6 +715,68 @@
             if(allStores[store][id]) return store;
         }
         return "Silinmiş Personel";
+    }
+
+    // === GERİ BUTONU KONTROLÜ ===
+    function updateNavButtons() {
+        if (navStack.length > 0) {
+            document.getElementById('back-btn').classList.remove('hidden');
+        } else {
+            document.getElementById('back-btn').classList.add('hidden');
+        }
+    }
+
+    window.goBack = function() {
+        if(navStack.length === 0) return;
+        let prevState = navStack.pop();
+        currentRole = prevState.role;
+        currentId = prevState.id;
+        
+        setURLParam(currentRole, currentRole === 'general' ? 'true' : currentId);
+        document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
+        
+        if (currentRole === 'store') {
+            document.getElementById('screen-store').classList.remove('hidden');
+            document.getElementById('store-title').innerText = currentId;
+            renderStoreUI();
+        } else if (currentRole === 'region') {
+            document.getElementById('screen-region').classList.remove('hidden');
+            document.getElementById('region-title').innerText = currentId;
+            renderRegionUI();
+        } else if (currentRole === 'general') {
+            document.getElementById('screen-general').classList.remove('hidden');
+            loadHistoricalGeneral(); 
+        } else {
+            goHome();
+        }
+        updateNavButtons();
+    }
+
+    // Doğrudan Mağazaya Gitme Fonksiyonu
+    window.goToStore = function(storeId) {
+        if(currentRole) navStack.push({role: currentRole, id: currentId});
+        currentRole = 'store'; currentId = storeId;
+        isStoreHistorical = false;
+        window.firedConfetti = { store: false };
+        setURLParam('store', currentId);
+        document.getElementById('store-title').innerText = currentId;
+        document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
+        document.getElementById('screen-store').classList.remove('hidden');
+        updateNavButtons();
+        renderStoreUI();
+    }
+
+    // Doğrudan Bölge Paneline Gitme Fonksiyonu
+    window.goToRegion = function(regionId) {
+        if(currentRole) navStack.push({role: currentRole, id: currentId});
+        currentRole = 'region'; currentId = regionId;
+        isRegionHistorical = false;
+        setURLParam('region', currentId);
+        document.getElementById('region-title').innerText = currentId;
+        document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
+        document.getElementById('screen-region').classList.remove('hidden');
+        updateNavButtons();
+        renderRegionUI();
     }
 
     // === PERSONEL PERFORMANS KARNESİ (MODAL) YENİDEN AKTİF ===
@@ -770,15 +848,8 @@
 
     window.sendApplauseFromModal = function(event) {
         if (!window.currentProfileStaffId || !window.currentProfileStore || window.currentProfileStore === "Silinmiş Personel") return;
-        window.giveApplause(event, window.currentProfileStore, window.currentProfileStaffId);
-    }
-
-    // === 👏 CANLI ALKIŞ GÖNDERME FONKSİYONU ===
-    window.giveApplause = function(event, storeId, staffId) {
-        if(event) event.stopPropagation();
-        if(!storeId || !staffId) return;
-
-        let ref = dbRoot.child('daily').child(ACTIVE_DATE).child(storeId).child('staff').child(staffId).child('applause');
+        
+        let ref = dbRoot.child('daily').child(ACTIVE_DATE).child(window.currentProfileStore).child('staff').child(window.currentProfileStaffId).child('applause');
         ref.transaction(function(current_value) {
             return (current_value || 0) + 1;
         });
@@ -903,11 +974,11 @@
         const medals = ['<i class="fa-solid fa-crown text-amber-500 text-lg"></i>', '<i class="fa-solid fa-medal text-slate-400 text-lg"></i>', '<i class="fa-solid fa-medal text-orange-400 text-lg"></i>'];
         const colors = ['bg-gradient-to-br from-amber-100 to-amber-50 border-amber-300 ring-2 ring-amber-400/50', 'bg-gradient-to-br from-slate-100 to-slate-50 border-slate-300', 'bg-gradient-to-br from-orange-100 to-orange-50 border-orange-300'];
         staffArr.slice(0, 3).forEach((st, idx) => {
-            html += `<div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[150px] cursor-pointer" onclick="openStaffProfile('${st.id}')" title="Karne için tıkla">
+            html += `<div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[150px] cursor-pointer hover:shadow-lg transition-shadow" onclick="openStaffProfile('${st.id}')" title="Karne için tıkla">
                 <div class="flex items-center justify-center w-6">${medals[idx]}</div>
                 <div class="flex flex-col">
                     <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-pink-600 ml-1">${st.sales}</span></span>
-                    <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1 hover:text-pink-500 transition-colors" onclick="event.stopPropagation(); loginAsStore('${st.store}')" title="Mağazaya Git">${st.store}</span>
+                    <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1 hover:text-pink-500 transition-colors" onclick="event.stopPropagation(); goToStore('${st.store}')" title="Mağazaya Git">${st.store}</span>
                 </div>
             </div>`;
         });
@@ -915,7 +986,6 @@
         container.innerHTML = html;
     }
 
-    // MAĞAZALAR İÇİN EGE BÖLGESİ ŞAMPİYON MAĞAZALARI BANNERI
     function updateTop3StoresBanner(containerId, storeArr, mainTitle, subTitle) {
         const container = document.getElementById(containerId);
         if(!container) return;
@@ -940,11 +1010,11 @@
         const medals = ['<i class="fa-solid fa-crown text-amber-500 text-lg"></i>', '<i class="fa-solid fa-medal text-slate-400 text-lg"></i>', '<i class="fa-solid fa-medal text-orange-400 text-lg"></i>'];
         const colors = ['bg-gradient-to-br from-amber-100 to-amber-50 border-amber-300 ring-2 ring-amber-400/50', 'bg-gradient-to-br from-slate-100 to-slate-50 border-slate-300', 'bg-gradient-to-br from-orange-100 to-orange-50 border-orange-300'];
         storeArr.slice(0, 3).forEach((st, idx) => {
-            html += `<div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[150px] cursor-pointer hover:shadow-lg transition-shadow" onclick="loginAsStore('${st.name}')" title="Mağazaya Git">
+            html += `<div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[150px] cursor-pointer hover:shadow-lg transition-shadow" onclick="goToStore('${st.name}')" title="Mağazaya Git">
                 <div class="flex items-center justify-center w-6">${medals[idx]}</div>
                 <div class="flex flex-col">
                     <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-emerald-600 ml-1">${st.sales}</span></span>
-                    <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1">${st.bm}</span>
+                    <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1 hover:text-emerald-600 transition-colors" onclick="event.stopPropagation(); goToRegion('${st.bm}')" title="Bölge Paneline Git">${st.bm}</span>
                 </div>
             </div>`;
         });
@@ -982,12 +1052,12 @@
             else if (globalRank === 1) globalBadge = `<span class="absolute -top-3 -right-2 bg-slate-200 text-slate-800 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-slate-400 animate-bounce whitespace-nowrap z-20">🥈 EGE BÖLGE 2.Sİ</span>`;
             else if (globalRank === 2) globalBadge = `<span class="absolute -top-3 -right-2 bg-orange-300 text-orange-900 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-orange-400 animate-bounce whitespace-nowrap z-20">🥉 EGE BÖLGE 3.SÜ</span>`;
             
-            html += `<div class="relative flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[130px] cursor-pointer" onclick="openStaffProfile('${st.id}')" title="Karne için tıkla">
+            html += `<div class="relative flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[130px] cursor-pointer hover:shadow-lg transition-shadow" onclick="openStaffProfile('${st.id}')" title="Karne için tıkla">
                 ${globalBadge}
                 <div class="flex items-center justify-center w-6">${medals[idx]}</div>
                 <div class="flex flex-col">
                     <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-indigo-600 ml-1">${st.sales}</span></span>
-                    <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1 hover:text-pink-500 transition-colors" onclick="event.stopPropagation(); loginAsStore('${st.store}')" title="Mağazaya Git">${st.store}</span>
+                    <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1 hover:text-indigo-500 transition-colors" onclick="event.stopPropagation(); goToStore('${st.store}')" title="Mağazaya Git">${st.store}</span>
                 </div>
             </div>`;
         });
@@ -1074,7 +1144,7 @@
         dbRoot.on('value', snap => {
             globalData = snap.val() || {};
             
-            // Eğer Karne modalı açıksa içindeki anlık alkış sayısını güncelle
+            // Karne modalı açıksa içindeki anlık alkış sayısını güncelle
             if (!document.getElementById('staff-profile-modal').classList.contains('hidden') && window.currentProfileStaffId && window.currentProfileStore) {
                  let updatedApplause = globalData.daily?.[ACTIVE_DATE]?.[window.currentProfileStore]?.staff?.[window.currentProfileStaffId]?.applause || 0;
                  let applauseEl = document.getElementById('profile-applause-count');
@@ -1108,7 +1178,6 @@
                         }
                     });
 
-                    // Mağaza Toplam Satışlarını Hesapla
                     if (sTotal > 0) {
                         allStoresSalesMap[store] = {
                             name: store,
@@ -1128,7 +1197,6 @@
             window.top3StoresGlobal = allStoresTop.slice(0, 3);
             
             if(!isStoreHistorical) {
-                // Mağaza ekranına giren herkes için Top 3 Şampiyon Mağaza ve Top 3 Personel
                 updateTop3StoresBanner('store-top3-stores-banner', window.top3StoresGlobal, '🏆 EGE BÖLGESİ ŞAMPİYON MAĞAZALARI', 'En Çok Satış Yapan İlk 3 Mağaza');
                 updateTop3Banners('store-top3-banner', window.top3Staff, 'GÜNÜN YILDIZ PERSONELLERİ', 'Tüm Mağazalar Arası Top 3 Personel');
             }
@@ -1157,12 +1225,14 @@
     }
 
     window.goHome = function() {
+        navStack = []; 
         currentRole = ''; currentId = ''; 
         isStoreHistorical = false; isRegionHistorical = false;
         window.firedConfetti = { store: false }; 
         setURLParam('', '');
         document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
         document.getElementById('screen-home').classList.remove('hidden');
+        updateNavButtons();
     }
 
     window.returnToTodayStore = function() {
@@ -1243,6 +1313,7 @@
     window.loginAsStore = function(directId) {
         const sel = directId || document.getElementById('select-store').value;
         if (!sel) return alert('Lütfen bir mağaza seçin.');
+        navStack = []; 
         currentRole = 'store'; currentId = sel;
         isStoreHistorical = false;
         window.firedConfetti = { store: false }; 
@@ -1250,6 +1321,7 @@
         document.getElementById('store-title').innerText = currentId;
         document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
         document.getElementById('screen-store').classList.remove('hidden');
+        updateNavButtons();
         renderStoreUI();
     }
 
@@ -1518,6 +1590,7 @@
             "fa-solid fa-map-location-dot text-indigo-500", 
             currentRegionPass, 
             () => {
+                navStack = []; 
                 currentRole = 'region'; 
                 currentId = sel;
                 isRegionHistorical = false;
@@ -1528,6 +1601,7 @@
                 document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
                 document.getElementById('screen-region').classList.remove('hidden');
                 
+                updateNavButtons();
                 renderRegionUI();
             }
         );
@@ -1645,7 +1719,7 @@
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
                     <div class="p-3 bg-slate-50 border-b flex justify-between items-start gap-2">
                         <div>
-                            <div class="font-bold text-sm text-slate-800 flex items-center flex-wrap gap-1">${icon} <span class="clickable-store" onclick="loginAsStore('${st.name}')" title="Mağazaya Git">${st.name}</span> ${distBadge}</div>
+                            <div class="font-bold text-sm text-slate-800 flex items-center flex-wrap gap-1">${icon} <span class="clickable-store" onclick="goToStore('${st.name}')" title="Mağazaya Git">${st.name}</span> ${distBadge}</div>
                             <div class="flex items-center gap-1 mt-2">
                                 <span class="text-[10px] font-bold text-slate-500 uppercase">Hedef:</span>
                                 ${targetInputHtml}
@@ -1747,10 +1821,12 @@
             "fa-solid fa-crown text-emerald-500", 
             "1244", 
             () => {
+                navStack = []; 
                 currentRole = 'general';
                 if(!isDirect) setURLParam('general', 'true');
                 document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
                 document.getElementById('screen-general').classList.remove('hidden');
+                updateNavButtons();
                 loadHistoricalGeneral();
             }
         );
@@ -1961,7 +2037,7 @@
             bmStores.forEach(s => {
                 let sP = s.target > 0 ? Math.round((s.sales/s.target)*100) : 0;
                 subTableHtml += `<tr class="border-b border-slate-200 last:border-0">
-                    <td class="py-1.5 font-bold text-slate-700"><span class="clickable-store" onclick="loginAsStore('${s.name}')">${s.name}</span></td>
+                    <td class="py-1.5 font-bold text-slate-700"><span class="clickable-store" onclick="event.stopPropagation(); goToStore('${s.name}')" title="Mağazaya Git">${s.name}</span></td>
                     <td class="text-center text-slate-500">${s.target}</td>
                     <td class="text-center font-black text-indigo-500">${s.sales}</td>
                     <td class="font-bold text-slate-500 text-right sm:text-left">%${sP}</td>
@@ -1972,7 +2048,7 @@
             rList.innerHTML += `
                 <tr class="hover:bg-slate-50 transition cursor-pointer" onclick="toggleBMStores('${idx}')" title="Detayları Görmek İçin Tıkla">
                     <td class="py-2 px-1 sm:px-4 font-bold text-slate-400 text-center text-[10px] sm:text-sm"><i id="bm-icon-${idx}" class="fa-solid fa-chevron-down text-slate-300"></i> ${idx+1}</td>
-                    <td class="py-2 px-1 sm:px-4 font-bold text-slate-700 text-[10px] sm:text-sm">${r.bm}</td>
+                    <td class="py-2 px-1 sm:px-4 font-bold text-slate-700 text-[10px] sm:text-sm"><span class="clickable-store" onclick="event.stopPropagation(); goToRegion('${r.bm}')" title="Bölge Paneline Işınlan">${r.bm}</span></td>
                     <td class="py-2 px-1 sm:px-4 text-center font-bold text-slate-600 text-[10px] sm:text-sm">${r.target}</td>
                     <td class="py-2 px-1 sm:px-4 text-center hidden sm:table-cell">
                         <div class="flex flex-col items-center">
@@ -2007,8 +2083,8 @@
 
             sList.innerHTML += `
                 <tr class="${rowClass}">
-                    <td class="py-2 px-1 sm:px-4 text-[9px] sm:text-xs font-bold text-slate-500 truncate max-w-[60px] sm:max-w-[80px] hidden sm:table-cell" title="${s.bm}">${s.bm}</td>
-                    <td class="py-2 px-1 sm:px-4 font-bold text-slate-800 text-[10px] sm:text-sm leading-tight"><span class="clickable-store" onclick="loginAsStore('${s.name}')" title="Mağazaya Git">${s.name}</span> ${fireBadge}</td>
+                    <td class="py-2 px-1 sm:px-4 text-[9px] sm:text-xs font-bold text-slate-500 truncate max-w-[60px] sm:max-w-[80px] hidden sm:table-cell" title="${s.bm}"><span class="clickable-store" onclick="goToRegion('${s.bm}')">${s.bm}</span></td>
+                    <td class="py-2 px-1 sm:px-4 font-bold text-slate-800 text-[10px] sm:text-sm leading-tight"><span class="clickable-store" onclick="goToStore('${s.name}')" title="Mağazaya Git">${s.name}</span> ${fireBadge}</td>
                     <td class="py-2 px-1 sm:px-4 text-center">
                         <span class="font-bold text-slate-600 block text-[10px] sm:text-sm">${s.target}</span>
                         <span class="text-[7px] sm:text-[8px] text-slate-400 uppercase">${s.targetBy}</span>
