@@ -35,6 +35,14 @@
             border-bottom-color: #db2777;
         }
 
+        .clickable-store {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .clickable-store:hover {
+            color: #db2777; /* pink-600 */
+        }
+
         /* Duyuru Bandı Animasyonu */
         @keyframes alert-ticker {
             0% { transform: translateX(100%); }
@@ -130,7 +138,6 @@
             </div>
             
             <div class="space-y-3">
-                <!-- Toplam Satış -->
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-500 flex items-center justify-center text-lg"><i class="fa-solid fa-boxes-stacked"></i></div>
@@ -141,8 +148,6 @@
                     </div>
                     <div class="text-3xl font-black text-indigo-600" id="profile-total-sales">0</div>
                 </div>
-
-                <!-- Rekor Günü -->
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-500 flex items-center justify-center text-lg"><i class="fa-solid fa-arrow-trend-up"></i></div>
@@ -153,8 +158,6 @@
                     </div>
                     <div class="text-3xl font-black text-emerald-600" id="profile-best-day">0</div>
                 </div>
-
-                <!-- Alev Rozeti -->
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm relative overflow-hidden">
                     <div class="absolute right-[-10px] top-[-10px] opacity-10 text-6xl"><i class="fa-solid fa-fire"></i></div>
                     <div class="flex items-center gap-3 relative z-10">
@@ -166,8 +169,7 @@
                     </div>
                     <div class="text-3xl font-black text-rose-600 relative z-10" id="profile-fire-count">0</div>
                 </div>
-
-                <!-- Alkış Butonu ve Sayaç -->
+                
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm relative overflow-hidden mt-3">
                     <div class="absolute right-[-10px] top-[-10px] opacity-10 text-6xl text-orange-500"><i class="fa-solid fa-hands-clapping"></i></div>
                     <div class="flex items-center gap-3 relative z-10">
@@ -180,7 +182,6 @@
                     <div class="text-3xl font-black text-orange-500 relative z-10" id="profile-applause-count">0</div>
                 </div>
 
-                <!-- Karneden Etkileşim Gönderme Tuşu -->
                 <div class="pt-2" id="profile-applause-btn-container">
                     <button type="button" id="btn-send-applause" onclick="sendApplauseFromModal(event)" class="w-full py-3.5 bg-gradient-to-r from-orange-400 to-rose-400 hover:from-orange-500 hover:to-rose-500 text-white font-black rounded-2xl transition-all shadow-md active:scale-95 text-sm flex items-center justify-center gap-2">
                         <i class="fa-solid fa-hands-clapping animate-bounce"></i> Harika İş! Alkış Gönder
@@ -229,7 +230,6 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Mağaza Girişi -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center">
                     <div class="w-16 h-16 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center text-2xl mb-4 shadow-inner">
                         <i class="fa-solid fa-store"></i>
@@ -240,7 +240,6 @@
                     <button type="button" onclick="loginAsStore()" class="w-full py-2.5 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-xl transition shadow">Mağazaya Git</button>
                 </div>
 
-                <!-- Bölge Müdürü Girişi -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center relative overflow-hidden">
                     <div class="absolute top-4 right-4 text-indigo-500"><i class="fa-solid fa-lock"></i></div>
                     <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-2xl mb-4 shadow-inner">
@@ -252,7 +251,6 @@
                     <button type="button" onclick="loginAsRegion()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow">Bölgeyi İzle</button>
                 </div>
 
-                <!-- Genel Yönetim Girişi -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center relative overflow-hidden">
                     <div class="absolute top-4 right-4 text-emerald-500"><i class="fa-solid fa-lock"></i></div>
                     <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-2xl mb-4 shadow-inner">
@@ -428,6 +426,9 @@
 
         <!-- ================= 4. GENEL YÖNETİM (GÜLİZ ATİK) EKRANI ================= -->
         <div id="screen-general" class="screen hidden space-y-6">
+            <!-- 🏆 EGE BÖLGESİ ŞAMPİYON MAĞAZALARI BANNERI -->
+            <div id="general-top3-stores-banner" class="hidden"></div>
+            <!-- MEVCUT PERSONEL TOP 3 BARI -->
             <div id="general-top3-banner" class="hidden"></div>
 
             <!-- DUYURU YÖNETİMİ -->
@@ -658,12 +659,12 @@
 
     window.top3Staff = [];
     window.generalTop3Staff = [];
-    window.top3StoresGlobal = [];
+    window.top3StoresGlobal = []; 
     
     // CHART.JS INSTANCE
     let pieChartInstance = null;
 
-    // KONFETİ TAKİBİ (Sadece mağaza geneli için)
+    // KONFETİ TAKİBİ
     window.firedConfetti = { store: false };
 
     window.fireConfetti = function() {
@@ -725,7 +726,6 @@
                         }
                         if (t > 0 && (s / t * 100) >= 150) fireCount++;
                     }
-                    // Sadece BUGÜNÜN alkışını alıyoruz, geçmiş siliniyor/gösterilmiyor
                     if (dateKey === ACTIVE_DATE) {
                         todayApplause = staffData.applause || 0;
                         pStore = store; 
@@ -752,9 +752,8 @@
         let applauseEl = document.getElementById('profile-applause-count');
         if(applauseEl) applauseEl.innerText = todayApplause;
 
-        // Geçmiş tarihe bakılıyorsa alkış atma butonunu gizle
         let btnContainer = document.getElementById('profile-applause-btn-container');
-        if (isStoreHistorical || isRegionHistorical) {
+        if (isStoreHistorical || isRegionHistorical || currentRole === 'general') {
             btnContainer.classList.add('hidden');
         } else {
             btnContainer.classList.remove('hidden');
@@ -769,7 +768,6 @@
         window.currentProfileStore = null;
     }
 
-    // Modal içinden çağrılan alkış fonksiyonu
     window.sendApplauseFromModal = function(event) {
         if (!window.currentProfileStaffId || !window.currentProfileStore || window.currentProfileStore === "Silinmiş Personel") return;
         window.giveApplause(event, window.currentProfileStore, window.currentProfileStaffId);
@@ -905,11 +903,11 @@
         const medals = ['<i class="fa-solid fa-crown text-amber-500 text-lg"></i>', '<i class="fa-solid fa-medal text-slate-400 text-lg"></i>', '<i class="fa-solid fa-medal text-orange-400 text-lg"></i>'];
         const colors = ['bg-gradient-to-br from-amber-100 to-amber-50 border-amber-300 ring-2 ring-amber-400/50', 'bg-gradient-to-br from-slate-100 to-slate-50 border-slate-300', 'bg-gradient-to-br from-orange-100 to-orange-50 border-orange-300'];
         staffArr.slice(0, 3).forEach((st, idx) => {
-            html += `<div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[150px]">
+            html += `<div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[150px] cursor-pointer" onclick="openStaffProfile('${st.id}')" title="Karne için tıkla">
                 <div class="flex items-center justify-center w-6">${medals[idx]}</div>
                 <div class="flex flex-col">
-                    <span class="font-black text-xs text-slate-800 uppercase leading-none"><span class="clickable-name" onclick="openStaffProfile('${st.id}')" title="Karne için tıkla">${st.name}</span> <span class="text-pink-600 ml-1">${st.sales}</span></span>
-                    <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1">${st.store}</span>
+                    <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-pink-600 ml-1">${st.sales}</span></span>
+                    <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1 hover:text-pink-500 transition-colors" onclick="event.stopPropagation(); loginAsStore('${st.store}')" title="Mağazaya Git">${st.store}</span>
                 </div>
             </div>`;
         });
@@ -942,7 +940,7 @@
         const medals = ['<i class="fa-solid fa-crown text-amber-500 text-lg"></i>', '<i class="fa-solid fa-medal text-slate-400 text-lg"></i>', '<i class="fa-solid fa-medal text-orange-400 text-lg"></i>'];
         const colors = ['bg-gradient-to-br from-amber-100 to-amber-50 border-amber-300 ring-2 ring-amber-400/50', 'bg-gradient-to-br from-slate-100 to-slate-50 border-slate-300', 'bg-gradient-to-br from-orange-100 to-orange-50 border-orange-300'];
         storeArr.slice(0, 3).forEach((st, idx) => {
-            html += `<div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[150px]">
+            html += `<div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[150px] cursor-pointer hover:shadow-lg transition-shadow" onclick="loginAsStore('${st.name}')" title="Mağazaya Git">
                 <div class="flex items-center justify-center w-6">${medals[idx]}</div>
                 <div class="flex flex-col">
                     <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-emerald-600 ml-1">${st.sales}</span></span>
@@ -984,12 +982,12 @@
             else if (globalRank === 1) globalBadge = `<span class="absolute -top-3 -right-2 bg-slate-200 text-slate-800 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-slate-400 animate-bounce whitespace-nowrap z-20">🥈 EGE BÖLGE 2.Sİ</span>`;
             else if (globalRank === 2) globalBadge = `<span class="absolute -top-3 -right-2 bg-orange-300 text-orange-900 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-orange-400 animate-bounce whitespace-nowrap z-20">🥉 EGE BÖLGE 3.SÜ</span>`;
             
-            html += `<div class="relative flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[130px]">
+            html += `<div class="relative flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[130px] cursor-pointer" onclick="openStaffProfile('${st.id}')" title="Karne için tıkla">
                 ${globalBadge}
                 <div class="flex items-center justify-center w-6">${medals[idx]}</div>
                 <div class="flex flex-col">
-                    <span class="font-black text-xs text-slate-800 uppercase leading-none"><span class="clickable-name" onclick="openStaffProfile('${st.id}')" title="Karne için tıkla">${st.name}</span> <span class="text-indigo-600 ml-1">${st.sales}</span></span>
-                    <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1">${st.store}</span>
+                    <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-indigo-600 ml-1">${st.sales}</span></span>
+                    <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1 hover:text-pink-500 transition-colors" onclick="event.stopPropagation(); loginAsStore('${st.store}')" title="Mağazaya Git">${st.store}</span>
                 </div>
             </div>`;
         });
@@ -1130,6 +1128,7 @@
             window.top3StoresGlobal = allStoresTop.slice(0, 3);
             
             if(!isStoreHistorical) {
+                // Mağaza ekranına giren herkes için Top 3 Şampiyon Mağaza ve Top 3 Personel
                 updateTop3StoresBanner('store-top3-stores-banner', window.top3StoresGlobal, '🏆 EGE BÖLGESİ ŞAMPİYON MAĞAZALARI', 'En Çok Satış Yapan İlk 3 Mağaza');
                 updateTop3Banners('store-top3-banner', window.top3Staff, 'GÜNÜN YILDIZ PERSONELLERİ', 'Tüm Mağazalar Arası Top 3 Personel');
             }
@@ -1420,7 +1419,6 @@
                     }
                 }
 
-                // SADECE KARTA TIKLAMA (clickable-name), LİSTEDEN ALKIŞ BUTONU KALDIRILDI
                 tbody.innerHTML += `
                 <tr class="${rowClass}">
                     <td class="py-2.5 px-2 sm:px-4 font-bold text-[10px] sm:text-sm text-slate-700 max-w-[65px] sm:max-w-none break-words leading-tight">
@@ -1625,7 +1623,6 @@
                     let fireBadge = pp >= 150 ? `<span class="ml-1 inline-block animate-pulse text-[10px]" title="%150 Başarı!">🔥</span>` : '';
                     let safePName = p.name || "İsimsiz";
 
-                    // Bölge Müdürü ekranında da Karne tıklaması VAR, listede Alkış butonu YOK
                     return `<div class="flex justify-between items-center py-1 border-b border-slate-50"><span class="text-[11px] font-bold text-slate-600 block sm:inline-block"><span class="clickable-name" onclick="openStaffProfile('${p.id}')" title="Karne için tıkla">${safePName}</span> ${fireBadge} ${transferBadge}</span><div class="flex items-center gap-2"><span class="text-[10px] text-slate-400">H: ${p.target}</span><span class="text-xs font-black text-pink-600 bg-pink-50 px-1.5 rounded">${p.sales}</span></div></div>`;
                 }).join('');
             
@@ -1648,7 +1645,7 @@
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
                     <div class="p-3 bg-slate-50 border-b flex justify-between items-start gap-2">
                         <div>
-                            <div class="font-bold text-sm text-slate-800 flex items-center flex-wrap gap-1">${icon} ${st.name} ${distBadge}</div>
+                            <div class="font-bold text-sm text-slate-800 flex items-center flex-wrap gap-1">${icon} <span class="clickable-store" onclick="loginAsStore('${st.name}')" title="Mağazaya Git">${st.name}</span> ${distBadge}</div>
                             <div class="flex items-center gap-1 mt-2">
                                 <span class="text-[10px] font-bold text-slate-500 uppercase">Hedef:</span>
                                 ${targetInputHtml}
@@ -1880,6 +1877,13 @@
         let generalAllStaff = Object.values(generalStaffMap);
         generalAllStaff.sort((a, b) => b.sales - a.sales);
         window.generalTop3Staff = generalAllStaff.slice(0, 3);
+        
+        regionStats.sort((a, b) => b.sales - a.sales);
+        allStores.sort((a, b) => b.sales - a.sales);
+        window.lastAllStoresList = allStores;
+
+        let top3StoresGen = allStores.filter(s => s.sales > 0).slice(0, 3);
+        updateTop3StoresBanner('general-top3-stores-banner', top3StoresGen, '🏆 EGE BÖLGESİ ŞAMPİYON MAĞAZALARI', 'Seçili Aralık En Çok Satan İlk 3 Mağaza');
         updateTop3Banners('general-top3-banner', window.generalTop3Staff, 'PERFORMANS YILDIZLARI', 'Seçili Aralık Top 3 Personel');
 
         document.getElementById('gen-total-sales').innerText = grandSales;
@@ -1888,10 +1892,6 @@
         let genPerc = grandTarget > 0 ? Math.round((grandSales / grandTarget) * 100) : 0;
         document.getElementById('gen-progress-bar').style.width = (genPerc > 100 ? 100 : genPerc) + "%";
         document.getElementById('gen-progress-text').innerText = genPerc;
-
-        regionStats.sort((a, b) => b.sales - a.sales);
-        allStores.sort((a, b) => b.sales - a.sales);
-        window.lastAllStoresList = allStores;
 
         try {
             if (typeof Chart !== 'undefined') {
@@ -1961,7 +1961,7 @@
             bmStores.forEach(s => {
                 let sP = s.target > 0 ? Math.round((s.sales/s.target)*100) : 0;
                 subTableHtml += `<tr class="border-b border-slate-200 last:border-0">
-                    <td class="py-1.5 font-bold text-slate-700">${s.name}</td>
+                    <td class="py-1.5 font-bold text-slate-700"><span class="clickable-store" onclick="loginAsStore('${s.name}')">${s.name}</span></td>
                     <td class="text-center text-slate-500">${s.target}</td>
                     <td class="text-center font-black text-indigo-500">${s.sales}</td>
                     <td class="font-bold text-slate-500 text-right sm:text-left">%${sP}</td>
@@ -2008,7 +2008,7 @@
             sList.innerHTML += `
                 <tr class="${rowClass}">
                     <td class="py-2 px-1 sm:px-4 text-[9px] sm:text-xs font-bold text-slate-500 truncate max-w-[60px] sm:max-w-[80px] hidden sm:table-cell" title="${s.bm}">${s.bm}</td>
-                    <td class="py-2 px-1 sm:px-4 font-bold text-slate-800 text-[10px] sm:text-sm leading-tight">${s.name} ${fireBadge}</td>
+                    <td class="py-2 px-1 sm:px-4 font-bold text-slate-800 text-[10px] sm:text-sm leading-tight"><span class="clickable-store" onclick="loginAsStore('${s.name}')" title="Mağazaya Git">${s.name}</span> ${fireBadge}</td>
                     <td class="py-2 px-1 sm:px-4 text-center">
                         <span class="font-bold text-slate-600 block text-[10px] sm:text-sm">${s.target}</span>
                         <span class="text-[7px] sm:text-[8px] text-slate-400 uppercase">${s.targetBy}</span>
