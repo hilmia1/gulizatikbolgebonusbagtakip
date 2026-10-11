@@ -24,16 +24,6 @@
         .ai-gradient { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; }
         .ai-text { background: -webkit-linear-gradient(0deg, #a855f7, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .progress-bar { transition: width 0.5s ease-in-out; }
-        
-        .clickable-name {
-            cursor: pointer;
-            border-bottom: 1px dashed #cbd5e1;
-            transition: color 0.2s;
-        }
-        .clickable-name:hover {
-            color: #db2777;
-            border-bottom-color: #db2777;
-        }
 
         /* Duyuru Bandı Animasyonu */
         @keyframes alert-ticker {
@@ -44,6 +34,18 @@
             display: inline-block;
             white-space: nowrap;
             animation: alert-ticker 20s linear infinite;
+        }
+
+        /* Uçuşan Emoji Animasyonu */
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-120px) scale(1.8) rotate(25deg); opacity: 0; }
+        }
+        .floating-emoji {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            animation: floatUp 1s ease-out forwards;
         }
     </style>
 </head>
@@ -105,54 +107,6 @@
         </div>
     </div>
 
-    <!-- PERSONEL PERFORMANS KARNESİ MODALI -->
-    <div id="staff-profile-modal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[120] flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all border border-pink-300">
-            <button type="button" onclick="closeStaffProfile()" class="absolute top-4 right-4 text-slate-400 hover:text-pink-600 transition-colors"><i class="fa-solid fa-xmark text-2xl"></i></button>
-            <div class="text-center mb-6 mt-2">
-                <div class="w-20 h-20 bg-pink-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-3 shadow-inner text-pink-500 border border-pink-200">
-                    <i class="fa-solid fa-id-badge"></i>
-                </div>
-                <h3 class="font-black text-2xl text-slate-800 uppercase" id="profile-name">Yükleniyor...</h3>
-                <p class="text-xs text-slate-500 mt-1 font-bold tracking-wider uppercase"><i class="fa-solid fa-ranking-star text-amber-500 mr-1"></i> Performans Karnesi</p>
-            </div>
-            
-            <div class="space-y-3">
-                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-500 flex items-center justify-center text-lg"><i class="fa-solid fa-boxes-stacked"></i></div>
-                        <div>
-                            <div class="text-[10px] font-bold text-slate-500 uppercase">Tüm Zamanlar Toplam</div>
-                            <div class="font-black text-slate-800">Kariyer Satışı</div>
-                        </div>
-                    </div>
-                    <div class="text-3xl font-black text-indigo-600" id="profile-total-sales">0</div>
-                </div>
-                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-500 flex items-center justify-center text-lg"><i class="fa-solid fa-arrow-trend-up"></i></div>
-                        <div>
-                            <div class="text-[10px] font-bold text-slate-500 uppercase">Rekor Günü</div>
-                            <div class="font-black text-slate-800 text-xs mt-0.5" id="profile-best-date">-</div>
-                        </div>
-                    </div>
-                    <div class="text-3xl font-black text-emerald-600" id="profile-best-day">0</div>
-                </div>
-                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm relative overflow-hidden">
-                    <div class="absolute right-[-10px] top-[-10px] opacity-10 text-6xl"><i class="fa-solid fa-fire"></i></div>
-                    <div class="flex items-center gap-3 relative z-10">
-                        <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-500 flex items-center justify-center text-lg"><i class="fa-solid fa-fire animate-pulse"></i></div>
-                        <div>
-                            <div class="text-[10px] font-bold text-slate-500 uppercase">Alev Rozeti (🔥)</div>
-                            <div class="font-black text-slate-800 text-[10px] mt-0.5">%150'yi Aştığı Günler</div>
-                        </div>
-                    </div>
-                    <div class="text-3xl font-black text-rose-600 relative z-10" id="profile-fire-count">0</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- KATALOG MODALI -->
     <div id="catalog-modal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[110] flex items-center justify-center p-2 sm:p-6">
         <div class="bg-white rounded-2xl shadow-2xl relative w-full max-w-3xl max-h-[95vh] flex flex-col overflow-hidden border border-pink-500/30">
@@ -192,6 +146,7 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Mağaza Girişi -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center">
                     <div class="w-16 h-16 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center text-2xl mb-4 shadow-inner">
                         <i class="fa-solid fa-store"></i>
@@ -202,6 +157,7 @@
                     <button type="button" onclick="loginAsStore()" class="w-full py-2.5 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-xl transition shadow">Mağazaya Git</button>
                 </div>
 
+                <!-- Bölge Müdürü Girişi -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center relative overflow-hidden">
                     <div class="absolute top-4 right-4 text-indigo-500"><i class="fa-solid fa-lock"></i></div>
                     <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-2xl mb-4 shadow-inner">
@@ -213,6 +169,7 @@
                     <button type="button" onclick="loginAsRegion()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow">Bölgeyi İzle</button>
                 </div>
 
+                <!-- Genel Yönetim Girişi -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center relative overflow-hidden">
                     <div class="absolute top-4 right-4 text-emerald-500"><i class="fa-solid fa-lock"></i></div>
                     <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-2xl mb-4 shadow-inner">
@@ -651,47 +608,36 @@
         return "Silinmiş Personel";
     }
 
-    window.openStaffProfile = function(stfId) {
-        if (!stfId || stfId === 'undefined') return;
-        let name = findStaffNameGlobal(stfId);
-        let totalSales = 0, bestDaySales = 0, bestDayDate = "-", fireCount = 0;
-        let daily = globalData.daily || {};
-        
-        Object.keys(daily).forEach(dateKey => {
-            let stores = daily[dateKey];
-            Object.keys(stores).forEach(store => {
-                let staffData = stores[store]?.staff?.[stfId];
-                if (staffData) {
-                    let s = staffData.sales || 0;
-                    let t = staffData.target || 0;
-                    if (s > 0) {
-                        totalSales += s;
-                        if (s > bestDaySales) {
-                            bestDaySales = s;
-                            bestDayDate = dateKey;
-                        }
-                        if (t > 0 && (s / t * 100) >= 150) fireCount++;
-                    }
-                }
-            });
+    // === 👏 CANLI ALKIŞ GÖNDERME FONKSİYONU ===
+    window.giveApplause = function(event, storeId, staffId) {
+        event.stopPropagation(); // Satır içi tıklamayı izole eder
+        if(!storeId || !staffId) return;
+
+        // Firebase Transaction ile güvenli 1 artırma
+        let ref = dbRoot.child('daily').child(ACTIVE_DATE).child(storeId).child('staff').child(staffId).child('applause');
+        ref.transaction(function(current_value) {
+            return (current_value || 0) + 1;
         });
 
-        let formattedDate = bestDayDate;
-        if (bestDayDate !== "-") {
-            let parts = bestDayDate.split('-');
-            if(parts.length === 3) formattedDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
-        }
-
-        document.getElementById('profile-name').innerText = name;
-        document.getElementById('profile-total-sales').innerText = totalSales;
-        document.getElementById('profile-best-day').innerText = bestDaySales;
-        document.getElementById('profile-best-date').innerText = formattedDate;
-        document.getElementById('profile-fire-count').innerText = fireCount;
-        document.getElementById('staff-profile-modal').classList.remove('hidden');
+        // Tıklanan Yerde Uçuşan Emojiler
+        let x = event.clientX;
+        let y = event.clientY;
+        createFloatingEmoji('👏', x, y);
+        setTimeout(() => createFloatingEmoji('❤️', x + (Math.random()*20-10), y + (Math.random()*20-10)), 100);
+        setTimeout(() => createFloatingEmoji('🔥', x + (Math.random()*20-10), y + (Math.random()*20-10)), 200);
     }
 
-    window.closeStaffProfile = function() {
-        document.getElementById('staff-profile-modal').classList.add('hidden');
+    function createFloatingEmoji(emojiStr, x, y) {
+        const el = document.createElement('div');
+        el.innerText = emojiStr;
+        el.className = 'floating-emoji text-3xl font-black';
+        
+        // Emojiyi tıklanan noktanın ortasına konumlandır
+        el.style.left = (x - 15) + 'px';
+        el.style.top = (y - 15) + 'px';
+        
+        document.body.appendChild(el);
+        setTimeout(() => { el.remove(); }, 1000);
     }
 
     window.openCatalogModal = function() { document.getElementById('catalog-modal').classList.remove('hidden'); }
@@ -795,7 +741,7 @@
             html += `<div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[150px]">
                 <div class="flex items-center justify-center w-6">${medals[idx]}</div>
                 <div class="flex flex-col">
-                    <span class="font-black text-xs text-slate-800 uppercase leading-none"><span class="clickable-name" onclick="openStaffProfile('${st.id}')" title="Karne için tıkla">${st.name}</span> <span class="text-pink-600 ml-1">${st.sales}</span></span>
+                    <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-pink-600 ml-1">${st.sales}</span></span>
                     <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1">${st.store}</span>
                 </div>
             </div>`;
@@ -833,11 +779,13 @@
             if (globalRank === 0) globalBadge = `<span class="absolute -top-3 -right-2 bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-amber-300 animate-bounce whitespace-nowrap z-20">👑 EGE BÖLGE 1.Sİ</span>`;
             else if (globalRank === 1) globalBadge = `<span class="absolute -top-3 -right-2 bg-slate-200 text-slate-800 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-slate-400 animate-bounce whitespace-nowrap z-20">🥈 EGE BÖLGE 2.Sİ</span>`;
             else if (globalRank === 2) globalBadge = `<span class="absolute -top-3 -right-2 bg-orange-300 text-orange-900 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-orange-400 animate-bounce whitespace-nowrap z-20">🥉 EGE BÖLGE 3.SÜ</span>`;
+            
+            // Sıralamada da ismin yanına alkış butonu eklenebilir ama kalabalık olmasın diye sadece listelere koyuyoruz
             html += `<div class="relative flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[130px]">
                 ${globalBadge}
                 <div class="flex items-center justify-center w-6">${medals[idx]}</div>
                 <div class="flex flex-col">
-                    <span class="font-black text-xs text-slate-800 uppercase leading-none"><span class="clickable-name" onclick="openStaffProfile('${st.id}')" title="Karne için tıkla">${st.name}</span> <span class="text-indigo-600 ml-1">${st.sales}</span></span>
+                    <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-indigo-600 ml-1">${st.sales}</span></span>
                     <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1">${st.store}</span>
                 </div>
             </div>`;
@@ -918,9 +866,6 @@
 
         document.getElementById('catalog-modal').addEventListener('click', function(e) {
             if(e.target === this) closeCatalogModal();
-        });
-        document.getElementById('staff-profile-modal').addEventListener('click', function(e) {
-            if(e.target === this) closeStaffProfile();
         });
 
         initGlobalAnnouncementListener();
@@ -1013,7 +958,7 @@
             agg[store] = { isLocked: true, storeTarget: 0, targetBy: 'Geçmiş Seçim', staff: {} };
             let masterStaff = globalData.master_staff?.[store] || {};
             for(let id in masterStaff) {
-                agg[store].staff[id] = { id: id, name: masterStaff[id].name || "İsimsiz", sales: 0, target: 0, isTransfer: false };
+                agg[store].staff[id] = { id: id, name: masterStaff[id].name || "İsimsiz", sales: 0, target: 0, applause: 0, isTransfer: false };
             }
         });
 
@@ -1027,10 +972,11 @@
                         Object.keys(sData.staff).forEach(stfId => {
                             if(!agg[store].staff[stfId]) {
                                 let name = findStaffNameGlobal(stfId);
-                                agg[store].staff[stfId] = { id: stfId, name: name + " (Transfer)", sales: 0, target: 0, isTransfer: true };
+                                agg[store].staff[stfId] = { id: stfId, name: name + " (Transfer)", sales: 0, target: 0, applause: 0, isTransfer: true };
                             }
                             agg[store].staff[stfId].sales += (sData.staff[stfId].sales || 0);
                             agg[store].staff[stfId].target += (sData.staff[stfId].target || 0);
+                            agg[store].staff[stfId].applause += (sData.staff[stfId].applause || 0);
                         });
                     }
                 }
@@ -1045,15 +991,15 @@
         let staffObj = {};
         
         for(let id in masterStaff) {
-            staffObj[id] = { id: id, name: masterStaff[id].name || "İsimsiz", sales: sData.staff?.[id]?.sales || 0, target: sData.staff?.[id]?.target || 0, isTransfer: false };
+            staffObj[id] = { id: id, name: masterStaff[id].name || "İsimsiz", sales: sData.staff?.[id]?.sales || 0, target: sData.staff?.[id]?.target || 0, applause: sData.staff?.[id]?.applause || 0, isTransfer: false };
         }
         
         if (sData.staff) {
             for(let id in sData.staff) {
                 if (!staffObj[id]) {
-                    if ((sData.staff[id].sales || 0) > 0 || (sData.staff[id].target || 0) > 0) {
+                    if ((sData.staff[id].sales || 0) > 0 || (sData.staff[id].target || 0) > 0 || (sData.staff[id].applause || 0) > 0) {
                         let name = findStaffNameGlobal(id);
-                        staffObj[id] = { id: id, name: name + " (Transfer)", sales: sData.staff[id].sales || 0, target: sData.staff[id].target || 0, isTransfer: true };
+                        staffObj[id] = { id: id, name: name + " (Transfer)", sales: sData.staff[id].sales || 0, target: sData.staff[id].target || 0, applause: sData.staff[id].applause || 0, isTransfer: true };
                     }
                 }
             }
@@ -1251,11 +1197,19 @@
                     }
                 }
 
+                // 👏 YENİ: İSMİN YANINDAKİ ALKIŞ BUTONU VE SAYAÇ
+                let applauseButtonHtml = '';
+                if (!isStoreHistorical) {
+                    applauseButtonHtml = `<button onclick="giveApplause(event, '${currentId}', '${p.id}')" class="mt-1 inline-flex items-center gap-1 bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 px-1.5 py-0.5 rounded text-[10px] font-bold shadow-sm active:scale-95 transition-transform" title="Tebrik Et!"><i class="fa-solid fa-hands-clapping"></i> <span>${p.applause}</span></button>`;
+                } else if (p.applause > 0) {
+                    applauseButtonHtml = `<span class="mt-1 inline-flex items-center gap-1 bg-slate-100 text-slate-500 border border-slate-200 px-1.5 py-0.5 rounded text-[10px] font-bold"><i class="fa-solid fa-hands-clapping"></i> ${p.applause}</span>`;
+                }
+
                 tbody.innerHTML += `
                 <tr class="${rowClass}">
                     <td class="py-2.5 px-2 sm:px-4 font-bold text-[10px] sm:text-sm text-slate-700 max-w-[65px] sm:max-w-none break-words leading-tight">
-                        <span class="clickable-name" onclick="openStaffProfile('${p.id}')" title="Performans Karnesini Gör">${safePName}</span> 
-                        ${fireBadge} ${nameBadge}
+                        <span class="block">${safePName} ${fireBadge} ${nameBadge}</span>
+                        ${applauseButtonHtml}
                     </td>
                     <td class="py-2.5 px-1 sm:px-4 text-center">${targetEl}</td>
                     <td class="py-2.5 px-1 sm:px-4 text-center"><span class="inline-block font-black text-xs sm:text-sm text-pink-600 bg-white px-1.5 sm:px-2 py-0.5 rounded border border-pink-200 shadow-sm">${p.sales}</span></td>
@@ -1454,7 +1408,15 @@
                     let transferBadge = p.isTransfer ? `<span class="text-[8px] bg-slate-200 text-slate-500 px-1 rounded ml-1">TRANSFER</span>` : '';
                     let fireBadge = pp >= 150 ? `<span class="ml-1 inline-block animate-pulse text-[10px]" title="%150 Başarı!">🔥</span>` : '';
                     let safePName = p.name || "İsimsiz";
-                    return `<div class="flex justify-between items-center py-1 border-b border-slate-50"><span class="text-[11px] font-bold text-slate-600 clickable-name" onclick="openStaffProfile('${p.id}')" title="Karne için tıkla">${safePName} ${fireBadge} ${transferBadge}</span><div class="flex items-center gap-2"><span class="text-[10px] text-slate-400">H: ${p.target}</span><span class="text-xs font-black text-pink-600 bg-pink-50 px-1.5 rounded">${p.sales}</span></div></div>`;
+                    
+                    let applauseBtn = '';
+                    if(!isRegionHistorical) {
+                        applauseBtn = `<button onclick="giveApplause(event, '${st.name}', '${p.id}')" class="ml-2 inline-flex items-center gap-1 bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 px-1 py-0.5 rounded text-[9px] font-bold shadow-sm active:scale-95 transition-transform" title="Tebrik Et!"><i class="fa-solid fa-hands-clapping"></i> <span>${p.applause}</span></button>`;
+                    } else if (p.applause > 0) {
+                        applauseBtn = `<span class="ml-2 inline-flex items-center gap-1 bg-slate-100 text-slate-500 border border-slate-200 px-1 py-0.5 rounded text-[9px] font-bold"><i class="fa-solid fa-hands-clapping"></i> ${p.applause}</span>`;
+                    }
+
+                    return `<div class="flex justify-between items-center py-1 border-b border-slate-50"><span class="text-[11px] font-bold text-slate-600 block sm:inline-block">${safePName} ${fireBadge} ${transferBadge} ${applauseBtn}</span><div class="flex items-center gap-2"><span class="text-[10px] text-slate-400">H: ${p.target}</span><span class="text-xs font-black text-pink-600 bg-pink-50 px-1.5 rounded">${p.sales}</span></div></div>`;
                 }).join('');
             
             let perc = st.target > 0 ? Math.round((st.sales / st.target) * 100) : 0;
@@ -1721,7 +1683,6 @@
         allStores.sort((a, b) => b.sales - a.sales);
         window.lastAllStoresList = allStores;
 
-        // 📊 GRAFİK (Sadece Pasta - Güvenli Yükleme)
         try {
             if (typeof Chart !== 'undefined') {
                 if (pieChartInstance) pieChartInstance.destroy();
@@ -1768,7 +1729,6 @@
             </ul>`;
         document.getElementById('ai-summary-content').innerHTML = aiText;
 
-        // 🔍 BÖLGE MÜDÜRÜ DRILL-DOWN LİSTESİ (MOBİL İYİLEŞTİRMELİ)
         const rList = document.getElementById('general-regions-list');
         rList.innerHTML = '';
         regionStats.forEach((r, idx) => {
@@ -1818,7 +1778,6 @@
                 <tr id="bm-stores-${idx}" class="hidden transition-all">${subTableHtml}</tr>`;
         });
 
-        // 🔥 MAĞAZALAR TABLOSU (MOBİL İYİLEŞTİRMELİ)
         const sList = document.getElementById('general-stores-list');
         sList.innerHTML = '';
         allStores.forEach(s => {
