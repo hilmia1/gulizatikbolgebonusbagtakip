@@ -24,6 +24,16 @@
         .ai-gradient { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; }
         .ai-text { background: -webkit-linear-gradient(0deg, #a855f7, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .progress-bar { transition: width 0.5s ease-in-out; }
+        
+        .clickable-name {
+            cursor: pointer;
+            border-bottom: 1px dashed #cbd5e1;
+            transition: color 0.2s;
+        }
+        .clickable-name:hover {
+            color: #db2777;
+            border-bottom-color: #db2777;
+        }
 
         /* Duyuru Bandı Animasyonu */
         @keyframes alert-ticker {
@@ -571,8 +581,8 @@
     // CHART.JS INSTANCE
     let pieChartInstance = null;
 
-    // KONFETİ TAKİBİ
-    window.firedConfetti = { store: false, staff: {} };
+    // KONFETİ TAKİBİ (Sadece mağaza geneli için)
+    window.firedConfetti = { store: false };
 
     window.fireConfetti = function() {
         if(typeof confetti !== 'undefined') {
@@ -610,16 +620,14 @@
 
     // === 👏 CANLI ALKIŞ GÖNDERME FONKSİYONU ===
     window.giveApplause = function(event, storeId, staffId) {
-        event.stopPropagation(); // Satır içi tıklamayı izole eder
+        event.stopPropagation();
         if(!storeId || !staffId) return;
 
-        // Firebase Transaction ile güvenli 1 artırma
         let ref = dbRoot.child('daily').child(ACTIVE_DATE).child(storeId).child('staff').child(staffId).child('applause');
         ref.transaction(function(current_value) {
             return (current_value || 0) + 1;
         });
 
-        // Tıklanan Yerde Uçuşan Emojiler
         let x = event.clientX;
         let y = event.clientY;
         createFloatingEmoji('👏', x, y);
@@ -631,11 +639,8 @@
         const el = document.createElement('div');
         el.innerText = emojiStr;
         el.className = 'floating-emoji text-3xl font-black';
-        
-        // Emojiyi tıklanan noktanın ortasına konumlandır
         el.style.left = (x - 15) + 'px';
         el.style.top = (y - 15) + 'px';
-        
         document.body.appendChild(el);
         setTimeout(() => { el.remove(); }, 1000);
     }
@@ -780,7 +785,6 @@
             else if (globalRank === 1) globalBadge = `<span class="absolute -top-3 -right-2 bg-slate-200 text-slate-800 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-slate-400 animate-bounce whitespace-nowrap z-20">🥈 EGE BÖLGE 2.Sİ</span>`;
             else if (globalRank === 2) globalBadge = `<span class="absolute -top-3 -right-2 bg-orange-300 text-orange-900 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-orange-400 animate-bounce whitespace-nowrap z-20">🥉 EGE BÖLGE 3.SÜ</span>`;
             
-            // Sıralamada da ismin yanına alkış butonu eklenebilir ama kalabalık olmasın diye sadece listelere koyuyoruz
             html += `<div class="relative flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[130px]">
                 ${globalBadge}
                 <div class="flex items-center justify-center w-6">${medals[idx]}</div>
@@ -929,7 +933,7 @@
     window.goHome = function() {
         currentRole = ''; currentId = ''; 
         isStoreHistorical = false; isRegionHistorical = false;
-        window.firedConfetti = { store: false, staff: {} }; 
+        window.firedConfetti = { store: false }; 
         setURLParam('', '');
         document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
         document.getElementById('screen-home').classList.remove('hidden');
@@ -939,7 +943,7 @@
         document.getElementById('store-start-date').value = ACTIVE_DATE;
         document.getElementById('store-end-date').value = ACTIVE_DATE;
         isStoreHistorical = false;
-        window.firedConfetti = { store: false, staff: {} }; 
+        window.firedConfetti = { store: false }; 
         document.getElementById('store-top3-banner').classList.remove('hidden');
         renderStoreUI();
     }
@@ -1014,7 +1018,7 @@
         if (!sel) return alert('Lütfen bir mağaza seçin.');
         currentRole = 'store'; currentId = sel;
         isStoreHistorical = false;
-        window.firedConfetti = { store: false, staff: {} }; 
+        window.firedConfetti = { store: false }; 
         setURLParam('store', currentId);
         document.getElementById('store-title').innerText = currentId;
         document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
@@ -1153,15 +1157,6 @@
             staffArray.forEach(p => {
                 let pPerc = p.target > 0 ? Math.round((p.sales / p.target) * 100) : 0;
                 
-                if (!isStoreHistorical && p.target > 0) {
-                    if (pPerc >= 100 && !window.firedConfetti.staff[p.id]) {
-                        fireConfetti();
-                        window.firedConfetti.staff[p.id] = true;
-                    } else if (pPerc < 100) {
-                        window.firedConfetti.staff[p.id] = false;
-                    }
-                }
-
                 let fireBadge = pPerc >= 150 ? `<span class="ml-1 inline-block animate-pulse text-[12px] drop-shadow-md" title="%150 Üzeri Başarı! Mükemmel!">🔥</span>` : '';
                 
                 let rankIndex = isStoreHistorical ? -1 : (window.top3Staff || []).findIndex(t => t.id === p.id);
