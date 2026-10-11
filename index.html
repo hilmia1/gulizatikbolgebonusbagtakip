@@ -21,6 +21,16 @@
         .ai-gradient { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; }
         .ai-text { background: -webkit-linear-gradient(0deg, #a855f7, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .progress-bar { transition: width 0.5s ease-in-out; }
+        
+        .clickable-name {
+            cursor: pointer;
+            border-bottom: 1px dashed #cbd5e1;
+            transition: color 0.2s;
+        }
+        .clickable-name:hover {
+            color: #db2777; /* pink-600 */
+            border-bottom-color: #db2777;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen font-sans relative">
@@ -44,7 +54,7 @@
         </div>
     </div>
 
-    <!-- YENİ: TRANSFER & SİL MODALI -->
+    <!-- TRANSFER & SİL MODALI -->
     <div id="transfer-modal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all border border-indigo-200">
             <button type="button" onclick="closeTransferModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"><i class="fa-solid fa-xmark text-2xl"></i></button>
@@ -68,6 +78,59 @@
                 <button type="button" onclick="executeDelete()" class="w-full py-3 bg-rose-100 hover:bg-rose-200 text-rose-600 font-black rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 border border-rose-200">
                     <i class="fa-solid fa-trash"></i> Sistemden Tamamen Sil
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PERSONEL PERFORMANS KARNESİ MODALI -->
+    <div id="staff-profile-modal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[120] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all border border-pink-300">
+            <button type="button" onclick="closeStaffProfile()" class="absolute top-4 right-4 text-slate-400 hover:text-pink-600 transition-colors"><i class="fa-solid fa-xmark text-2xl"></i></button>
+            <div class="text-center mb-6 mt-2">
+                <div class="w-20 h-20 bg-pink-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-3 shadow-inner text-pink-500 border border-pink-200">
+                    <i class="fa-solid fa-id-badge"></i>
+                </div>
+                <h3 class="font-black text-2xl text-slate-800 uppercase" id="profile-name">Yükleniyor...</h3>
+                <p class="text-xs text-slate-500 mt-1 font-bold tracking-wider uppercase"><i class="fa-solid fa-ranking-star text-amber-500 mr-1"></i> Performans Karnesi</p>
+            </div>
+            
+            <div class="space-y-3">
+                <!-- Toplam Satış -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-500 flex items-center justify-center text-lg"><i class="fa-solid fa-boxes-stacked"></i></div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-500 uppercase">Tüm Zamanlar Toplam</div>
+                            <div class="font-black text-slate-800">Kariyer Satışı</div>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-black text-indigo-600" id="profile-total-sales">0</div>
+                </div>
+
+                <!-- En İyi Gün -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-500 flex items-center justify-center text-lg"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-500 uppercase">Rekor Günü</div>
+                            <div class="font-black text-slate-800 text-xs mt-0.5" id="profile-best-date">-</div>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-black text-emerald-600" id="profile-best-day">0</div>
+                </div>
+
+                <!-- Alev Rozeti Sayısı -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm relative overflow-hidden">
+                    <div class="absolute right-[-10px] top-[-10px] opacity-10 text-6xl"><i class="fa-solid fa-fire"></i></div>
+                    <div class="flex items-center gap-3 relative z-10">
+                        <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-500 flex items-center justify-center text-lg"><i class="fa-solid fa-fire animate-pulse"></i></div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-500 uppercase">Alev Rozeti (🔥)</div>
+                            <div class="font-black text-slate-800 text-[10px] mt-0.5">%150'yi Aştığı Günler</div>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-black text-rose-600 relative z-10" id="profile-fire-count">0</div>
+                </div>
             </div>
         </div>
     </div>
@@ -534,6 +597,80 @@
         }
     }
 
+    // === GÜVENLİ PERSONEL İSMİ BULMA ===
+    function findStaffNameGlobal(id) {
+        if (!id || id === 'undefined') return "Eski Personel";
+        let allStores = globalData.master_staff || {};
+        for(let store in allStores) {
+            if(allStores[store][id] && allStores[store][id].name) {
+                return allStores[store][id].name;
+            }
+        }
+        return "Eski Personel";
+    }
+
+    function findStaffCurrentStore(id) {
+        let allStores = globalData.master_staff || {};
+        for(let store in allStores) {
+            if(allStores[store][id]) return store;
+        }
+        return "Silinmiş Personel";
+    }
+
+    // === PERSONEL PERFORMANS KARNESİ (PROFİL) FONKSİYONLARI ===
+    window.openStaffProfile = function(stfId) {
+        if (!stfId || stfId === 'undefined') return;
+        
+        let name = findStaffNameGlobal(stfId);
+        
+        let totalSales = 0;
+        let bestDaySales = 0;
+        let bestDayDate = "-";
+        let fireCount = 0;
+
+        let daily = globalData.daily || {};
+        
+        Object.keys(daily).forEach(dateKey => {
+            let stores = daily[dateKey];
+            Object.keys(stores).forEach(store => {
+                let staffData = stores[store]?.staff?.[stfId];
+                if (staffData) {
+                    let s = staffData.sales || 0;
+                    let t = staffData.target || 0;
+                    
+                    if (s > 0) {
+                        totalSales += s;
+                        if (s > bestDaySales) {
+                            bestDaySales = s;
+                            bestDayDate = dateKey;
+                        }
+                        if (t > 0 && (s / t * 100) >= 150) {
+                            fireCount++;
+                        }
+                    }
+                }
+            });
+        });
+
+        let formattedDate = bestDayDate;
+        if (bestDayDate !== "-") {
+            let parts = bestDayDate.split('-');
+            if(parts.length === 3) formattedDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
+        }
+
+        document.getElementById('profile-name').innerText = name;
+        document.getElementById('profile-total-sales').innerText = totalSales;
+        document.getElementById('profile-best-day').innerText = bestDaySales;
+        document.getElementById('profile-best-date').innerText = formattedDate;
+        document.getElementById('profile-fire-count').innerText = fireCount;
+
+        document.getElementById('staff-profile-modal').classList.remove('hidden');
+    }
+
+    window.closeStaffProfile = function() {
+        document.getElementById('staff-profile-modal').classList.add('hidden');
+    }
+
     // === KATALOG MODALI FONKSİYONLARI ===
     window.openCatalogModal = function() {
         document.getElementById('catalog-modal').classList.remove('hidden');
@@ -592,22 +729,6 @@
                 dbRoot.child('master_staff').child(currentId).child(id).update({ name: newName });
             }
         }
-    }
-
-    function findStaffNameGlobal(id) {
-        let allStores = globalData.master_staff || {};
-        for(let store in allStores) {
-            if(allStores[store][id]) return allStores[store][id].name;
-        }
-        return "Eski Personel";
-    }
-
-    function findStaffCurrentStore(id) {
-        let allStores = globalData.master_staff || {};
-        for(let store in allStores) {
-            if(allStores[store][id]) return store;
-        }
-        return "Silinmiş Personel";
     }
 
     // === GÜVENLİ ŞİFRE MODALI ===
@@ -671,7 +792,7 @@
             html += `<div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[150px]">
                 <div class="flex items-center justify-center w-6">${medals[idx]}</div>
                 <div class="flex flex-col">
-                    <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-pink-600 ml-1">${st.sales}</span></span>
+                    <span class="font-black text-xs text-slate-800 uppercase leading-none clickable-name" onclick="openStaffProfile('${st.id}')" title="Karne için tıkla">${st.name}</span>
                     <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1">${st.store}</span>
                 </div>
             </div>`;
@@ -735,7 +856,7 @@
                 ${globalBadge}
                 <div class="flex items-center justify-center w-6">${medals[idx]}</div>
                 <div class="flex flex-col">
-                    <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-indigo-600 ml-1">${st.sales}</span></span>
+                    <span class="font-black text-xs text-slate-800 uppercase leading-none clickable-name" onclick="openStaffProfile('${st.id}')" title="Karne için tıkla">${st.name}</span>
                     <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1">${st.store}</span>
                 </div>
             </div>`;
@@ -778,6 +899,10 @@
 
         document.getElementById('catalog-modal').addEventListener('click', function(e) {
             if(e.target === this) closeCatalogModal();
+        });
+
+        document.getElementById('staff-profile-modal').addEventListener('click', function(e) {
+            if(e.target === this) closeStaffProfile();
         });
 
         dbRoot.on('value', snap => {
@@ -866,7 +991,7 @@
             agg[store] = { isLocked: true, storeTarget: 0, targetBy: 'Geçmiş Seçim', staff: {} };
             let masterStaff = globalData.master_staff?.[store] || {};
             for(let id in masterStaff) {
-                agg[store].staff[id] = { name: masterStaff[id].name, sales: 0, target: 0, isTransfer: false };
+                agg[store].staff[id] = { id: id, name: masterStaff[id].name || "İsimsiz", sales: 0, target: 0, isTransfer: false };
             }
         });
 
@@ -879,7 +1004,7 @@
                         Object.keys(sData.staff).forEach(stfId => {
                             if(!agg[store].staff[stfId]) {
                                 let name = findStaffNameGlobal(stfId);
-                                agg[store].staff[stfId] = { name: name + " (Transfer)", sales: 0, target: 0, isTransfer: true };
+                                agg[store].staff[stfId] = { id: stfId, name: name + " (Transfer)", sales: 0, target: 0, isTransfer: true };
                             }
                             agg[store].staff[stfId].sales += (sData.staff[stfId].sales || 0);
                             agg[store].staff[stfId].target += (sData.staff[stfId].target || 0);
@@ -897,7 +1022,7 @@
         let staffObj = {};
         
         for(let id in masterStaff) {
-            staffObj[id] = { name: masterStaff[id].name, sales: sData.staff?.[id]?.sales || 0, target: sData.staff?.[id]?.target || 0, isTransfer: false };
+            staffObj[id] = { id: id, name: masterStaff[id].name || "İsimsiz", sales: sData.staff?.[id]?.sales || 0, target: sData.staff?.[id]?.target || 0, isTransfer: false };
         }
         
         if (sData.staff) {
@@ -905,7 +1030,7 @@
                 if (!staffObj[id]) {
                     if ((sData.staff[id].sales || 0) > 0 || (sData.staff[id].target || 0) > 0) {
                         let name = findStaffNameGlobal(id);
-                        staffObj[id] = { name: name + " (Transfer)", sales: sData.staff[id].sales || 0, target: sData.staff[id].target || 0, isTransfer: true };
+                        staffObj[id] = { id: id, name: name + " (Transfer)", sales: sData.staff[id].sales || 0, target: sData.staff[id].target || 0, isTransfer: true };
                     }
                 }
             }
@@ -1090,11 +1215,13 @@
                 let targetEl = isStaffTargetLocked ? `<span class="font-bold text-slate-500">${p.target}</span>` : `<input type="number" min="0" value="${p.target}" onchange="updateStaffTarget('${p.id}', this.value)" class="w-9 sm:w-12 p-0.5 sm:p-1 text-center font-bold text-indigo-600 bg-white border border-slate-300 rounded text-xs focus:outline-none">`;
                 
                 let actions = '';
+                let safeName = (p.name || "İsimsiz").replace(/'/g, "\\'");
+                let safePName = p.name || "İsimsiz";
+
                 if(!isStoreHistorical) {
                     if (p.isTransfer) {
                         actions = `<td class="py-2.5 px-1 sm:px-4 text-right"><span class="text-[9px] text-slate-400 font-bold bg-slate-100 px-2 py-1 rounded">TRANSFER OLDU</span></td>`;
                     } else {
-                        let safeName = p.name.replace(/'/g, "\\'");
                         let btnMinus = `<button type="button" onclick="updateStoreSale('${p.id}', -1)" class="w-6 h-6 sm:w-7 sm:h-7 bg-white border border-slate-200 rounded-md font-bold text-slate-600 hover:bg-slate-100 shadow-sm leading-none">-</button>`;
                         let btnPlus = `<button type="button" onclick="updateStoreSale('${p.id}', 1)" class="w-6 h-6 sm:w-7 sm:h-7 bg-pink-600 rounded-md font-bold text-white hover:bg-pink-700 shadow-sm leading-none">+</button>`;
                         let btnEdit = `<button type="button" onclick="editStaffName('${p.id}', '${safeName}')" class="w-6 h-6 sm:w-7 sm:h-7 bg-indigo-100 text-indigo-600 rounded-md font-bold hover:bg-indigo-200 ml-0.5 sm:ml-1 leading-none" title="İsmi Düzenle"><i class="fa-solid fa-pen text-[9px] sm:text-xs"></i></button>`;
@@ -1105,7 +1232,10 @@
 
                 tbody.innerHTML += `
                 <tr class="${rowClass}">
-                    <td class="py-2.5 px-2 sm:px-4 font-bold text-[10px] sm:text-sm text-slate-700 max-w-[65px] sm:max-w-none break-words leading-tight">${p.name} ${fireBadge} ${nameBadge}</td>
+                    <td class="py-2.5 px-2 sm:px-4 font-bold text-[10px] sm:text-sm text-slate-700 max-w-[65px] sm:max-w-none break-words leading-tight">
+                        <span class="clickable-name" onclick="openStaffProfile('${p.id}')" title="Performans Karnesini Gör">${safePName}</span> 
+                        ${fireBadge} ${nameBadge}
+                    </td>
                     <td class="py-2.5 px-1 sm:px-4 text-center">${targetEl}</td>
                     <td class="py-2.5 px-1 sm:px-4 text-center"><span class="inline-block font-black text-xs sm:text-sm text-pink-600 bg-white px-1.5 sm:px-2 py-0.5 rounded border border-pink-200 shadow-sm">${p.sales}</span></td>
                     <td class="py-2.5 px-1 sm:px-4 text-center">
@@ -1305,7 +1435,8 @@
                     let pp = p.target > 0 ? Math.round((p.sales/p.target)*100) : 0;
                     let transferBadge = p.isTransfer ? `<span class="text-[8px] bg-slate-200 text-slate-500 px-1 rounded ml-1">TRANSFER</span>` : '';
                     let fireBadge = pp >= 150 ? `<span class="ml-1 inline-block animate-pulse text-[10px]" title="%150 Başarı!">🔥</span>` : '';
-                    return `<div class="flex justify-between items-center py-1 border-b border-slate-50"><span class="text-[11px] font-bold text-slate-600">${p.name} ${fireBadge} ${transferBadge}</span><div class="flex items-center gap-2"><span class="text-[10px] text-slate-400">H: ${p.target}</span><span class="text-xs font-black text-pink-600 bg-pink-50 px-1.5 rounded">${p.sales}</span></div></div>`;
+                    let safePName = p.name || "İsimsiz";
+                    return `<div class="flex justify-between items-center py-1 border-b border-slate-50"><span class="text-[11px] font-bold text-slate-600 clickable-name" onclick="openStaffProfile('${p.id}')" title="Karne için tıkla">${safePName} ${fireBadge} ${transferBadge}</span><div class="flex items-center gap-2"><span class="text-[10px] text-slate-400">H: ${p.target}</span><span class="text-xs font-black text-pink-600 bg-pink-50 px-1.5 rounded">${p.sales}</span></div></div>`;
                 }).join('');
             
             let perc = st.target > 0 ? Math.round((st.sales / st.target) * 100) : 0;
