@@ -396,14 +396,15 @@
             <div id="region-top5-banner" class="hidden"></div>
             
             <!-- BÖLGE MÜDÜRÜ TELSİZ YÖNETİMİ -->
-            <div id="region-walkie-talkie" class="bg-indigo-900/80 p-4 rounded-2xl border border-indigo-700/50 flex flex-col sm:flex-row gap-3 items-center shadow-lg">
+            <div id="region-walkie-talkie" class="bg-indigo-900/80 p-4 rounded-2xl border border-indigo-700/50 flex flex-col xl:flex-row gap-3 items-center shadow-lg">
                 <div class="flex items-center gap-2 text-rose-400 font-black whitespace-nowrap">
                     <i class="fa-solid fa-tower-broadcast text-xl animate-pulse"></i> TELSİZ:
                 </div>
-                <input type="text" id="region-announcement-input" class="flex-1 w-full bg-indigo-950 text-white border border-indigo-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-rose-500 transition-colors" placeholder="Tüm mağazalara flaş duyuru gönder (Mesajın sonuna isminiz eklenecektir)...">
-                <div class="flex gap-2 w-full sm:w-auto">
-                    <button onclick="publishAnnouncement('region-announcement-input')" class="flex-1 sm:flex-none px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl transition shadow-md text-sm whitespace-nowrap"><i class="fa-solid fa-paper-plane mr-1"></i> Yayınla</button>
-                    <button onclick="clearAnnouncement()" class="px-4 py-2.5 bg-indigo-800 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow-sm text-sm" title="Kendi Duyurumu Kaldır"><i class="fa-solid fa-trash"></i></button>
+                <input type="text" id="region-announcement-input" class="flex-1 w-full bg-indigo-950 text-white border border-indigo-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-rose-500 transition-colors" placeholder="Duyuru mesajınızı yazın...">
+                <div class="flex flex-wrap sm:flex-nowrap gap-2 w-full xl:w-auto">
+                    <button onclick="publishAnnouncement('region-announcement-input', 'regional')" class="flex-1 sm:flex-none px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-xl transition shadow-md text-[11px] sm:text-xs whitespace-nowrap"><i class="fa-solid fa-location-dot mr-1"></i> Bölgeme Yayınla</button>
+                    <button onclick="publishAnnouncement('region-announcement-input', 'global')" class="flex-1 sm:flex-none px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl transition shadow-md text-[11px] sm:text-xs whitespace-nowrap"><i class="fa-solid fa-globe mr-1"></i> Genele Yayınla</button>
+                    <button onclick="clearAnnouncement()" class="px-4 py-2.5 bg-indigo-800 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow-sm text-xs" title="Kendi Duyurumu Kaldır"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </div>
             
@@ -476,11 +477,13 @@
                 </div>
                 <input type="text" id="announcement-input" class="flex-1 w-full bg-slate-900 text-white border border-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-rose-500 transition-colors" placeholder="Tüm mağazalara ve müdürlere flaş duyuru gönder (Mesajın sonuna isminiz eklenecektir)...">
                 <div class="flex gap-2 w-full sm:w-auto">
-                    <button onclick="publishAnnouncement('announcement-input')" class="flex-1 sm:flex-none px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl transition shadow-md text-sm whitespace-nowrap"><i class="fa-solid fa-paper-plane mr-1"></i> Yayınla</button>
+                    <!-- Güliz Atik Sadece Genele Yayınlar -->
+                    <button onclick="publishAnnouncement('announcement-input', 'global')" class="flex-1 sm:flex-none px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl transition shadow-md text-sm whitespace-nowrap"><i class="fa-solid fa-paper-plane mr-1"></i> Yayınla</button>
                     <button onclick="clearAnnouncement()" class="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition shadow-sm text-sm" title="Kendi Duyurumu Kaldır"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </div>
             
+            <!-- Burada xl:flex-row kullanıldı (Responsive Üst Üste Binme Çözümü) -->
             <div class="bg-slate-900 rounded-2xl shadow-xl p-6 text-white flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 relative overflow-hidden border border-slate-700">
                 <div class="absolute right-4 bottom-[-20px] text-white/5 text-9xl font-black pointer-events-none"><i class="fa-solid fa-chart-pie"></i></div>
                 <div class="relative z-10 w-full xl:w-5/12">
@@ -489,7 +492,6 @@
                         <i class="fa-solid fa-key"></i> Bölge M. Şifresini Değiştir
                     </button>
                     
-                    <!-- 📅 GÜZELLEŞTİRİLMİŞ KOYU SİYAH TARİH KUTULARI -->
                     <div class="bg-slate-800/80 p-2.5 rounded-xl border border-slate-600/50 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-max">
                         <div class="flex items-center justify-between gap-2 bg-slate-700 p-1.5 rounded-lg border border-slate-500 shadow-inner">
                             <label class="text-[10px] text-slate-300 font-bold uppercase w-16 sm:w-auto ml-1">Başlangıç:</label>
@@ -700,6 +702,9 @@
     window.generalTop3Staff = [];
     window.top3StoresGlobal = []; 
     
+    // Telsiz Sistemi İçin Bellek
+    window.lastAnnouncementsData = {};
+
     // Geri Dönüş Hafızası (History Stack)
     let navStack = [];
 
@@ -1098,70 +1103,107 @@
         container.innerHTML = html;
     }
 
-    // === TELSİZ & DUYURU LİSTENER'I (GÜNCELLENDİ) ===
-    function initGlobalAnnouncementListener() {
-        dbRoot.child('global_announcement').on('value', snap => {
-            let announcements = snap.val() || {};
-            let bar = document.getElementById('global-announcement-bar');
-            let textEl = document.getElementById('global-announcement-text');
+    // === TELSİZ & DUYURU SİSTEMİ (GÜNCELLENDİ) ===
+    function updateAnnouncementUI() {
+        let bar = document.getElementById('global-announcement-bar');
+        let textEl = document.getElementById('global-announcement-text');
+        
+        let activeMessages = [];
+        let now = Date.now();
+        let ONE_HOUR = 60 * 60 * 1000;
+        
+        Object.keys(window.lastAnnouncementsData).forEach(sender => {
+            let ann = window.lastAnnouncementsData[sender];
             
-            let activeMessages = [];
-            let now = Date.now();
-            let ONE_HOUR = 60 * 60 * 1000;
-            
-            Object.keys(announcements).forEach(sender => {
-                let ann = announcements[sender];
-                // 1 saat dolmadıysa ekranda göster
-                if (now - ann.time <= ONE_HOUR) {
-                    activeMessages.push(`<span class="text-amber-300 font-bold ml-4 mr-1">${sender}:</span><span class="text-white">${ann.message}</span>`);
+            if (now - ann.time <= ONE_HOUR) {
+                // Görünürlük Kontrolü
+                let canSee = false;
+                
+                // Mesaj Genel mi?
+                if (ann.target === 'global' || !ann.target) {
+                    canSee = true; // Herkes görür
+                } 
+                // Mesaj Bölgesel mi?
+                else if (ann.target === 'regional') {
+                    if (currentRole === 'general') canSee = true; // GM Her şeyi görür
+                    else if (currentRole === 'region' && currentId === ann.bm) canSee = true; // BM Kendi mesajını görür
+                    else if (currentRole === 'store') {
+                        // Mağaza bu BM'ye mi bağlı?
+                        let storeBM = allStoresList.find(s => s.name === currentId)?.bm;
+                        if (storeBM === ann.bm) canSee = true;
+                    }
                 }
-            });
 
-            if (activeMessages.length > 0) {
-                // Mesajları yanyana diz, aralarına opak bir dik çizgi koy
-                textEl.innerHTML = activeMessages.join('<span class="mx-6 text-white/40">|</span>');
-                bar.classList.remove('hidden');
-            } else {
-                bar.classList.add('hidden');
+                if (canSee) {
+                    let badge = ann.target === 'regional' 
+                        ? `<span class="bg-indigo-500/80 border border-indigo-400 text-[8px] px-1.5 py-0.5 rounded ml-1 uppercase text-white shadow-sm whitespace-nowrap">BÖLGE MESAJI</span>` 
+                        : `<span class="bg-rose-500/80 border border-rose-400 text-[8px] px-1.5 py-0.5 rounded ml-1 uppercase text-white shadow-sm whitespace-nowrap">GENEL MESAJ</span>`;
+                    
+                    activeMessages.push(`<span class="text-amber-300 font-bold ml-4 mr-1">${sender} ${badge}:</span><span class="text-white">${ann.message}</span>`);
+                }
             }
         });
 
-        // Ekranda açıkken 1 saati dolan mesajları otomatik silmek için periyodik kontrol
-        setInterval(() => {
-            dbRoot.child('global_announcement').once('value').then(snap => {
-                let announcements = snap.val() || {};
-                let now = Date.now();
-                let ONE_HOUR = 60 * 60 * 1000;
-                Object.keys(announcements).forEach(sender => {
-                    // Eğer 1 saati geçmişse veritabanından kaldır, UI otomatik güncellenecek
-                    if (now - announcements[sender].time > ONE_HOUR) {
-                        dbRoot.child('global_announcement').child(sender).remove();
-                    }
-                });
-            });
-        }, 30000); // 30 saniyede bir kontrol et
+        // Eğer kullanıcı bir ekrandaysa ve mesaj varsa göster
+        if (activeMessages.length > 0 && currentRole !== '') {
+            textEl.innerHTML = activeMessages.join('<span class="mx-6 text-white/40">|</span>');
+            bar.classList.remove('hidden');
+        } else {
+            bar.classList.add('hidden');
+        }
     }
 
-    window.publishAnnouncement = function(inputId = 'announcement-input') {
+    function initGlobalAnnouncementListener() {
+        dbRoot.child('global_announcement').on('value', snap => {
+            window.lastAnnouncementsData = snap.val() || {};
+            updateAnnouncementUI();
+        });
+
+        // 30 Saniyede Bir Zaman Aşımı Kontrolü
+        setInterval(() => {
+            let now = Date.now();
+            let ONE_HOUR = 60 * 60 * 1000;
+            let dbChanged = false;
+            
+            Object.keys(window.lastAnnouncementsData).forEach(sender => {
+                if (now - window.lastAnnouncementsData[sender].time > ONE_HOUR) {
+                    dbRoot.child('global_announcement').child(sender).remove(); // Veritabanından Sil
+                    dbChanged = true;
+                }
+            });
+            
+            if(!dbChanged) updateAnnouncementUI(); // Sadece UI güncelle
+        }, 30000); 
+    }
+
+    window.publishAnnouncement = function(inputId = 'announcement-input', targetType = 'global') {
         let inputEl = document.getElementById(inputId);
         if (!inputEl) inputEl = document.getElementById('announcement-input'); 
         
         let msg = inputEl.value.trim();
         if(!msg) return alert("Lütfen yayınlanacak mesajı girin.");
         
-        // Kimin yazdığını belirle (Kanal Anahtarı Olarak Kullanılacak)
         let senderName = "";
         if (currentRole === 'general') {
             senderName = "GÜLİZ ATİK"; 
+            targetType = 'global'; // GM Sadece genele atar
         } else if (currentRole === 'region') {
             senderName = currentId; 
         } else {
             return alert("Duyuru yapma yetkiniz bulunmuyor.");
         }
 
-        if(confirm('Bu mesaj 1 saat boyunca tüm ekranlarda dönecek. Onaylıyor musunuz?')) {
-            // "global_announcement/GÜLİZ ATİK" veya "global_announcement/SUAT BAŞPEHLİVAN" düğümüne kaydet
-            dbRoot.child('global_announcement').child(senderName).set({ message: msg, time: Date.now() });
+        let confirmMsg = targetType === 'regional' 
+            ? `Bu mesaj 1 saat boyunca SADECE ${senderName} BÖLGESİ mağazalarında dönecek. Onaylıyor musunuz?`
+            : `Bu mesaj 1 saat boyunca TÜM BÖLGELERDE ve mağazalarda dönecek. Onaylıyor musunuz?`;
+
+        if(confirm(confirmMsg)) {
+            dbRoot.child('global_announcement').child(senderName).set({ 
+                message: msg, 
+                time: Date.now(),
+                target: targetType,
+                bm: senderName
+            });
             inputEl.value = ""; 
         }
     }
@@ -1223,7 +1265,10 @@
         if (urlParams.get('store')) loginAsStore(urlParams.get('store'));
         else if (urlParams.get('region')) loginAsRegion(urlParams.get('region'));
         else if (urlParams.get('general')) loginAsGeneral(true);
-        else document.getElementById('screen-home').classList.remove('hidden');
+        else {
+            document.getElementById('screen-home').classList.remove('hidden');
+            updateAnnouncementUI();
+        }
 
         document.getElementById('catalog-modal').addEventListener('click', function(e) {
             if(e.target === this) closeCatalogModal();
@@ -1322,6 +1367,7 @@
         document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
         document.getElementById('screen-home').classList.remove('hidden');
         updateNavButtons();
+        updateAnnouncementUI();
     }
 
     window.returnToTodayStore = function() {
@@ -1438,6 +1484,8 @@
     function renderStoreUI() {
         if (currentRole !== 'store') return;
         const stats = isStoreHistorical ? storeHistoricalData : getStoreDailyStats(currentId, ACTIVE_DATE);
+
+        updateAnnouncementUI();
 
         if(isStoreHistorical) {
             document.getElementById('store-mode-badge').innerText = "GEÇMİŞ RAPOR MODU";
@@ -1721,6 +1769,8 @@
         
         let isReadOnlyBM = (currentId === "GÜLÇİN FAKILAR");
 
+        updateAnnouncementUI();
+
         if (isReadOnlyBM) {
             document.getElementById('region-mode-badge').innerText = "GÖZLEM MODU";
             document.getElementById('region-mode-badge').classList.replace('bg-white/20', 'bg-rose-500/20');
@@ -1988,6 +2038,8 @@
     }
 
     function renderGeneralUI(aggData) {
+        updateAnnouncementUI();
+        
         let grandSales = 0, grandTarget = 0;
         let regionStats = [], allStores = [];
         let ai_noTargetStores = 0, ai_undistributed = 0;
@@ -2095,7 +2147,7 @@
             topTargetStoreText = `${overachievers[0].name} (<strong class="text-emerald-400">%${overachievers[0].perc}</strong> - Hedef: ${overachievers[0].target}, Satış: ${overachievers[0].sales} - ${overachievers[0].bm})`;
         }
 
-        // KÜRESEL PAYLAŞIM LİSTELERİ VE RAPORU İÇİN EKSİK OLAN ATAMALAR EKLENDİ
+        // DÜZELTME: Rapor Butonlarının Çalışması İçin Global Değişken Atamaları
         window.lastZeroSalesList = allStores.filter(s => s.sales === 0);
         window.lastNoTargetList = allStores.filter(s => s.target === 0);
         window.lastUndistributedList = allStores.filter(s => s.target > 0 && s.distStatus === 'KIRMIZI');
