@@ -44,13 +44,13 @@
         }
 
         /* 📅 Koyu Ekranlar İçin Takvim İkonunu Beyaz Yapma */
-        .dark-date-input::-webkit-calendar-picker-indicator {
+        .dark-date-input::-webkit-calendar-picker-indicator, .dark-time-input::-webkit-calendar-picker-indicator {
             filter: invert(1);
             cursor: pointer;
             opacity: 0.7;
             transition: opacity 0.2s;
         }
-        .dark-date-input::-webkit-calendar-picker-indicator:hover {
+        .dark-date-input::-webkit-calendar-picker-indicator:hover, .dark-time-input::-webkit-calendar-picker-indicator:hover {
             opacity: 1;
         }
         .light-date-input::-webkit-calendar-picker-indicator {
@@ -70,7 +70,6 @@
         .alert-track {
             display: inline-block;
             white-space: nowrap;
-            /* Çoklu mesajlarda rahat okunması için hızı düşürdük */
             animation: alert-ticker 35s linear infinite;
         }
 
@@ -89,8 +88,17 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen font-sans relative pb-16">
 
-    <!-- 📢 GLOBAL DUYURU BANDI -->
-    <div id="global-announcement-bar" class="hidden bg-gradient-to-r from-amber-500 to-rose-600 text-white py-1.5 text-sm font-black tracking-wide overflow-hidden shadow-md sticky top-0 z-[60]">
+    <!-- ⚡ MERKEZ DUYURU BANDI (SİSTEM YÖNETİCİSİ İÇİN) -->
+    <div id="central-announcement-bar" class="hidden bg-gradient-to-r from-indigo-900 to-slate-900 border-b-2 border-yellow-400 py-2 text-sm font-black tracking-widest overflow-hidden shadow-lg sticky top-0 z-[65]">
+        <div class="alert-track w-full flex items-center gap-4 text-yellow-300">
+            <i class="fa-solid fa-bolt animate-bounce"></i>
+            <span id="central-announcement-text" class="text-white drop-shadow-md"></span>
+            <i class="fa-solid fa-bolt animate-bounce"></i>
+        </div>
+    </div>
+
+    <!-- 📢 GLOBAL DUYURU BANDI (TELSİZ) -->
+    <div id="global-announcement-bar" class="hidden bg-gradient-to-r from-amber-500 to-rose-600 text-white py-1.5 text-sm font-black tracking-wide overflow-hidden shadow-md sticky top-[42px] z-[60]">
         <div class="alert-track w-full flex items-center gap-4">
             <i class="fa-solid fa-bullhorn animate-pulse"></i>
             <span id="global-announcement-text"></span>
@@ -225,7 +233,7 @@
     </div>
 
     <!-- ÜST BİLGİ BARI -->
-    <div class="bg-slate-900 text-white p-3 shadow-md sticky top-0 z-50">
+    <div class="bg-slate-900 text-white p-3 shadow-md sticky top-[0px] z-50">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <i class="fa-solid fa-bullseye text-pink-500 text-xl"></i>
@@ -254,13 +262,13 @@
                 <p class="text-slate-500">Görüntülemek istediğiniz paneli yetkinize göre seçiniz.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center">
                     <div class="w-16 h-16 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center text-2xl mb-4 shadow-inner">
                         <i class="fa-solid fa-store"></i>
                     </div>
                     <h3 class="font-bold text-lg mb-1">Mağaza Paneli</h3>
-                    <p class="text-xs text-slate-400 mb-5">Hedef dağıt, personeli kitle ve canlı satış gir.</p>
+                    <p class="text-[11px] text-slate-400 mb-5">Hedef dağıt, personeli kitle ve canlı satış gir.</p>
                     <select id="select-store" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium mb-3 focus:outline-none focus:border-pink-500"></select>
                     <button type="button" onclick="loginAsStore()" class="w-full py-2.5 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-xl transition shadow">Mağazaya Git</button>
                 </div>
@@ -271,7 +279,7 @@
                         <i class="fa-solid fa-map-location-dot"></i>
                     </div>
                     <h3 class="font-bold text-lg mb-1">Bölge Müdürü</h3>
-                    <p class="text-xs text-slate-400 mb-5">Mağazalara hedef ver ve dağıtımları kontrol et.</p>
+                    <p class="text-[11px] text-slate-400 mb-5">Mağazalara hedef ver ve dağıtımları kontrol et.</p>
                     <select id="select-region" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium mb-3 focus:outline-none focus:border-indigo-500"></select>
                     <button type="button" onclick="loginAsRegion()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow">Bölgeyi İzle</button>
                 </div>
@@ -281,11 +289,93 @@
                     <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-2xl mb-4 shadow-inner">
                         <i class="fa-solid fa-crown"></i>
                     </div>
-                    <h3 class="font-bold text-lg mb-1">Güliz Atik Bölge Yön.</h3>
-                    <p class="text-xs text-slate-400 mb-5">Komuta merkezi, detaylı raporlar ve duyurular.</p>
+                    <h3 class="font-bold text-lg mb-1">Güliz Atik Paneli</h3>
+                    <p class="text-[11px] text-slate-400 mb-5">Komuta merkezi, detaylı raporlar ve duyurular.</p>
                     <div class="flex-1 w-full flex items-end">
-                        <button type="button" onclick="loginAsGeneral()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl transition shadow">Güliz Atik Paneline Git</button>
+                        <button type="button" onclick="loginAsGeneral()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl transition shadow">Yönetime Git</button>
                     </div>
+                </div>
+
+                <!-- SİSTEM MERKEZİ BUTONU -->
+                <div class="bg-slate-900 p-6 rounded-2xl shadow-lg border border-slate-700 flex flex-col items-center text-center relative overflow-hidden text-white">
+                    <div class="absolute top-4 right-4 text-yellow-500"><i class="fa-solid fa-key"></i></div>
+                    <div class="w-16 h-16 bg-indigo-900/50 border border-indigo-500 text-yellow-400 rounded-full flex items-center justify-center text-2xl mb-4 shadow-[0_0_15px_rgba(250,204,21,0.2)]">
+                        <i class="fa-solid fa-server"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-5 text-indigo-200">Sistem Merkezi</h3>
+                    <div class="flex-1 w-full flex items-end">
+                        <button type="button" onclick="loginAsCentral()" class="w-full py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-bold rounded-xl transition shadow">Merkeze Giriş</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= SİSTEM MERKEZİ (ADMIN) EKRANI ================= -->
+        <div id="screen-central" class="screen hidden space-y-6">
+            <!-- Header -->
+            <div class="bg-slate-900 rounded-2xl shadow-xl p-6 text-white flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative overflow-hidden border border-indigo-500/50">
+                <div class="absolute right-4 bottom-[-20px] text-white/5 text-9xl font-black pointer-events-none"><i class="fa-solid fa-server"></i></div>
+                <div class="relative z-10 w-full lg:w-1/2">
+                    <span class="bg-indigo-600 text-white px-2 py-1 rounded text-[10px] font-black tracking-widest uppercase shadow-sm">Sadece Size Özel</span>
+                    <h2 class="text-3xl font-black mb-1 mt-2 text-indigo-300">SİSTEM MERKEZİ</h2>
+                    <p class="text-xs text-slate-400">Merkezi duyuru, toplu hedef atama ve kilit mekanizması.</p>
+                </div>
+                <div class="relative z-10 flex gap-4 w-full lg:w-auto">
+                    <div class="bg-slate-800/80 p-4 rounded-xl shadow-inner border border-slate-700 text-center flex-1">
+                        <span class="text-[10px] text-indigo-200 font-bold block uppercase tracking-widest">Merkez Hedefi Toplamı</span>
+                        <span class="text-3xl font-black text-white" id="central-total-target">0</span>
+                    </div>
+                    <div class="bg-slate-800/80 p-4 rounded-xl shadow-inner border border-slate-700 text-center flex-1">
+                        <span class="text-[10px] text-emerald-200 font-bold block uppercase tracking-widest">Tüm Şirket Gerçekleşen</span>
+                        <span class="text-3xl font-black text-emerald-400" id="central-total-sales">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Central Duyuru -->
+            <div class="bg-gradient-to-r from-indigo-900 to-slate-800 p-4 rounded-2xl border border-indigo-700/50 flex flex-col xl:flex-row gap-3 items-center shadow-lg">
+                <div class="flex items-center gap-2 text-yellow-300 font-black whitespace-nowrap">
+                    <i class="fa-solid fa-bolt text-xl animate-pulse"></i> SİSTEM DUYURUSU:
+                </div>
+                <input type="text" id="central-announcement-input" class="flex-1 w-full bg-slate-900 text-white border border-indigo-500/50 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-yellow-400 transition-colors placeholder-slate-500" placeholder="En üst sarı bantta geçecek duyuruyu girin...">
+                
+                <div class="flex flex-wrap sm:flex-nowrap gap-2 w-full xl:w-auto items-center">
+                    <input type="time" id="central-start" class="w-full sm:w-auto bg-slate-900 text-slate-300 border border-indigo-500/50 rounded-xl px-2 py-2.5 text-sm focus:outline-none focus:border-yellow-400 transition-colors dark-time-input [color-scheme:dark]" title="Başlama Saati">
+                    <input type="time" id="central-end" class="w-full sm:w-auto bg-slate-900 text-slate-300 border border-indigo-500/50 rounded-xl px-2 py-2.5 text-sm focus:outline-none focus:border-yellow-400 transition-colors dark-time-input [color-scheme:dark]" title="Bitiş Saati">
+                    
+                    <button onclick="publishCentralAnnouncement()" class="flex-1 sm:flex-none px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition shadow-md text-sm whitespace-nowrap"><i class="fa-solid fa-bullhorn mr-1"></i> Yayınla</button>
+                    <button onclick="clearCentralAnnouncement()" class="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-rose-400 font-bold rounded-xl transition shadow-sm text-sm" title="Duyuruyu Kaldır"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </div>
+
+            <!-- Toplu İşlemler -->
+            <div class="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-4">
+                <div>
+                    <h3 class="font-bold text-slate-700"><i class="fa-solid fa-list-ol text-indigo-500 mr-1"></i> Tüm Mağazalar Listesi</h3>
+                    <p class="text-xs text-slate-500">Numaraya göre sıralıdır. Buradan verilen hedefler mağazalar tarafından değiştirilemez.</p>
+                </div>
+                <div class="flex flex-wrap sm:flex-nowrap gap-2 w-full xl:w-auto">
+                    <button onclick="unlockAllStoresCentral()" class="flex-1 sm:flex-none px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-bold rounded-xl text-xs shadow-sm transition"><i class="fa-solid fa-lock-open mr-1"></i> Tüm Kilitleri Aç</button>
+                    <button onclick="lockAllStoresCentral()" class="flex-1 sm:flex-none px-4 py-2 bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold rounded-xl text-xs shadow-sm transition"><i class="fa-solid fa-lock mr-1"></i> Tümünü Kilitle</button>
+                </div>
+            </div>
+
+            <!-- Stores Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm relative">
+                        <thead class="sticky top-0 z-20">
+                            <tr class="text-[10px] uppercase tracking-wider text-slate-500 border-b border-slate-200 bg-slate-100/90 backdrop-blur-md">
+                                <th class="py-3 px-3 font-bold">Mağaza</th>
+                                <th class="py-3 px-3 font-bold hidden sm:table-cell">Bölge M.</th>
+                                <th class="py-3 px-3 font-bold text-center">Merkezi Hedef</th>
+                                <th class="py-3 px-3 font-bold text-center hidden md:table-cell">Ekibe Dağıtım Durumu</th>
+                                <th class="py-3 px-3 font-bold text-center">Satış</th>
+                                <th class="py-3 px-3 font-bold text-center">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody id="central-stores-list" class="divide-y divide-slate-100"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -401,9 +491,13 @@
                     <i class="fa-solid fa-tower-broadcast text-xl animate-pulse"></i> TELSİZ:
                 </div>
                 <input type="text" id="region-announcement-input" class="flex-1 w-full bg-indigo-950 text-white border border-indigo-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-rose-500 transition-colors" placeholder="Duyuru mesajınızı yazın...">
-                <div class="flex flex-wrap sm:flex-nowrap gap-2 w-full xl:w-auto">
-                    <button onclick="publishAnnouncement('region-announcement-input', 'regional')" class="flex-1 sm:flex-none px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-xl transition shadow-md text-[11px] sm:text-xs whitespace-nowrap"><i class="fa-solid fa-location-dot mr-1"></i> Bölgeme Yayınla</button>
-                    <button onclick="publishAnnouncement('region-announcement-input', 'global')" class="flex-1 sm:flex-none px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl transition shadow-md text-[11px] sm:text-xs whitespace-nowrap"><i class="fa-solid fa-globe mr-1"></i> Genele Yayınla</button>
+                
+                <div class="flex flex-wrap sm:flex-nowrap gap-2 w-full xl:w-auto items-center">
+                    <input type="time" id="reg-start" class="w-full sm:w-auto bg-indigo-950 text-slate-300 border border-indigo-600 rounded-xl px-2 py-2.5 text-sm focus:outline-none focus:border-rose-500 transition-colors dark-time-input [color-scheme:dark]" title="Başlama Saati">
+                    <input type="time" id="reg-end" class="w-full sm:w-auto bg-indigo-950 text-slate-300 border border-indigo-600 rounded-xl px-2 py-2.5 text-sm focus:outline-none focus:border-rose-500 transition-colors dark-time-input [color-scheme:dark]" title="Bitiş Saati">
+                    
+                    <button onclick="publishAnnouncement('region-announcement-input', 'regional', 'reg-start', 'reg-end')" class="flex-1 sm:flex-none px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-xl transition shadow-md text-[11px] sm:text-xs whitespace-nowrap"><i class="fa-solid fa-location-dot mr-1"></i> Bölgeme</button>
+                    <button onclick="publishAnnouncement('region-announcement-input', 'global', 'reg-start', 'reg-end')" class="flex-1 sm:flex-none px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl transition shadow-md text-[11px] sm:text-xs whitespace-nowrap"><i class="fa-solid fa-globe mr-1"></i> Genele</button>
                     <button onclick="clearAnnouncement()" class="px-4 py-2.5 bg-indigo-800 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow-sm text-xs" title="Kendi Duyurumu Kaldır"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </div>
@@ -449,7 +543,6 @@
                     </div>
                 </div>
                 
-                <!-- EKLENEN KISIM: BÖLGE MÜDÜRÜ İÇİN YENİ İSTATİSTİK KARTLARI -->
                 <div class="flex gap-2 relative z-10 w-full md:w-auto mt-4 md:mt-0 flex-wrap justify-end">
                     <div class="bg-white/10 p-3 sm:p-4 rounded-xl backdrop-blur-md border border-white/20 text-center flex-1 min-w-[90px] md:min-w-[110px]">
                         <span class="text-[9px] sm:text-[10px] text-indigo-100 font-bold block uppercase tracking-wider mb-1">Hedefli P. / Top. P.</span>
@@ -477,14 +570,18 @@
             <div id="general-top3-banner" class="hidden"></div>
 
             <!-- DUYURU YÖNETİMİ -->
-            <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 flex flex-col sm:flex-row gap-3 items-center shadow-lg">
+            <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 flex flex-col xl:flex-row gap-3 items-center shadow-lg">
                 <div class="flex items-center gap-2 text-rose-400 font-black whitespace-nowrap">
                     <i class="fa-solid fa-tower-broadcast text-xl animate-pulse"></i> TELSİZ:
                 </div>
                 <input type="text" id="announcement-input" class="flex-1 w-full bg-slate-900 text-white border border-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-rose-500 transition-colors" placeholder="Tüm mağazalara ve müdürlere flaş duyuru gönder (Mesajın sonuna isminiz eklenecektir)...">
-                <div class="flex gap-2 w-full sm:w-auto">
+                
+                <div class="flex flex-wrap sm:flex-nowrap gap-2 w-full xl:w-auto items-center">
+                    <input type="time" id="gen-start" class="w-full sm:w-auto bg-slate-900 text-slate-300 border border-slate-600 rounded-xl px-2 py-2.5 text-sm focus:outline-none focus:border-rose-500 transition-colors dark-time-input [color-scheme:dark]" title="Başlama Saati">
+                    <input type="time" id="gen-end" class="w-full sm:w-auto bg-slate-900 text-slate-300 border border-slate-600 rounded-xl px-2 py-2.5 text-sm focus:outline-none focus:border-rose-500 transition-colors dark-time-input [color-scheme:dark]" title="Bitiş Saati">
+                    
                     <!-- Güliz Atik Sadece Genele Yayınlar -->
-                    <button onclick="publishAnnouncement('announcement-input', 'global')" class="flex-1 sm:flex-none px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl transition shadow-md text-sm whitespace-nowrap"><i class="fa-solid fa-paper-plane mr-1"></i> Yayınla</button>
+                    <button onclick="publishAnnouncement('announcement-input', 'global', 'gen-start', 'gen-end')" class="flex-1 sm:flex-none px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl transition shadow-md text-sm whitespace-nowrap"><i class="fa-solid fa-paper-plane mr-1"></i> Yayınla</button>
                     <button onclick="clearAnnouncement()" class="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition shadow-sm text-sm" title="Kendi Duyurumu Kaldır"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </div>
@@ -709,6 +806,7 @@
     
     // Telsiz Sistemi İçin Bellek
     window.lastAnnouncementsData = {};
+    window.centralAnnData = null;
 
     // Geri Dönüş Hafızası (History Stack)
     let navStack = [];
@@ -782,6 +880,9 @@
         } else if (currentRole === 'general') {
             document.getElementById('screen-general').classList.remove('hidden');
             loadHistoricalGeneral(); 
+        } else if (currentRole === 'central') {
+            document.getElementById('screen-central').classList.remove('hidden');
+            renderCentralUI();
         } else {
             goHome();
         }
@@ -804,7 +905,7 @@
 
     // Doğrudan Bölge Paneline Gitme Fonksiyonu (YETKİ KONTROLLÜ)
     window.goToRegion = function(regionId) {
-        if (currentRole === 'general') {
+        if (currentRole === 'general' || currentRole === 'central') {
             executeGoToRegion(regionId);
         } else {
             let currentRegionPass = globalData.settings?.regionPassword || "0000";
@@ -884,7 +985,7 @@
         if(applauseEl) applauseEl.innerText = todayApplause;
 
         let btnContainer = document.getElementById('profile-applause-btn-container');
-        if (isStoreHistorical || isRegionHistorical || currentRole === 'general') {
+        if (isStoreHistorical || isRegionHistorical || currentRole === 'general' || currentRole === 'central') {
             btnContainer.classList.add('hidden');
         } else {
             btnContainer.classList.remove('hidden');
@@ -1108,32 +1209,107 @@
         container.innerHTML = html;
     }
 
-    // === TELSİZ & DUYURU SİSTEMİ (GÜNCELLENDİ) ===
+    // === TELSİZ VE MERKEZİ DUYURU LİSTENER ===
+    function checkCentralAnnouncementVisibility() {
+        let ann = window.centralAnnData;
+        let bar = document.getElementById('central-announcement-bar');
+        let textEl = document.getElementById('central-announcement-text');
+        
+        if (!ann || !ann.message) {
+            bar.classList.add('hidden');
+            return;
+        }
+
+        let now = new Date();
+        let currentStr = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
+        
+        let isVisible = true;
+        if (ann.startTime && currentStr < ann.startTime) isVisible = false;
+        
+        if (ann.endTime && currentStr > ann.endTime) {
+            isVisible = false;
+        }
+        
+        if (isVisible) {
+            textEl.innerHTML = ann.message;
+            bar.classList.remove('hidden');
+        } else {
+            bar.classList.add('hidden');
+        }
+    }
+
+    function initCentralAnnouncementListener() {
+        dbRoot.child('central_announcement').on('value', snap => {
+            window.centralAnnData = snap.val();
+            checkCentralAnnouncementVisibility();
+        });
+        // 15 Saniyede bir zaman kontrolü yap
+        setInterval(checkCentralAnnouncementVisibility, 15000);
+    }
+
+    window.publishCentralAnnouncement = function() {
+        let msg = document.getElementById('central-announcement-input').value.trim();
+        let st = document.getElementById('central-start').value;
+        let et = document.getElementById('central-end').value;
+
+        if(!msg) return alert("Lütfen duyuru metnini girin.");
+        if(confirm("Bu sistem duyurusu yayınlanacak. Onaylıyor musunuz?")) {
+            dbRoot.child('central_announcement').set({ 
+                message: msg, 
+                time: Date.now(),
+                startTime: st,
+                endTime: et
+            });
+            document.getElementById('central-announcement-input').value = "";
+        }
+    }
+
+    window.clearCentralAnnouncement = function() {
+        if(confirm("Sistem duyurusunu kaldırmak istediğinize emin misiniz?")) {
+            dbRoot.child('central_announcement').remove();
+        }
+    }
+
     function updateAnnouncementUI() {
         let bar = document.getElementById('global-announcement-bar');
         let textEl = document.getElementById('global-announcement-text');
         
         let activeMessages = [];
-        let now = Date.now();
+        let nowTime = Date.now();
         let ONE_HOUR = 60 * 60 * 1000;
+
+        let d = new Date();
+        let currentStr = String(d.getHours()).padStart(2, '0') + ":" + String(d.getMinutes()).padStart(2, '0');
         
         Object.keys(window.lastAnnouncementsData).forEach(sender => {
             let ann = window.lastAnnouncementsData[sender];
             
-            if (now - ann.time <= ONE_HOUR) {
+            let isExpired = false;
+            let isStarted = true;
+
+            // Bitiş süresi verilmişse bitişi bekle, yoksa 1 saat kuralı geçerli
+            if (ann.endTime) {
+                if (currentStr > ann.endTime) isExpired = true;
+            } else {
+                if (nowTime - ann.time > ONE_HOUR) isExpired = true;
+            }
+
+            // Başlama süresi verilmişse kontrol et
+            if (ann.startTime) {
+                if (currentStr < ann.startTime) isStarted = false;
+            }
+
+            if (!isExpired && isStarted) {
                 // Görünürlük Kontrolü
                 let canSee = false;
                 
-                // Mesaj Genel mi?
                 if (ann.target === 'global' || !ann.target) {
-                    canSee = true; // Herkes görür
+                    canSee = true; 
                 } 
-                // Mesaj Bölgesel mi?
                 else if (ann.target === 'regional') {
-                    if (currentRole === 'general') canSee = true; // GM Her şeyi görür
-                    else if (currentRole === 'region' && currentId === ann.bm) canSee = true; // BM Kendi mesajını görür
+                    if (currentRole === 'general' || currentRole === 'central') canSee = true; 
+                    else if (currentRole === 'region' && currentId === ann.bm) canSee = true; 
                     else if (currentRole === 'store') {
-                        // Mağaza bu BM'ye mi bağlı?
                         let storeBM = allStoresList.find(s => s.name === currentId)?.bm;
                         if (storeBM === ann.bm) canSee = true;
                     }
@@ -1149,7 +1325,6 @@
             }
         });
 
-        // Eğer kullanıcı bir ekrandaysa ve mesaj varsa göster
         if (activeMessages.length > 0 && currentRole !== '') {
             textEl.innerHTML = activeMessages.join('<span class="mx-6 text-white/40">|</span>');
             bar.classList.remove('hidden');
@@ -1166,12 +1341,23 @@
 
         // 30 Saniyede Bir Zaman Aşımı Kontrolü
         setInterval(() => {
-            let now = Date.now();
+            let nowTime = Date.now();
             let ONE_HOUR = 60 * 60 * 1000;
+            let d = new Date();
+            let currentStr = String(d.getHours()).padStart(2, '0') + ":" + String(d.getMinutes()).padStart(2, '0');
             let dbChanged = false;
             
             Object.keys(window.lastAnnouncementsData).forEach(sender => {
-                if (now - window.lastAnnouncementsData[sender].time > ONE_HOUR) {
+                let ann = window.lastAnnouncementsData[sender];
+                let isExpired = false;
+
+                if (ann.endTime) {
+                    if (currentStr > ann.endTime) isExpired = true;
+                } else {
+                    if (nowTime - ann.time > ONE_HOUR) isExpired = true;
+                }
+
+                if (isExpired) {
                     dbRoot.child('global_announcement').child(sender).remove(); // Veritabanından Sil
                     dbChanged = true;
                 }
@@ -1181,33 +1367,39 @@
         }, 30000); 
     }
 
-    window.publishAnnouncement = function(inputId = 'announcement-input', targetType = 'global') {
+    window.publishAnnouncement = function(inputId = 'announcement-input', targetType = 'global', startId = '', endId = '') {
         let inputEl = document.getElementById(inputId);
         if (!inputEl) inputEl = document.getElementById('announcement-input'); 
         
         let msg = inputEl.value.trim();
         if(!msg) return alert("Lütfen yayınlanacak mesajı girin.");
+
+        let st = startId ? (document.getElementById(startId)?.value || "") : "";
+        let et = endId ? (document.getElementById(endId)?.value || "") : "";
         
         let senderName = "";
         if (currentRole === 'general') {
             senderName = "GÜLİZ ATİK"; 
-            targetType = 'global'; // GM Sadece genele atar
+            targetType = 'global'; 
         } else if (currentRole === 'region') {
             senderName = currentId; 
         } else {
             return alert("Duyuru yapma yetkiniz bulunmuyor.");
         }
 
+        let timeMsg = (st || et) ? `\n(Mesajınız belirttiğiniz saatlere göre gösterilecektir)` : `\n(Mesajınız 1 saat boyunca dönecektir)`;
         let confirmMsg = targetType === 'regional' 
-            ? `Bu mesaj 1 saat boyunca SADECE ${senderName} BÖLGESİ mağazalarında dönecek. Onaylıyor musunuz?`
-            : `Bu mesaj 1 saat boyunca TÜM BÖLGELERDE ve mağazalarda dönecek. Onaylıyor musunuz?`;
+            ? `Bu mesaj SADECE ${senderName} BÖLGESİ mağazalarında dönecek. Onaylıyor musunuz? ${timeMsg}`
+            : `Bu mesaj TÜM BÖLGELERDE ve mağazalarda dönecek. Onaylıyor musunuz? ${timeMsg}`;
 
         if(confirm(confirmMsg)) {
             dbRoot.child('global_announcement').child(senderName).set({ 
                 message: msg, 
                 time: Date.now(),
                 target: targetType,
-                bm: senderName
+                bm: senderName,
+                startTime: st,
+                endTime: et
             });
             inputEl.value = ""; 
         }
@@ -1270,6 +1462,7 @@
         if (urlParams.get('store')) loginAsStore(urlParams.get('store'));
         else if (urlParams.get('region')) loginAsRegion(urlParams.get('region'));
         else if (urlParams.get('general')) loginAsGeneral(true);
+        else if (urlParams.get('central')) loginAsCentral();
         else {
             document.getElementById('screen-home').classList.remove('hidden');
             updateAnnouncementUI();
@@ -1280,6 +1473,7 @@
         });
 
         initGlobalAnnouncementListener();
+        initCentralAnnouncementListener();
 
         dbRoot.on('value', snap => {
             globalData = snap.val() || {};
@@ -1341,9 +1535,9 @@
             }
 
             if (currentRole === 'store' && !isStoreHistorical) renderStoreUI();
-            if (currentRole === 'region' && !isRegionHistorical) {
-                renderRegionUI();
-            }
+            if (currentRole === 'region' && !isRegionHistorical) renderRegionUI();
+            if (currentRole === 'central') renderCentralUI();
+            
             if (currentRole === 'general') {
                 const sStr = document.getElementById('start-date-picker').value;
                 const eStr = document.getElementById('end-date-picker').value;
@@ -1519,13 +1713,14 @@
         let targetInput = document.getElementById('store-target-input');
         if (document.activeElement !== targetInput) targetInput.value = stats.storeTarget;
         
-        let isStoreTargetLocked = isStoreHistorical ? true : (stats.isLocked || (stats.targetBy === "BM" && stats.storeTarget > 0));
+        // Merkezden verilen hedefler mağazada kilitlenir
+        let isStoreTargetLocked = isStoreHistorical ? true : (stats.isLocked || stats.targetBy === "MERKEZ" || (stats.targetBy === "BM" && stats.storeTarget > 0));
         targetInput.disabled = isStoreTargetLocked;
         
         if (isStoreTargetLocked) {
             targetInput.classList.add('bg-slate-100', 'text-slate-400', 'cursor-not-allowed');
             targetInput.classList.remove('bg-white', 'text-indigo-600');
-            targetInput.title = isStoreHistorical ? "Geçmiş veriler değiştirilemez." : (stats.targetBy === "BM" ? "Bölge Müdürü tarafından verilen hedef değiştirilemez." : "");
+            targetInput.title = isStoreHistorical ? "Geçmiş veriler değiştirilemez." : (stats.targetBy === "MERKEZ" ? "Merkez tarafından verilen hedef değiştirilemez." : "Bölge Müdürü tarafından verilen hedef değiştirilemez.");
         } else {
             targetInput.classList.remove('bg-slate-100', 'text-slate-400', 'cursor-not-allowed');
             targetInput.classList.add('bg-white', 'text-indigo-600');
@@ -1535,6 +1730,8 @@
         let infoText = "";
         if(isStoreHistorical) {
             infoText = `<span class="text-indigo-600 font-bold"><i class="fa-solid fa-clock-rotate-left"></i> Seçili Tarih Aralığı Gösteriliyor</span>`;
+        } else if (stats.targetBy === "MERKEZ") {
+            infoText = `<span class="text-purple-600 font-bold"><i class="fa-solid fa-building-shield"></i> Hedefler merkezi olarak verilmiştir, lütfen ekibe dağıtınız.</span>`;
         } else if (stats.storeTarget === 0) {
             infoText = `<span class="text-amber-500 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> Herhangi bir hedef belirlenmedi</span>`;
         } else if (stats.targetBy === "BM") {
@@ -1665,6 +1862,7 @@
         if(v < 0) v = 0;
         const stats = getStoreDailyStats(currentId, ACTIVE_DATE);
         if (role === 'MM' && stats.targetBy === 'BM' && stats.storeTarget > 0) return alert('Bölge Müdürü tarafından verilen hedef değiştirilemez!');
+        if (stats.targetBy === 'MERKEZ' && stats.storeTarget > 0) return alert('Merkez tarafından verilen hedef değiştirilemez!');
         dbRoot.child('daily').child(ACTIVE_DATE).child(currentId).update({ target: v, targetBy: role });
     }
     window.updateStaffTarget = function(id, val) {
@@ -1855,15 +2053,21 @@
             let barW = perc > 100 ? 100 : perc;
             
             let icon = (isRegionHistorical || isReadOnlyBM) ? `<i class="fa-solid fa-clock-rotate-left text-indigo-500"></i>` : (st.data.isLocked ? `<i class="fa-solid fa-lock text-emerald-500"></i>` : `<i class="fa-solid fa-lock-open text-amber-500"></i>`);
-            let byBadge = st.targetBy === 'BM' ? `<span class="text-[9px] bg-indigo-100 text-indigo-700 px-1 rounded ml-1">BM</span>` : st.targetBy === 'MM' ? `<span class="text-[9px] bg-emerald-100 text-emerald-700 px-1 rounded ml-1">MM</span>` : `<span class="text-[9px] bg-slate-200 text-slate-500 px-1 rounded ml-1">${st.targetBy}</span>`;
+            
+            let byBadge = '';
+            if (st.targetBy === 'MERKEZ') byBadge = `<span class="text-[9px] bg-purple-100 text-purple-700 px-1 rounded ml-1" title="Merkez Tarafından Kilitlendi">MRKZ</span>`;
+            else if (st.targetBy === 'BM') byBadge = `<span class="text-[9px] bg-indigo-100 text-indigo-700 px-1 rounded ml-1">BM</span>`;
+            else if (st.targetBy === 'MM') byBadge = `<span class="text-[9px] bg-emerald-100 text-emerald-700 px-1 rounded ml-1">MM</span>`;
+            else byBadge = `<span class="text-[9px] bg-slate-200 text-slate-500 px-1 rounded ml-1">${st.targetBy}</span>`;
 
             let distBadge = '';
             if (st.target === 0) distBadge = `<span class="bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded text-[9px] font-bold ml-2 whitespace-nowrap">HEDEF GİRİLMEDİ</span>`;
             else if (st.staffTargetSum < st.target) distBadge = `<span class="bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded text-[9px] font-bold animate-pulse ml-2 whitespace-nowrap"><i class="fa-solid fa-triangle-exclamation"></i> EKİBE DAĞITILMADI</span>`;
             else distBadge = `<span class="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded text-[9px] font-bold ml-2 whitespace-nowrap"><i class="fa-solid fa-check-double"></i> EKİBE DAĞITILDI</span>`;
 
-            let targetInputHtml = (isRegionHistorical || isReadOnlyBM) 
-                ? `<span class="font-bold text-indigo-600">${st.target}</span>` 
+            // Merkez hedefleri kilitlemişse input yerine text göster
+            let targetInputHtml = (isRegionHistorical || isReadOnlyBM || st.targetBy === 'MERKEZ') 
+                ? `<span class="font-bold ${st.targetBy === 'MERKEZ' ? 'text-purple-600' : 'text-indigo-600'}" title="${st.targetBy === 'MERKEZ' ? 'Merkez Kilitli' : ''}">${st.target}</span>` 
                 : `<input type="number" min="0" value="${st.target}" onchange="updateBMTarget('${st.name}', this.value)" class="w-14 p-0.5 text-center text-xs font-bold text-indigo-600 border border-slate-300 rounded focus:outline-none bg-white">`;
 
             container.innerHTML += `
@@ -1893,7 +2097,6 @@
         document.getElementById('region-total-sales').innerText = regSales;
         document.getElementById('region-total-target').innerText = regTarget;
         
-        // Yeni Eklenen Hedefli Personel İstatistiği Bölge Müdürü Ekranı İçin
         let statEl = document.getElementById('region-staff-stats');
         if(statEl) statEl.innerText = `${regTargetedStaff} / ${regTotalStaff}`;
     }
@@ -1985,6 +2188,105 @@
                 loadHistoricalGeneral();
             }
         );
+    }
+
+    // === YENİ: SİSTEM MERKEZİ (ADMIN) GİRİŞİ ===
+    window.loginAsCentral = function() {
+        openPasswordModal(
+            "Sistem Merkezi", 
+            "Yönetici paneline giriş için güvenlik kodunu girin.", 
+            "fa-solid fa-server text-purple-500", 
+            "1988", 
+            () => {
+                navStack = []; 
+                currentRole = 'central';
+                setURLParam('central', 'true');
+                document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
+                document.getElementById('screen-central').classList.remove('hidden');
+                updateNavButtons();
+                renderCentralUI();
+            }
+        );
+    }
+
+    // === SİSTEM MERKEZİ İŞLEMLERİ ===
+    function renderCentralUI() {
+        updateAnnouncementUI();
+        
+        let totalSales = 0;
+        let totalTarget = 0;
+        let listHTML = '';
+
+        allStoresList.forEach((storeObj) => {
+            let stats = getStoreDailyStats(storeObj.name, ACTIVE_DATE);
+            totalTarget += stats.storeTarget;
+            let sSales = 0;
+            let staffTargetSum = 0;
+            
+            Object.values(stats.staff).forEach(p => {
+                sSales += p.sales;
+                staffTargetSum += p.target;
+            });
+            totalSales += sSales;
+
+            let isLocked = stats.isLocked;
+            let lockBtn = isLocked 
+                ? `<button onclick="toggleCentralLock('${storeObj.name}', false)" class="px-2 py-1 bg-rose-100 text-rose-600 hover:bg-rose-200 rounded text-xs font-bold transition"><i class="fa-solid fa-lock mr-1"></i> Aç</button>`
+                : `<button onclick="toggleCentralLock('${storeObj.name}', true)" class="px-2 py-1 bg-emerald-100 text-emerald-600 hover:bg-emerald-200 rounded text-xs font-bold transition"><i class="fa-solid fa-lock-open mr-1"></i> Kilitle</button>`;
+
+            let targetInput = `<input type="number" min="0" value="${stats.storeTarget}" onchange="updateCentralTarget('${storeObj.name}', this.value)" class="w-16 p-1 text-center font-bold border border-slate-300 rounded focus:border-purple-500 focus:outline-none text-indigo-600">`;
+
+            let distStatus = "";
+            if (stats.storeTarget === 0) distStatus = `<span class="text-[9px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded font-bold uppercase whitespace-nowrap">Hedef Yok</span>`;
+            else if (staffTargetSum < stats.storeTarget) distStatus = `<span class="text-[9px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded font-bold uppercase whitespace-nowrap animate-pulse">Eksik Dağıtım</span>`;
+            else distStatus = `<span class="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-bold uppercase whitespace-nowrap">Tamamlandı</span>`;
+
+            listHTML += `
+            <tr class="border-b border-slate-200 hover:bg-indigo-50/50 transition">
+                <td class="py-2.5 px-3 font-bold text-slate-700 text-xs sm:text-sm"><span class="clickable-store" onclick="goToStore('${storeObj.name}')" title="Mağazaya Git">${storeObj.name}</span></td>
+                <td class="py-2.5 px-3 text-[10px] text-slate-500 hidden sm:table-cell"><span class="clickable-store" onclick="goToRegion('${storeObj.bm}')">${storeObj.bm}</span></td>
+                <td class="py-2.5 px-3 text-center">${targetInput}</td>
+                <td class="py-2.5 px-3 text-center hidden md:table-cell">${distStatus}</td>
+                <td class="py-2.5 px-3 text-center font-black text-pink-600 text-sm">${sSales}</td>
+                <td class="py-2.5 px-3 text-center">${lockBtn}</td>
+            </tr>
+            `;
+        });
+
+        document.getElementById('central-stores-list').innerHTML = listHTML;
+        document.getElementById('central-total-target').innerText = totalTarget;
+        document.getElementById('central-total-sales').innerText = totalSales;
+    }
+
+    window.updateCentralTarget = function(storeName, val) {
+        let v = parseInt(val) || 0;
+        if(v < 0) v = 0;
+        // MERKEZ olarak etiketliyoruz
+        dbRoot.child('daily').child(ACTIVE_DATE).child(storeName).update({ target: v, targetBy: 'MERKEZ' });
+    }
+
+    window.toggleCentralLock = function(storeName, lockState) {
+        dbRoot.child('daily').child(ACTIVE_DATE).child(storeName).update({ isLocked: lockState });
+    }
+
+    window.lockAllStoresCentral = function() {
+        if(confirm("Tüm mağazaları aynı anda kilitlemek istediğinize emin misiniz? (Personel ekleme/silme ve hedef işlemleri durur, sadece satış girebilirler.)")) {
+            let updates = {};
+            allStoresList.forEach(s => {
+                updates[`${s.name}/isLocked`] = true;
+            });
+            dbRoot.child('daily').child(ACTIVE_DATE).update(updates).then(() => alert("Tüm mağazalar başarıyla kilitlendi!"));
+        }
+    }
+
+    window.unlockAllStoresCentral = function() {
+        if(confirm("Tüm mağazaların kilidini açmak istediğinize emin misiniz?")) {
+            let updates = {};
+            allStoresList.forEach(s => {
+                updates[`${s.name}/isLocked`] = false;
+            });
+            dbRoot.child('daily').child(ACTIVE_DATE).update(updates).then(() => alert("Tüm kilitler başarıyla açıldı!"));
+        }
     }
 
     window.changeRegionPassword = function() {
@@ -2258,7 +2560,7 @@
                     <td class="py-2 px-1 sm:px-4 text-[9px] sm:text-xs font-bold text-slate-500 truncate max-w-[60px] sm:max-w-[80px] hidden sm:table-cell" title="${s.bm}"><span class="clickable-store" onclick="goToRegion('${s.bm}')">${s.bm}</span></td>
                     <td class="py-2 px-1 sm:px-4 font-bold text-slate-800 text-[10px] sm:text-sm leading-tight"><span class="clickable-store" onclick="goToStore('${s.name}')" title="Mağazaya Git">${s.name}</span> ${fireBadge}</td>
                     <td class="py-2 px-1 sm:px-4 text-center">
-                        <span class="font-bold text-slate-600 block text-[10px] sm:text-sm">${s.target}</span>
+                        <span class="font-bold ${s.targetBy === 'MERKEZ' ? 'text-purple-600' : 'text-slate-600'} block text-[10px] sm:text-sm" title="${s.targetBy === 'MERKEZ' ? 'Merkez Kilitli' : ''}">${s.target}</span>
                         <span class="text-[7px] sm:text-[8px] text-slate-400 uppercase">${s.targetBy}</span>
                     </td>
                     <td class="py-2 px-1 sm:px-4 text-center hidden sm:table-cell">${distBadge}</td>
