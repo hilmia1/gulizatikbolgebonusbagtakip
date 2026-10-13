@@ -403,6 +403,8 @@
             <div id="store-top3-stores-banner" class="hidden"></div>
             <!-- MEVCUT PERSONEL TOP 3 BARI -->
             <div id="store-top3-banner" class="hidden"></div>
+            <!-- BÖLGE İÇİ TOP 3 BARI (YENİ) -->
+            <div id="store-regional-top3-banner" class="hidden"></div>
             
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 relative overflow-hidden">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-5 relative z-10">
@@ -1223,7 +1225,7 @@
         container.innerHTML = html;
     }
 
-    function updateRegionTop5Banner(containerId, staffArr, globalTop3) {
+    function updateRegionTop5Banner(containerId, staffArr, globalTop3, customTitle = "BÖLGE YILDIZLARI (İLK 5)", customSub = "Kendi Bölgenizdeki En İyi Personeller", limit = 5) {
         const container = document.getElementById(containerId);
         if(!container) return;
         if (!staffArr || staffArr.length === 0) {
@@ -1239,14 +1241,15 @@
                     <i class="fa-solid fa-star text-xl text-indigo-400 animate-pulse"></i>
                 </div>
                 <div class="text-center lg:text-left">
-                    <div class="font-black text-sm text-white tracking-wide">BÖLGE YILDIZLARI (İLK 5)</div>
-                    <div class="text-[10px] text-indigo-200/80 font-bold uppercase tracking-wider">Kendi Bölgenizdeki En İyi Personeller</div>
+                    <div class="font-black text-sm text-white tracking-wide">${customTitle}</div>
+                    <div class="text-[10px] text-indigo-200/80 font-bold uppercase tracking-wider">${customSub}</div>
                 </div>
             </div>
             <div class="flex flex-wrap justify-center lg:justify-end gap-2 sm:gap-3 w-full lg:w-auto relative z-10">`;
         const medals = ['<i class="fa-solid fa-crown text-amber-500 text-lg"></i>', '<i class="fa-solid fa-medal text-slate-400 text-lg"></i>', '<i class="fa-solid fa-medal text-orange-400 text-lg"></i>','<span class="font-black text-indigo-400 text-sm">4.</span>','<span class="font-black text-indigo-400 text-sm">5.</span>'];
         const colors = ['bg-gradient-to-br from-amber-100 to-amber-50 border-amber-300 ring-2 ring-amber-400/50', 'bg-gradient-to-br from-slate-100 to-slate-50 border-slate-300', 'bg-gradient-to-br from-orange-100 to-orange-50 border-orange-300','bg-white border-indigo-100','bg-white border-indigo-100'];
-        staffArr.slice(0, 5).forEach((st, idx) => {
+        
+        staffArr.slice(0, limit).forEach((st, idx) => {
             let globalRank = globalTop3 ? globalTop3.findIndex(g => g.id === st.id) : -1;
             let globalBadge = '';
             if (globalRank === 0) globalBadge = `<span class="absolute -top-3 -right-2 bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-amber-300 animate-bounce whitespace-nowrap z-20">👑 EGE BÖLGE 1.Sİ</span>`;
@@ -1729,6 +1732,10 @@
 
             let allStaff = Object.values(allStaffMap);
             allStaff.sort((a, b) => b.sales - a.sales);
+            
+            // Tüm personelleri daha sonra bölgesel sıralama yapabilmek için global'e attık (YENİ EKLENDİ)
+            window.allStaffGlobal = allStaff;
+            
             window.top3Staff = allStaff.slice(0, 3);
 
             let allStoresTop = Object.values(allStoresSalesMap);
@@ -1782,6 +1789,7 @@
         window.firedConfetti = { store: false }; 
         document.getElementById('store-top3-stores-banner').classList.remove('hidden');
         document.getElementById('store-top3-banner').classList.remove('hidden');
+        document.getElementById('store-regional-top3-banner').classList.remove('hidden'); // YENİ EKLENDİ
         document.getElementById('store-heatmap-card').classList.remove('hidden');
         renderStoreUI();
     }
@@ -1889,6 +1897,7 @@
             storeHistoricalData = agg[currentId];
             document.getElementById('store-top3-stores-banner').classList.add('hidden');
             document.getElementById('store-top3-banner').classList.add('hidden');
+            document.getElementById('store-regional-top3-banner').classList.add('hidden'); // YENİ EKLENDİ
             
             renderStoreUI();
         });
@@ -1911,6 +1920,7 @@
             document.getElementById('store-wa-btn').classList.remove('hidden');
             document.getElementById('store-action-header').classList.add('hidden');
             document.getElementById('store-live-btn').classList.remove('hidden');
+            document.getElementById('store-regional-top3-banner')?.classList.add('hidden'); // YENİ EKLENDİ
         } else {
             document.getElementById('store-mode-badge').innerText = "CANLI MAĞAZA PANELİ";
             document.getElementById('store-mode-badge').classList.replace('bg-slate-200', 'bg-pink-100');
@@ -1918,6 +1928,24 @@
             document.getElementById('store-wa-duyur-btn').classList.remove('hidden');
             document.getElementById('store-action-header').classList.remove('hidden');
             document.getElementById('store-live-btn').classList.add('hidden');
+
+            // --- YENİ EKLENDİ: Mağaza Kendi Bölgesindeki İlk 3 Personel Banner'ı ---
+            let currentStoreBM = allStoresList.find(s => s.name === currentId)?.bm;
+            if (currentStoreBM && window.allStaffGlobal) {
+                // Sadece kendi bölgesindeki personelleri filtrele
+                let regionalStaff = window.allStaffGlobal.filter(p => p.bm === currentStoreBM);
+                
+                // updateRegionTop5Banner fonksiyonunu bu liste için özelleştirilmiş başlıkla çağır
+                updateRegionTop5Banner(
+                    'store-regional-top3-banner', 
+                    regionalStaff, 
+                    window.top3Staff, 
+                    currentStoreBM + ' BÖLGESİ (İLK 3)', 
+                    'Kendi Bölgenizdeki Yıldızlar', 
+                    3
+                );
+            }
+            // ------------------------------------------------------------------------
         }
 
         let totalSales = 0, distTarget = 0;
