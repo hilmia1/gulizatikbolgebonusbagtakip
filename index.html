@@ -25,77 +25,55 @@
         .ai-text { background: -webkit-linear-gradient(0deg, #a855f7, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .progress-bar { transition: width 0.5s ease-in-out; }
         
-        .clickable-name {
-            cursor: pointer;
-            border-bottom: 1px dashed #cbd5e1;
-            transition: color 0.2s;
-        }
-        .clickable-name:hover {
-            color: #db2777;
-            border-bottom-color: #db2777;
-        }
+        .clickable-name { cursor: pointer; border-bottom: 1px dashed #cbd5e1; transition: color 0.2s; }
+        .clickable-name:hover { color: #db2777; border-bottom-color: #db2777; }
+        .clickable-store { cursor: pointer; transition: color 0.2s; }
+        .clickable-store:hover { color: #db2777; }
 
-        .clickable-store {
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-        .clickable-store:hover {
-            color: #db2777;
-        }
-
-        /* 📅 Koyu Ekranlar İçin Takvim İkonunu Beyaz Yapma */
-        .dark-date-input::-webkit-calendar-picker-indicator, .dark-time-input::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-            cursor: pointer;
-            opacity: 0.7;
-            transition: opacity 0.2s;
-        }
-        .dark-date-input::-webkit-calendar-picker-indicator:hover, .dark-time-input::-webkit-calendar-picker-indicator:hover {
-            opacity: 1;
-        }
-        .light-date-input::-webkit-calendar-picker-indicator {
-            cursor: pointer;
-            opacity: 0.6;
-            transition: opacity 0.2s;
-        }
-        .light-date-input::-webkit-calendar-picker-indicator:hover {
-            opacity: 1;
-        }
+        /* 📅 Takvim İkonları */
+        .dark-date-input::-webkit-calendar-picker-indicator, .dark-time-input::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; opacity: 0.7; transition: opacity 0.2s; }
+        .dark-date-input::-webkit-calendar-picker-indicator:hover, .dark-time-input::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+        .light-date-input::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; transition: opacity 0.2s; }
+        .light-date-input::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 
         /* Duyuru Bandı Animasyonu */
-        @keyframes alert-ticker {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
-        }
-        
-        /* Masaüstünde normal hız */
-        .alert-track {
-            display: inline-block;
-            white-space: nowrap;
-            animation: alert-ticker 30s linear infinite;
-        }
-
-        /* Mobilde mesafe kısa olduğu için süreyi düşürüp hızı artırıyoruz */
-        @media (max-width: 768px) {
-            .alert-track {
-                animation: alert-ticker 12s linear infinite;
-            }
-        }
+        @keyframes alert-ticker { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        .alert-track { display: inline-block; white-space: nowrap; animation: alert-ticker 35s linear infinite; }
+        @media (max-width: 768px) { .alert-track { animation: alert-ticker 15s linear infinite; } }
 
         /* Uçuşan Emoji Animasyonu */
-        @keyframes floatUp {
-            0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(-120px) scale(1.8) rotate(25deg); opacity: 0; }
+        @keyframes floatUp { 0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translateY(-120px) scale(1.8) rotate(25deg); opacity: 0; } }
+        .floating-emoji { position: fixed; pointer-events: none; z-index: 9999; animation: floatUp 1s ease-out forwards; }
+
+        /* === 🌙 KARANLIK MOD CSS (DARK THEME) === */
+        body.dark-mode { background-color: #0f172a !important; color: #f1f5f9 !important; }
+        .dark-mode .bg-white { background-color: #1e293b !important; border-color: #334155 !important; color: #f8fafc; }
+        .dark-mode .bg-slate-50 { background-color: #0f172a !important; border-color: #1e293b !important; color: #e2e8f0; }
+        .dark-mode .bg-slate-100 { background-color: #1e293b !important; border-color: #334155 !important; }
+        .dark-mode .text-slate-800, .dark-mode .text-slate-700 { color: #f8fafc !important; }
+        .dark-mode .text-slate-600, .dark-mode .text-slate-500 { color: #94a3b8 !important; }
+        .dark-mode .border-slate-200, .dark-mode .border-slate-300, .dark-mode .border-slate-100 { border-color: #334155 !important; }
+        
+        .dark-mode input[type="text"], .dark-mode input[type="number"], .dark-mode input[type="date"], .dark-mode select { 
+            background-color: #0f172a !important; border-color: #334155 !important; color: #f8fafc !important; color-scheme: dark;
         }
-        .floating-emoji {
-            position: fixed;
-            pointer-events: none;
-            z-index: 9999;
-            animation: floatUp 1s ease-out forwards;
+        
+        .dark-mode thead th { background-color: #1e293b !important; border-bottom: 1px solid #334155 !important; color: #cbd5e1 !important;}
+        .dark-mode tbody tr { border-bottom-color: #334155 !important; }
+        .dark-mode tbody tr:hover { background-color: #334155 !important; }
+
+        .dark-mode .shadow-sm, .dark-mode .shadow-md { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5) !important; }
+        .dark-mode .shadow-inner { box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.5) !important; }
+
+        .dark-mode .bg-pink-100, .dark-mode .bg-emerald-100, .dark-mode .bg-rose-100, .dark-mode .bg-indigo-100, .dark-mode .bg-amber-100, .dark-mode .bg-orange-100 {
+            background-color: transparent !important; border: 1px solid currentColor !important;
         }
+
+        .dark-mode #dark-mode-icon::before { content: "\f185"; color: #facc15; } 
+        #dark-mode-icon::before { content: "\f186"; } 
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen font-sans relative pb-16">
+<body class="bg-slate-50 text-slate-800 min-h-screen font-sans relative pb-16 transition-colors duration-300">
 
     <!-- ⚡ MERKEZ DUYURU BANDI (SİSTEM YÖNETİCİSİ İÇİN - YENİ RENK) -->
     <div id="central-announcement-bar" class="hidden bg-gradient-to-r from-cyan-950 to-slate-900 border-b border-cyan-500 py-2 text-sm font-black tracking-widest overflow-hidden shadow-lg sticky top-0 z-[65]">
@@ -242,7 +220,7 @@
     </div>
 
     <!-- ÜST BİLGİ BARI -->
-    <div class="bg-slate-900 text-white p-3 shadow-md sticky top-[0px] z-50">
+    <div class="bg-slate-900 text-white p-3 shadow-md sticky top-[0px] z-50 transition-colors">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <i class="fa-solid fa-bullseye text-pink-500 text-xl"></i>
@@ -251,6 +229,10 @@
             <div class="flex items-center gap-2 sm:gap-3">
                 <span id="active-date-badge" class="hidden sm:inline-block px-3 py-1 bg-slate-800 rounded-lg text-xs font-bold text-slate-300 border border-slate-700"></span>
                 
+                <button type="button" onclick="toggleDarkMode()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-bold transition flex items-center gap-1.5 border border-slate-700 shadow-sm" title="Gece/Gündüz Modu">
+                    <i id="dark-mode-icon" class="fa-solid"></i>
+                </button>
+
                 <button type="button" id="back-btn" onclick="goBack()" class="hidden px-3 py-1.5 bg-pink-600 hover:bg-pink-500 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm border border-pink-500">
                     <i class="fa-solid fa-arrow-left"></i> <span class="hidden sm:inline">Geri</span>
                 </button>
@@ -267,8 +249,8 @@
         <!-- ================= 1. GİRİŞ VE SEÇİM EKRANI ================= -->
         <div id="screen-home" class="screen space-y-6 hidden">
             <div class="text-center py-6">
-                <h2 class="text-3xl font-black text-slate-800 mb-2">Bonus Bag Sistemine Hoş Geldiniz 🚀</h2>
-                <p class="text-slate-500">Görüntülemek istediğiniz paneli yetkinize göre seçiniz.</p>
+                <h2 class="text-3xl font-black text-slate-800 mb-2 transition-colors">Bonus Bag Sistemine Hoş Geldiniz 🚀</h2>
+                <p class="text-slate-500 transition-colors">Görüntülemek istediğiniz paneli yetkinize göre seçiniz.</p>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -369,7 +351,7 @@
                 </div>
             </div>
 
-            <!-- Stores Table (Scroll İptal Edildi, Aşağı Doğru Uzar) -->
+            <!-- Stores Table (Aşağı Doğru Uzar) -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="w-full">
                     <table class="w-full text-left text-sm relative">
@@ -442,7 +424,14 @@
                 </div>
             </div>
 
-            <div id="store-add-panel" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <!-- MAĞAZA SAATLİK ISI HARİTASI (YENİ) -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mt-4 overflow-hidden hidden" id="store-heatmap-card">
+                <h3 class="font-bold text-slate-700 text-sm mb-2"><i class="fa-solid fa-fire-flame-curved text-pink-500 mr-2"></i> Mağaza Saatlik Yoğunluk Haritası</h3>
+                <p class="text-[10px] text-slate-500 mb-4">Günün hangi saatlerinde satış girildiğini gösterir.</p>
+                <div id="store-heatmap-container" class="w-full flex items-end justify-between h-24 gap-1"></div>
+            </div>
+
+            <div id="store-add-panel" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mt-4">
                 <div class="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-3">
                     <div>
                         <h3 class="font-bold text-slate-700 text-sm"><i class="fa-solid fa-users text-pink-500 mr-1"></i> Ekip Yönetimi & Hedef Dağıtımı</h3>
@@ -641,10 +630,29 @@
                 </div>
             </div>
 
-            <!-- 📊 GRAFİK (Sadece Pasta) -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mt-2">
-                <h3 class="font-bold text-slate-700 text-sm mb-4 text-center sm:text-left"><i class="fa-solid fa-chart-pie text-pink-500 mr-2"></i> Bölge Müdürü Pay Dağılımı</h3>
-                <div class="relative h-56 w-full flex justify-center"><canvas id="pieChart"></canvas></div>
+            <!-- GRAFİKLER BÖLÜMÜ (3 Sütunlu Izgara) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-2">
+                <!-- 📊 GRAFİK 1: Pasta -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-slate-700 text-sm mb-4 text-center sm:text-left"><i class="fa-solid fa-chart-pie text-pink-500 mr-2"></i> Bölge Pay Dağılımı</h3>
+                    <div class="relative h-48 w-full flex justify-center"><canvas id="pieChart"></canvas></div>
+                </div>
+                
+                <!-- 📈 GRAFİK 2: Trend Line (7 Günlük İvme) -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-700 text-sm"><i class="fa-solid fa-arrow-trend-up text-indigo-500 mr-2"></i> 7 Günlük İvme</h3>
+                        <div id="momentum-badge"></div>
+                    </div>
+                    <div class="relative flex-1 min-h-[150px] w-full"><canvas id="trendChart"></canvas></div>
+                </div>
+
+                <!-- 🔥 GRAFİK 3: Heatmap (Saatlik Harita) -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
+                    <h3 class="font-bold text-slate-700 text-sm mb-2"><i class="fa-solid fa-fire-flame-curved text-rose-500 mr-2"></i> Saatlik Yoğunluk Haritası</h3>
+                    <p class="text-[10px] text-slate-500 mb-4">Günün hangi saatlerinde satış girildiğini gösterir.</p>
+                    <div id="gen-heatmap-container" class="flex-1 w-full flex items-end justify-between gap-1"></div>
+                </div>
             </div>
 
             <!-- Yapay Zeka Özeti ve Paylaşım Barı -->
@@ -725,6 +733,22 @@
     </div>
 
 <script>
+    // === DARK MODE LİSTENER ===
+    function toggleDarkMode() {
+        const body = document.body;
+        body.classList.toggle('dark-mode');
+        const isDark = body.classList.contains('dark-mode');
+        localStorage.setItem('bonusbag_darkmode', isDark ? 'true' : 'false');
+    }
+
+    function initDarkMode() {
+        const isDark = localStorage.getItem('bonusbag_darkmode') === 'true';
+        if (isDark) {
+            document.body.classList.add('dark-mode');
+        }
+    }
+    initDarkMode(); 
+
     // === FIREBASE AYARLARI ===
     const firebaseConfig = {
         apiKey: "AIzaSyB-KkoAiXqLZnzclUrjrFkMe_J0PhqFJUs",
@@ -809,7 +833,6 @@
     let currentTransferStaffId = null;
     let currentTransferStaffName = null;
 
-    // Profil İçin Küresel Değişkenler
     window.currentProfileStaffId = null;
     window.currentProfileStore = null;
 
@@ -817,19 +840,14 @@
     window.generalTop3Staff = [];
     window.top3StoresGlobal = []; 
     
-    // Telsiz Sistemi İçin Bellek
     window.lastAnnouncementsData = {};
     window.centralAnnData = null;
 
-    // Geri Dönüş Hafızası (History Stack)
     let navStack = [];
-
-    // CHART.JS INSTANCE
     let pieChartInstance = null;
+    let trendChartInstance = null;
 
-    // KONFETİ TAKİBİ
     window.firedConfetti = { store: false };
-
     window.fireConfetti = function() {
         if(typeof confetti !== 'undefined') {
             var duration = 3 * 1000;
@@ -864,7 +882,6 @@
         return "Silinmiş Personel";
     }
 
-    // === GERİ BUTONU KONTROLÜ ===
     function updateNavButtons() {
         if (navStack.length > 0) {
             document.getElementById('back-btn').classList.remove('hidden');
@@ -902,7 +919,6 @@
         updateNavButtons();
     }
 
-    // Doğrudan Mağazaya Gitme Fonksiyonu
     window.goToStore = function(storeId) {
         if(currentRole) navStack.push({role: currentRole, id: currentId});
         currentRole = 'store'; currentId = storeId;
@@ -912,11 +928,11 @@
         document.getElementById('store-title').innerText = currentId;
         document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
         document.getElementById('screen-store').classList.remove('hidden');
+        document.getElementById('store-heatmap-card').classList.remove('hidden');
         updateNavButtons();
         renderStoreUI();
     }
 
-    // Doğrudan Bölge Paneline Gitme Fonksiyonu (YETKİ KONTROLLÜ)
     window.goToRegion = function(regionId) {
         if (currentRole === 'general' || currentRole === 'central') {
             executeGoToRegion(regionId);
@@ -946,7 +962,6 @@
         renderRegionUI();
     }
 
-    // === PERSONEL PERFORMANS KARNESİ (MODAL) YENİDEN AKTİF ===
     window.openStaffProfile = function(stfId) {
         if (!stfId || stfId === 'undefined') return;
         
@@ -1222,7 +1237,119 @@
         container.innerHTML = html;
     }
 
-    // === TELSİZ VE MERKEZİ DUYURU LİSTENER ===
+    // === GRAFİK RENDER FONKSİYONLARI ===
+    function renderHeatmap(hourlyData, containerId, colorClass) {
+        const container = document.getElementById(containerId);
+        if(!container) return;
+        
+        let maxVal = Math.max(...Object.values(hourlyData), 1);
+        let html = '';
+        
+        for(let i=9; i<=22; i++) {
+            let key = i < 10 ? '0'+i : ''+i;
+            let val = hourlyData[key] || 0;
+            let hPerc = (val / maxVal) * 100;
+            let opacity = val === 0 ? 10 : Math.max(30, hPerc);
+            
+            html += `<div class="flex flex-col items-center flex-1 group relative h-full justify-end">
+                <div class="absolute -top-6 bg-slate-800 text-white text-[9px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">${val} Satış</div>
+                <div class="w-full ${colorClass} rounded-t-sm transition-all duration-500" style="height: ${hPerc}%; min-height: ${val>0?'10%':'2%'}; opacity: ${opacity}%"></div>
+                <span class="text-[8px] text-slate-400 mt-1">${key}</span>
+            </div>`;
+        }
+        container.innerHTML = html;
+    }
+
+    function renderTrendChart(trendDataArr, labelsArr, momentum) {
+        if(trendChartInstance) trendChartInstance.destroy();
+        let canvas = document.getElementById('trendChart');
+        if(!canvas) return;
+        let ctx = canvas.getContext('2d');
+        
+        let color = momentum >= 0 ? '#10b981' : '#f43f5e'; 
+        
+        trendChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labelsArr,
+                datasets: [{
+                    label: 'Satışlar',
+                    data: trendDataArr,
+                    borderColor: color,
+                    backgroundColor: color + '20',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointBackgroundColor: color
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { display: false } },
+                    x: { grid: { display: false }, ticks: { font: {size: 9} } }
+                }
+            }
+        });
+        
+        let mIcon = momentum >= 0 ? '<i class="fa-solid fa-arrow-trend-up"></i>' : '<i class="fa-solid fa-arrow-trend-down"></i>';
+        let mText = momentum >= 0 ? `+${momentum}% Yükseliş` : `${momentum}% Düşüş`;
+        let mClass = momentum >= 0 ? 'bg-emerald-100 text-emerald-700 border-emerald-300' : 'bg-rose-100 text-rose-700 border-rose-300';
+        
+        document.getElementById('momentum-badge').innerHTML = `<span class="px-2 py-1 border rounded font-bold text-[10px] ${mClass}">${mIcon} ${mText}</span>`;
+    }
+
+    // 7 Günlük İvme ve Genel Saatlik Isı Haritası Hesaplamaları (GÜVENLİ)
+    function calculateGlobalTrendAndHeatmap() {
+        try {
+            // Trend Grafiği (Son 7 Gün)
+            let dLabels = [];
+            let dData = [];
+            let today = new Date();
+            
+            for(let i=6; i>=0; i--) {
+                let d = new Date(today);
+                d.setDate(d.getDate() - i);
+                let yyyy = d.getFullYear();
+                let mm = String(d.getMonth()+1).padStart(2, '0');
+                let dd = String(d.getDate()).padStart(2, '0');
+                let dStr = `${yyyy}-${mm}-${dd}`;
+                dLabels.push(`${dd}.${mm}`);
+                
+                let sum = 0;
+                let dayObj = globalData.daily?.[dStr] || {};
+                Object.keys(dayObj).forEach(st => {
+                    if (st !== 'isLocked' && dayObj[st] && dayObj[st].staff) {
+                       Object.values(dayObj[st].staff).forEach(p => { sum += (p.sales||0); });
+                    }
+                });
+                dData.push(sum);
+            }
+            let todayVal = dData[6] || 0;
+            let yesterdayVal = dData[5] || 0;
+            let momentum = yesterdayVal > 0 ? Math.round(((todayVal - yesterdayVal) / yesterdayVal) * 100) : (todayVal > 0 ? 100 : 0);
+            renderTrendChart(dData, dLabels, momentum);
+
+            // Genel Saatlik Isı Haritası (Bugün)
+            let hourlyTotals = {};
+            let todayData = globalData.daily?.[ACTIVE_DATE] || {};
+            Object.keys(todayData).forEach(store => {
+                if (todayData[store] && todayData[store].hourly) {
+                    let hObj = todayData[store].hourly;
+                    Object.keys(hObj).forEach(h => {
+                        hourlyTotals[h] = (hourlyTotals[h] || 0) + hObj[h];
+                    });
+                }
+            });
+            renderHeatmap(hourlyTotals, 'gen-heatmap-container', 'bg-rose-500');
+        } catch(e) {
+            console.error("Grafik oluşturulurken hata:", e);
+        }
+    }
+
     function checkCentralAnnouncementVisibility() {
         let ann = window.centralAnnData;
         let bar = document.getElementById('central-announcement-bar');
@@ -1256,7 +1383,6 @@
             window.centralAnnData = snap.val();
             checkCentralAnnouncementVisibility();
         });
-        // 15 Saniyede bir zaman kontrolü yap
         setInterval(checkCentralAnnouncementVisibility, 15000);
     }
 
@@ -1352,7 +1478,6 @@
             updateAnnouncementUI();
         });
 
-        // 30 Saniyede Bir Zaman Aşımı Kontrolü
         setInterval(() => {
             let nowTime = Date.now();
             let ONE_HOUR = 60 * 60 * 1000;
@@ -1371,12 +1496,12 @@
                 }
 
                 if (isExpired) {
-                    dbRoot.child('global_announcement').child(sender).remove(); // Veritabanından Sil
+                    dbRoot.child('global_announcement').child(sender).remove(); 
                     dbChanged = true;
                 }
             });
             
-            if(!dbChanged) updateAnnouncementUI(); // Sadece UI güncelle
+            if(!dbChanged) updateAnnouncementUI(); 
         }, 30000); 
     }
 
@@ -1589,6 +1714,7 @@
         window.firedConfetti = { store: false }; 
         document.getElementById('store-top3-stores-banner').classList.remove('hidden');
         document.getElementById('store-top3-banner').classList.remove('hidden');
+        document.getElementById('store-heatmap-card').classList.remove('hidden');
         renderStoreUI();
     }
 
@@ -1603,7 +1729,7 @@
     function aggregateDataForStores(storeList, rangeData) {
         let agg = {};
         storeList.forEach(store => {
-            agg[store] = { isLocked: true, storeTarget: 0, targetBy: 'Geçmiş Seçim', staff: {} };
+            agg[store] = { isLocked: true, storeTarget: 0, targetBy: 'Geçmiş Seçim', staff: {}, hourly: {} };
             let masterStaff = globalData.master_staff?.[store] || {};
             for(let id in masterStaff) {
                 agg[store].staff[id] = { id: id, name: masterStaff[id].name || "İsimsiz", sales: 0, target: 0, applause: 0, isTransfer: false };
@@ -1625,6 +1751,11 @@
                             agg[store].staff[stfId].sales += (sData.staff[stfId].sales || 0);
                             agg[store].staff[stfId].target += (sData.staff[stfId].target || 0);
                             agg[store].staff[stfId].applause += (sData.staff[stfId].applause || 0);
+                        });
+                    }
+                    if(sData.hourly) {
+                        Object.keys(sData.hourly).forEach(hr => {
+                            agg[store].hourly[hr] = (agg[store].hourly[hr] || 0) + sData.hourly[hr];
                         });
                     }
                 }
@@ -1653,7 +1784,7 @@
             }
         }
         
-        return { isLocked: sData.isLocked || false, storeTarget: sData.target || 0, targetBy: sData.targetBy || '', staff: staffObj };
+        return { isLocked: sData.isLocked || false, storeTarget: sData.target || 0, targetBy: sData.targetBy || '', staff: staffObj, hourly: sData.hourly || {} };
     }
 
     // === MAĞAZA EKRANI İŞLEMLERİ ===
@@ -1668,6 +1799,7 @@
         document.getElementById('store-title').innerText = currentId;
         document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
         document.getElementById('screen-store').classList.remove('hidden');
+        document.getElementById('store-heatmap-card').classList.remove('hidden');
         updateNavButtons();
         renderStoreUI();
     }
@@ -1689,6 +1821,7 @@
             storeHistoricalData = agg[currentId];
             document.getElementById('store-top3-stores-banner').classList.add('hidden');
             document.getElementById('store-top3-banner').classList.add('hidden');
+            
             renderStoreUI();
         });
     }
@@ -1698,6 +1831,7 @@
         const stats = isStoreHistorical ? storeHistoricalData : getStoreDailyStats(currentId, ACTIVE_DATE);
 
         updateAnnouncementUI();
+        renderHeatmap(stats.hourly || {}, 'store-heatmap-container', 'bg-pink-500');
 
         if(isStoreHistorical) {
             document.getElementById('store-mode-badge').innerText = "GEÇMİŞ RAPOR MODU";
@@ -1726,6 +1860,7 @@
         let targetInput = document.getElementById('store-target-input');
         if (document.activeElement !== targetInput) targetInput.value = stats.storeTarget;
         
+        // Merkezden verilen hedefler mağazada kilitlenir
         let isStoreTargetLocked = isStoreHistorical ? true : (stats.isLocked || stats.targetBy === "MERKEZ" || (stats.targetBy === "BM" && stats.storeTarget > 0));
         targetInput.disabled = isStoreTargetLocked;
         
@@ -1882,12 +2017,23 @@
         if(v < 0) v = 0;
         dbRoot.child('daily').child(ACTIVE_DATE).child(currentId).child('staff').child(id).update({ target: v });
     }
+    
+    // === Saatlik Isı Haritası Mantığı ===
     window.updateStoreSale = function(id, change) {
         let current = globalData.daily?.[ACTIVE_DATE]?.[currentId]?.staff?.[id]?.sales || 0;
-        let next = current + change;
-        if (next < 0) next = 0;
+        let next = Math.max(0, current + change);
         dbRoot.child('daily').child(ACTIVE_DATE).child(currentId).child('staff').child(id).update({ sales: next });
+
+        // Heatmap Logging (Eğer artış varsa)
+        if (change > 0 && !isStoreHistorical) {
+            let h = new Date().getHours();
+            if (h >= 9 && h <= 22) { // 09:00 ile 22:00 arası kayıt
+                let hrKey = h < 10 ? '0'+h : ''+h;
+                dbRoot.child('daily').child(ACTIVE_DATE).child(currentId).child('hourly').child(hrKey).transaction(v => (v || 0) + change);
+            }
+        }
     }
+
     window.lockStore = function() { 
         const stats = getStoreDailyStats(currentId, ACTIVE_DATE);
         if (Object.keys(stats.staff).length === 0) return alert('Personel eklemediniz!');
@@ -2217,7 +2363,7 @@
         openPasswordModal(
             "Sistem Merkezi", 
             "Yönetici paneline giriş için güvenlik kodunu girin.", 
-            "fa-solid fa-server text-purple-500", 
+            "fa-solid fa-server text-cyan-500", 
             "1988", 
             () => {
                 navStack = []; 
@@ -2234,6 +2380,7 @@
     // === SİSTEM MERKEZİ İŞLEMLERİ ===
     function renderCentralUI() {
         updateAnnouncementUI();
+        calculateGlobalTrendAndHeatmap();
         
         let totalSales = 0;
         let totalTarget = 0;
@@ -2256,7 +2403,7 @@
                 ? `<button onclick="toggleCentralLock('${storeObj.name}', false)" class="px-2 py-1 bg-rose-100 text-rose-600 hover:bg-rose-200 rounded text-xs font-bold transition"><i class="fa-solid fa-lock mr-1"></i> Aç</button>`
                 : `<button onclick="toggleCentralLock('${storeObj.name}', true)" class="px-2 py-1 bg-emerald-100 text-emerald-600 hover:bg-emerald-200 rounded text-xs font-bold transition"><i class="fa-solid fa-lock-open mr-1"></i> Kilitle</button>`;
 
-            let targetInput = `<input type="number" min="0" value="${stats.storeTarget}" onchange="updateCentralTarget('${storeObj.name}', this.value)" class="w-16 p-1 text-center font-bold border border-slate-300 rounded focus:border-purple-500 focus:outline-none text-indigo-600">`;
+            let targetInput = `<input type="number" min="0" value="${stats.storeTarget}" onchange="updateCentralTarget('${storeObj.name}', this.value)" class="w-16 p-1 text-center font-bold border border-slate-300 rounded focus:border-cyan-500 focus:outline-none text-indigo-600">`;
 
             let distStatus = "";
             if (stats.storeTarget === 0) distStatus = `<span class="text-[9px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded font-bold uppercase whitespace-nowrap">Hedef Yok</span>`;
@@ -2264,7 +2411,7 @@
             else distStatus = `<span class="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-bold uppercase whitespace-nowrap">Tamamlandı</span>`;
 
             listHTML += `
-            <tr class="border-b border-slate-200 hover:bg-indigo-50/50 transition">
+            <tr class="border-b border-slate-200 hover:bg-cyan-50/50 transition">
                 <td class="py-2.5 px-3 font-bold text-slate-700 text-xs sm:text-sm"><span class="clickable-store" onclick="goToStore('${storeObj.name}')" title="Mağazaya Git">${storeObj.name}</span></td>
                 <td class="py-2.5 px-3 text-[10px] text-slate-500 hidden sm:table-cell"><span class="clickable-store" onclick="goToRegion('${storeObj.bm}')">${storeObj.bm}</span></td>
                 <td class="py-2.5 px-3 text-center">${targetInput}</td>
@@ -2345,7 +2492,6 @@
     function processGeneralData(rangeData) {
         let aggData = {};
         
-        // Önce mağazalardaki tüm geçmiş personelleri veritabanından başlat (Sıfır hedef hesaplaması için)
         Object.keys(effectiveHierarchy).forEach(bm => {
             effectiveHierarchy[bm].forEach(store => {
                 aggData[store] = { staff: {}, target: 0, targetBy: 'Genel', isLocked: false };
@@ -2381,6 +2527,7 @@
 
     function renderGeneralUI(aggData) {
         updateAnnouncementUI();
+        calculateGlobalTrendAndHeatmap();
         
         let grandSales = 0, grandTarget = 0;
         let grandTotalStores = 0, grandDistributedStores = 0;
@@ -2510,6 +2657,7 @@
         let aiText = `<p><strong>${reportDateRangeStr}</strong> tarih aralığı performans analizi:</p>
             <ul class="mt-2 space-y-1.5 ml-2">
                 <li>🎯 <strong>Bölge Geneli:</strong> Toplam ${grandTarget} adet hedefe karşılık ${grandSales} adet satış gerçekleşti. <strong>Başarı oranı %${genPerc}.</strong></li>
+                <li>👥 <strong>Ekip Katılımı:</strong> Bölgedeki toplam ${grandTotalStores} mağazanın <strong class="text-white">${grandDistributedStores}</strong> kadarı hedefini dağıtmıştır.</li>
                 <li>👑 <strong>En Çok Satan Bölge Müdürü:</strong> ${topBMText}</li>
                 <li>🏆 <strong>En Çok Satan Mağaza:</strong> ${topStoreText}</li>
                 <li>🚀 <strong>Hedefini En Çok Aşan Mağaza:</strong> ${topTargetStoreText}</li>
