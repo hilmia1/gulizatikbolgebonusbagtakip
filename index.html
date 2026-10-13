@@ -71,6 +71,32 @@
 
         .dark-mode #dark-mode-icon::before { content: "\f185"; color: #facc15; } 
         #dark-mode-icon::before { content: "\f186"; } 
+
+        /* --- YENİ: DARK MODE TABLO VE LİSTE RENK DÜZELTMELERİ --- */
+        .dark-mode .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.1) !important; }
+        .dark-mode .hover\:bg-emerald-100:hover { background-color: rgba(16, 185, 129, 0.2) !important; }
+        
+        .dark-mode .bg-orange-50 { background-color: rgba(249, 115, 22, 0.1) !important; }
+        .dark-mode .hover\:bg-orange-100:hover { background-color: rgba(249, 115, 22, 0.2) !important; }
+        
+        .dark-mode .bg-rose-50 { background-color: rgba(244, 63, 94, 0.1) !important; }
+        .dark-mode .hover\:bg-rose-100:hover { background-color: rgba(244, 63, 94, 0.2) !important; }
+        
+        .dark-mode .bg-amber-50\/70 { background-color: rgba(245, 158, 11, 0.15) !important; }
+        .dark-mode .bg-slate-100\/70 { background-color: rgba(148, 163, 184, 0.15) !important; }
+        .dark-mode .bg-orange-50\/70 { background-color: rgba(249, 115, 22, 0.15) !important; }
+
+        .dark-mode .from-amber-100 { --tw-gradient-from: rgba(245, 158, 11, 0.2) !important; --tw-gradient-to: rgba(245, 158, 11, 0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+        .dark-mode .to-amber-50 { --tw-gradient-to: rgba(245, 158, 11, 0.05) !important; }
+        
+        .dark-mode .from-slate-100 { --tw-gradient-from: rgba(148, 163, 184, 0.2) !important; --tw-gradient-to: rgba(148, 163, 184, 0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+        .dark-mode .to-slate-50 { --tw-gradient-to: rgba(148, 163, 184, 0.05) !important; }
+        
+        .dark-mode .from-orange-100 { --tw-gradient-from: rgba(249, 115, 22, 0.2) !important; --tw-gradient-to: rgba(249, 115, 22, 0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+        .dark-mode .to-orange-50 { --tw-gradient-to: rgba(249, 115, 22, 0.05) !important; }
+
+        .dark-mode .border-indigo-100 { border-color: rgba(99, 102, 241, 0.3) !important; }
+        /* -------------------------------------------------------- */
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen font-sans relative pb-16 transition-colors duration-300">
@@ -651,7 +677,7 @@
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
                     <h3 class="font-bold text-slate-700 text-sm mb-2"><i class="fa-solid fa-fire-flame-curved text-rose-500 mr-2"></i> Saatlik Yoğunluk Haritası</h3>
                     <p class="text-[10px] text-slate-500 mb-4">Günün hangi saatlerinde satış girildiğini gösterir.</p>
-                    <div id="gen-heatmap-container" class="flex-1 w-full flex items-end justify-between gap-1"></div>
+                    <div id="gen-heatmap-container" class="flex-1 w-full flex items-end justify-between gap-1 min-h-[120px]"></div>
                 </div>
             </div>
 
@@ -1594,6 +1620,24 @@
             }
         }
     }
+
+    // YENİ EKLENEN AÇILIR MENÜ (ACCORDION) FONKSİYONU
+    window.toggleBMStores = function(idx) {
+        const row = document.getElementById('bm-stores-' + idx);
+        const icon = document.getElementById('bm-icon-' + idx);
+        
+        if (row && icon) {
+            if (row.classList.contains('hidden')) {
+                row.classList.remove('hidden');
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            } else {
+                row.classList.add('hidden');
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            }
+        }
+    };
 
     window.onload = () => {
         document.getElementById('modal-password-input').addEventListener('keypress', function (e) {
