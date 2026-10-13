@@ -72,7 +72,7 @@
         .dark-mode #dark-mode-icon::before { content: "\f185"; color: #facc15; } 
         #dark-mode-icon::before { content: "\f186"; } 
 
-        /* --- YENİ: DARK MODE TABLO VE LİSTE RENK DÜZELTMELERİ --- */
+        /* --- DARK MODE TABLO VE LİSTE RENK DÜZELTMELERİ --- */
         .dark-mode .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.1) !important; }
         .dark-mode .hover\:bg-emerald-100:hover { background-color: rgba(16, 185, 129, 0.2) !important; }
         
@@ -401,9 +401,11 @@
         <div id="screen-store" class="screen hidden space-y-5">
             <!-- 🏆 MAĞAZALAR TOP 3 BARI -->
             <div id="store-top3-stores-banner" class="hidden"></div>
+            <!-- BÖLGE İÇİ MAĞAZALAR TOP 3 BARI (YENİ) -->
+            <div id="store-regional-top3-stores-banner" class="hidden"></div>
             <!-- MEVCUT PERSONEL TOP 3 BARI -->
             <div id="store-top3-banner" class="hidden"></div>
-            <!-- BÖLGE İÇİ TOP 3 BARI (YENİ) -->
+            <!-- BÖLGE İÇİ PERSONEL TOP 3 BARI -->
             <div id="store-regional-top3-banner" class="hidden"></div>
             
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 relative overflow-hidden">
@@ -1224,6 +1226,50 @@
         html += `</div></div>`;
         container.innerHTML = html;
     }
+    
+    function updateRegionalTop3StoresBanner(containerId, storeArr, globalTop3Stores, mainTitle, subTitle) {
+        const container = document.getElementById(containerId);
+        if(!container) return;
+        if (!storeArr || storeArr.length === 0) {
+            container.innerHTML = '';
+            container.classList.add('hidden');
+            return;
+        }
+        container.classList.remove('hidden');
+        let html = `<div class="bg-gradient-to-r from-cyan-900 to-slate-800 rounded-2xl shadow-lg p-3 sm:p-4 mb-5 flex flex-col lg:flex-row items-center gap-4 justify-between border border-cyan-500/30 relative overflow-hidden">
+            <div class="absolute right-0 top-0 text-white/5 text-6xl font-black transform translate-x-2 -translate-y-2"><i class="fa-solid fa-store"></i></div>
+            <div class="flex items-center gap-3 relative z-10 w-full lg:w-auto justify-center lg:justify-start">
+                <div class="w-10 h-10 rounded-full bg-cyan-400/20 flex items-center justify-center border border-cyan-400/50 shadow-[0_0_15px_rgba(34,211,238,0.3)]">
+                    <i class="fa-solid fa-store text-xl text-cyan-400 animate-pulse"></i>
+                </div>
+                <div class="text-center lg:text-left">
+                    <div class="font-black text-sm text-white tracking-wide">${mainTitle}</div>
+                    <div class="text-[10px] text-cyan-200/80 font-bold uppercase tracking-wider">${subTitle}</div>
+                </div>
+            </div>
+            <div class="flex flex-wrap justify-center lg:justify-end gap-2 sm:gap-3 w-full lg:w-auto relative z-10">`;
+        const medals = ['<i class="fa-solid fa-crown text-amber-500 text-lg"></i>', '<i class="fa-solid fa-medal text-slate-400 text-lg"></i>', '<i class="fa-solid fa-medal text-orange-400 text-lg"></i>'];
+        const colors = ['bg-gradient-to-br from-amber-100 to-amber-50 border-amber-300 ring-2 ring-amber-400/50', 'bg-gradient-to-br from-slate-100 to-slate-50 border-slate-300', 'bg-gradient-to-br from-orange-100 to-orange-50 border-orange-300'];
+        
+        storeArr.slice(0, 3).forEach((st, idx) => {
+            let globalRank = globalTop3Stores ? globalTop3Stores.findIndex(g => g.name === st.name) : -1;
+            let globalBadge = '';
+            if (globalRank === 0) globalBadge = `<span class="absolute -top-3 -right-2 bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-amber-300 animate-bounce whitespace-nowrap z-20">👑 EGE 1.Sİ</span>`;
+            else if (globalRank === 1) globalBadge = `<span class="absolute -top-3 -right-2 bg-slate-200 text-slate-800 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-slate-400 animate-bounce whitespace-nowrap z-20">🥈 EGE 2.Sİ</span>`;
+            else if (globalRank === 2) globalBadge = `<span class="absolute -top-3 -right-2 bg-orange-300 text-orange-900 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-orange-400 animate-bounce whitespace-nowrap z-20">🥉 EGE 3.SÜ</span>`;
+            
+            html += `<div class="relative flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[150px] cursor-pointer hover:shadow-lg transition-shadow" onclick="goToStore('${st.name}')" title="Mağazaya Git">
+                ${globalBadge}
+                <div class="flex items-center justify-center w-6">${medals[idx]}</div>
+                <div class="flex flex-col">
+                    <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-cyan-600 ml-1">${st.sales}</span></span>
+                    <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1 hover:text-cyan-500 transition-colors" onclick="event.stopPropagation(); goToRegion('${st.bm}')" title="Bölge Paneline Git">${st.bm}</span>
+                </div>
+            </div>`;
+        });
+        html += `</div></div>`;
+        container.innerHTML = html;
+    }
 
     function updateRegionTop5Banner(containerId, staffArr, globalTop3, customTitle = "BÖLGE YILDIZLARI (İLK 5)", customSub = "Kendi Bölgenizdeki En İyi Personeller", limit = 5) {
         const container = document.getElementById(containerId);
@@ -1733,13 +1779,18 @@
             let allStaff = Object.values(allStaffMap);
             allStaff.sort((a, b) => b.sales - a.sales);
             
-            // Tüm personelleri daha sonra bölgesel sıralama yapabilmek için global'e attık (YENİ EKLENDİ)
+            // Tüm personelleri daha sonra bölgesel sıralama yapabilmek için global'e attık
             window.allStaffGlobal = allStaff;
             
             window.top3Staff = allStaff.slice(0, 3);
 
             let allStoresTop = Object.values(allStoresSalesMap);
             allStoresTop.sort((a, b) => b.sales - a.sales);
+            
+            // --- YENİ EKLENDİ: Tüm mağazaları bölgesel sıralama için global'e attık ---
+            window.allStoresGlobal = allStoresTop;
+            // ----------------------------------------------------------------------------
+            
             window.top3StoresGlobal = allStoresTop.slice(0, 3);
             
             if(!isStoreHistorical) {
@@ -1789,7 +1840,8 @@
         window.firedConfetti = { store: false }; 
         document.getElementById('store-top3-stores-banner').classList.remove('hidden');
         document.getElementById('store-top3-banner').classList.remove('hidden');
-        document.getElementById('store-regional-top3-banner').classList.remove('hidden'); // YENİ EKLENDİ
+        document.getElementById('store-regional-top3-banner').classList.remove('hidden');
+        document.getElementById('store-regional-top3-stores-banner').classList.remove('hidden'); // YENİ EKLENDİ
         document.getElementById('store-heatmap-card').classList.remove('hidden');
         renderStoreUI();
     }
@@ -1897,7 +1949,8 @@
             storeHistoricalData = agg[currentId];
             document.getElementById('store-top3-stores-banner').classList.add('hidden');
             document.getElementById('store-top3-banner').classList.add('hidden');
-            document.getElementById('store-regional-top3-banner').classList.add('hidden'); // YENİ EKLENDİ
+            document.getElementById('store-regional-top3-banner').classList.add('hidden');
+            document.getElementById('store-regional-top3-stores-banner').classList.add('hidden'); // YENİ EKLENDİ
             
             renderStoreUI();
         });
@@ -1920,7 +1973,8 @@
             document.getElementById('store-wa-btn').classList.remove('hidden');
             document.getElementById('store-action-header').classList.add('hidden');
             document.getElementById('store-live-btn').classList.remove('hidden');
-            document.getElementById('store-regional-top3-banner')?.classList.add('hidden'); // YENİ EKLENDİ
+            document.getElementById('store-regional-top3-banner')?.classList.add('hidden');
+            document.getElementById('store-regional-top3-stores-banner')?.classList.add('hidden'); // YENİ EKLENDİ
         } else {
             document.getElementById('store-mode-badge').innerText = "CANLI MAĞAZA PANELİ";
             document.getElementById('store-mode-badge').classList.replace('bg-slate-200', 'bg-pink-100');
@@ -1929,23 +1983,36 @@
             document.getElementById('store-action-header').classList.remove('hidden');
             document.getElementById('store-live-btn').classList.add('hidden');
 
-            // --- YENİ EKLENDİ: Mağaza Kendi Bölgesindeki İlk 3 Personel Banner'ı ---
+            // Mağaza Kendi Bölgesindeki İlk 3 Personel Banner'ı
             let currentStoreBM = allStoresList.find(s => s.name === currentId)?.bm;
             if (currentStoreBM && window.allStaffGlobal) {
                 // Sadece kendi bölgesindeki personelleri filtrele
                 let regionalStaff = window.allStaffGlobal.filter(p => p.bm === currentStoreBM);
                 
-                // updateRegionTop5Banner fonksiyonunu bu liste için özelleştirilmiş başlıkla çağır
                 updateRegionTop5Banner(
                     'store-regional-top3-banner', 
                     regionalStaff, 
                     window.top3Staff, 
-                    currentStoreBM + ' BÖLGESİ (İLK 3)', 
-                    'Kendi Bölgenizdeki Yıldızlar', 
+                    currentStoreBM + ' BÖLGESİ YILDIZLARI', 
+                    'Kendi Bölgenizdeki En İyi 3 Personel', 
                     3
                 );
             }
-            // ------------------------------------------------------------------------
+            
+            // --- YENİ EKLENDİ: Mağaza Kendi Bölgesindeki İlk 3 Mağaza Banner'ı ---
+            if (currentStoreBM && window.allStoresGlobal) {
+                // Sadece kendi bölgesindeki mağazaları filtrele
+                let regionalStores = window.allStoresGlobal.filter(s => s.bm === currentStoreBM);
+                
+                updateRegionalTop3StoresBanner(
+                    'store-regional-top3-stores-banner', 
+                    regionalStores, 
+                    window.top3StoresGlobal, 
+                    currentStoreBM + ' BÖLGESİ ŞAMPİYONLARI', 
+                    'Kendi Bölgenizdeki En Çok Satan İlk 3 Mağaza'
+                );
+            }
+            // ----------------------------------------------------------------------
         }
 
         let totalSales = 0, distTarget = 0;
