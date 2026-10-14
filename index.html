@@ -10,6 +10,7 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     
     <!-- 🎉 Konfeti Efekti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -689,9 +690,7 @@
                 <div class="absolute right-4 bottom-[-20px] text-white/5 text-9xl font-black pointer-events-none"><i class="fa-solid fa-chart-pie"></i></div>
                 <div class="relative z-10 w-full xl:w-5/12">
                     <h2 class="text-3xl font-black mb-1">GÜLİZ ATİK BÖLGESİ</h2>
-                    <button type="button" onclick="changeRegionPassword()" class="mb-3 text-[10px] bg-slate-700 hover:bg-slate-600 text-slate-200 px-2 py-1 rounded border border-slate-600 transition flex items-center gap-1 w-max">
-                        <i class="fa-solid fa-key"></i> Bölge M. Şifresini Değiştir
-                    </button>
+                    
                     
                     <div class="bg-slate-800/80 p-2.5 rounded-xl border border-slate-600/50 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-max">
                         <div class="flex items-center justify-between gap-2 bg-slate-700 p-1.5 rounded-lg border border-slate-500 shadow-inner">
@@ -902,7 +901,7 @@
     };
 
     window.saveContestBrands = function(inputId) {
-        let val = document.getElementById(inputId).value;
+        let val = String(document.getElementById(inputId).value).split(',').map(s => cleanText(s).replace(/[.$#\[\]\/]/g, '').trim()).filter(s => s).join(', ');
         dbRoot.child('settings').update({ contestBrands: val });
         alert("Odak ürünler başarıyla güncellendi!");
     }
@@ -1059,6 +1058,58 @@
     };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+
+    // === GÜVENLİK: YÖNETİCİ GİRİŞİ (Firebase Authentication) ===
+    // Bu e-postalar Firebase Console > Authentication > Users bölümünde oluşturulmalı
+    // ve database.rules.json içindeki e-postalarla AYNI olmalıdır.
+    const ADMIN_EMAILS = {
+        central: 'merkez@bonusbag.app',   // Sistem Merkezi
+        general: 'guliz@bonusbag.app',    // Güliz Atik paneli
+        region:  'bolge@bonusbag.app'     // Bölge müdürleri (ortak hesap)
+    };
+    const auth = firebase.auth();
+    // Oturum sadece açık sayfada tutulur: sayfa yenilenince şifre tekrar istenir (eski davranış).
+    auth.setPersistence(firebase.auth.Auth.Persistence.NONE).catch(() => {});
+
+    function hasAdminSession() {
+        const u = auth.currentUser;
+        return !!(u && u.email && Object.values(ADMIN_EMAILS).includes(u.email.toLowerCase()));
+    }
+
+    // === GÜVENLİK: METİN TEMİZLEME ===
+    function cleanText(s) { return String(s == null ? '' : s).replace(/[<>"'`\\]/g, ''); }
+    function escHtml(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+    function sanitizeGlobalData() {
+        const ms = globalData.master_staff;
+        if (!ms) return;
+        const known = new Set(allStoresList.map(s => s.name));
+        const clean = {};
+        Object.keys(ms).forEach(store => {
+            if (!known.has(store)) return;
+            clean[store] = {};
+            Object.keys(ms[store] || {}).forEach(id => {
+                if (!/^[A-Za-z0-9_-]+$/.test(id)) return;
+                const rec = ms[store][id] || {};
+                clean[store][id] = Object.assign({}, rec, { name: cleanText(rec.name) });
+            });
+        });
+        globalData.master_staff = clean;
+    }
+
+    // Yetkisiz yazma denemesi olursa kullanıcıya bilgi ver
+    let lastPermAlert = 0;
+    window.addEventListener('unhandledrejection', e => {
+        const msg = String((e.reason && (e.reason.code || e.reason.message)) || e.reason || '');
+        if (/permission[_ ]denied/i.test(msg)) {
+            e.preventDefault();
+            if (Date.now() - lastPermAlert > 10000) {
+                lastPermAlert = Date.now();
+                alert('Bu işlem için yetkiniz yok veya oturumunuz sona erdi. Lütfen Ana Menü\'den yeniden giriş yapın.');
+            }
+        }
+    });
     
     const dbRoot = db.ref('watsons_v7'); 
 
@@ -1235,12 +1286,12 @@
         if (currentRole === 'general' || currentRole === 'central') {
             executeGoToRegion(regionId);
         } else {
-            let currentRegionPass = globalData.settings?.regionPassword || "0000";
-            openPasswordModal(
+            if (hasAdminSession()) { executeGoToRegion(regionId); return; }
+            openAuthModal(
                 "Bölge Müdürü Yetkisi", 
                 "Bu panele geçiş yapmak için şifre gereklidir.", 
                 "fa-solid fa-shield-halved text-indigo-500", 
-                currentRegionPass, 
+                ADMIN_EMAILS.region, 
                 () => {
                     executeGoToRegion(regionId);
                 }
@@ -1389,7 +1440,7 @@
     window.editStaffName = function(id, currentName) {
         let newName = prompt("Personelin yeni adını/soyadını girin:", currentName);
         if (newName !== null) {
-            newName = newName.trim().toUpperCase();
+            newName = cleanText(newName).trim().toUpperCase();
             if (newName !== "" && newName !== currentName) {
                 dbRoot.child('master_staff').child(currentId).child(id).update({ name: newName });
             }
@@ -1398,28 +1449,74 @@
 
     let passwordSuccessCallback = null;
     let expectedPassword = "";
+    let authModalEmail = null;
+    const MODAL_ERR_DEFAULT = '<i class="fa-solid fa-circle-exclamation mr-1"></i> Hatalı şifre! Tekrar deneyin.';
 
-    window.openPasswordModal = function(title, desc, iconClass, correctPass, onSuccess) {
+    function resetModalState(title, desc, iconClass) {
         document.getElementById('modal-title').innerText = title;
         document.getElementById('modal-desc').innerText = desc;
         document.getElementById('modal-icon').className = iconClass;
         document.getElementById('modal-password-input').value = '';
-        document.getElementById('modal-password-error').classList.add('hidden');
-        expectedPassword = correctPass;
-        passwordSuccessCallback = onSuccess;
+        const err = document.getElementById('modal-password-error');
+        err.innerHTML = MODAL_ERR_DEFAULT;
+        err.classList.add('hidden');
+        const btn = document.getElementById('modal-submit-btn');
+        btn.disabled = false; btn.innerText = 'Giriş Yap';
         document.getElementById('password-modal').classList.remove('hidden');
         setTimeout(() => document.getElementById('modal-password-input').focus(), 100);
     }
+
+    // Basit (istemci tarafı) şifre kutusu: sadece mağaza kilidi gibi hafif korumalar için
+    window.openPasswordModal = function(title, desc, iconClass, correctPass, onSuccess) {
+        authModalEmail = null;
+        expectedPassword = correctPass;
+        passwordSuccessCallback = onSuccess;
+        resetModalState(title, desc, iconClass);
+    }
+
+    // Gerçek giriş: Firebase Authentication ile doğrular
+    window.openAuthModal = function(title, desc, iconClass, email, onSuccess) {
+        authModalEmail = email;
+        expectedPassword = "";
+        passwordSuccessCallback = onSuccess;
+        resetModalState(title, desc, iconClass);
+    }
+
     window.closePasswordModal = function() {
         document.getElementById('password-modal').classList.add('hidden');
+        authModalEmail = null;
     }
+
     window.verifyPassword = function() {
         const pass = document.getElementById('modal-password-input').value;
-        if(pass === expectedPassword) {
+        const errEl = document.getElementById('modal-password-error');
+
+        if (authModalEmail) {
+            if (!pass) return;
+            const btn = document.getElementById('modal-submit-btn');
+            btn.disabled = true; btn.innerText = 'Kontrol ediliyor...';
+            auth.signInWithEmailAndPassword(authModalEmail, pass).then(() => {
+                const cb = passwordSuccessCallback;
+                closePasswordModal();
+                if (cb) cb();
+            }).catch(err => {
+                btn.disabled = false; btn.innerText = 'Giriş Yap';
+                const code = (err && err.code) || '';
+                let msg = MODAL_ERR_DEFAULT;
+                if (code === 'auth/too-many-requests') msg = '<i class="fa-solid fa-hourglass-half mr-1"></i> Çok fazla hatalı deneme. Lütfen birkaç dakika bekleyin.';
+                else if (code === 'auth/network-request-failed') msg = '<i class="fa-solid fa-wifi mr-1"></i> Bağlantı hatası. İnternetinizi kontrol edin.';
+                else if (code === 'auth/user-not-found' || code === 'auth/operation-not-allowed') msg = '<i class="fa-solid fa-triangle-exclamation mr-1"></i> Hesap tanımlı değil. Sistem yöneticisine başvurun.';
+                errEl.innerHTML = msg;
+                errEl.classList.remove('hidden');
+            });
+            return;
+        }
+
+        if (pass === expectedPassword) {
             closePasswordModal();
-            if(passwordSuccessCallback) passwordSuccessCallback();
+            if (passwordSuccessCallback) passwordSuccessCallback();
         } else {
-            document.getElementById('modal-password-error').classList.remove('hidden');
+            errEl.classList.remove('hidden');
         }
     }
 
@@ -1708,7 +1805,7 @@
         }
         
         if (isVisible) {
-            textEl.innerHTML = ann.message;
+            textEl.textContent = ann.message;
             bar.classList.remove('hidden');
         } else {
             bar.classList.add('hidden');
@@ -1793,7 +1890,7 @@
                         ? `<span class="bg-indigo-500/80 border border-indigo-400 text-[8px] px-1.5 py-0.5 rounded ml-1 uppercase text-white shadow-sm whitespace-nowrap">BÖLGE MESAJI</span>` 
                         : `<span class="bg-rose-500/80 border border-rose-400 text-[8px] px-1.5 py-0.5 rounded ml-1 uppercase text-white shadow-sm whitespace-nowrap">GENEL MESAJ</span>`;
                     
-                    activeMessages.push(`<span class="text-amber-300 font-bold ml-4 mr-1">${sender} ${badge}:</span><span class="text-white">${ann.message}</span>`);
+                    activeMessages.push(`<span class="text-amber-300 font-bold ml-4 mr-1">${escHtml(sender)} ${badge}:</span><span class="text-white">${escHtml(ann.message)}</span>`);
                 }
             }
         });
@@ -1991,9 +2088,10 @@
 
         dbRoot.on('value', snap => {
             globalData = snap.val() || {};
+            sanitizeGlobalData();
             
             if(globalData.settings && globalData.settings.contestBrands) {
-                window.activeContestBrands = globalData.settings.contestBrands.split(',').map(s => s.trim()).filter(s => s);
+                window.activeContestBrands = String(globalData.settings.contestBrands).split(',').map(s => cleanText(s).replace(/[.$#\[\]\/]/g, '').trim()).filter(s => s);
                 let cInput1 = document.getElementById('central-contest-input');
                 let cInput2 = document.getElementById('general-contest-input');
                 if(cInput1 && document.activeElement !== cInput1) cInput1.value = globalData.settings.contestBrands;
@@ -2117,6 +2215,7 @@
     }
 
     window.goHome = function() {
+        try { auth.signOut(); } catch (e) {}
         navStack = []; 
         currentRole = ''; currentId = ''; 
         isStoreHistorical = false; isRegionHistorical = false;
@@ -2469,7 +2568,7 @@
 
     window.addStaff = function() {
         const input = document.getElementById('new-staff-name');
-        const name = input.value.trim().toUpperCase();
+        const name = cleanText(input.value).trim().toUpperCase();
         if (!name) return alert('Lütfen isim girin.');
         dbRoot.child('master_staff').child(currentId).child('staff_' + Date.now()).set({ name: name });
         input.value = '';
@@ -2534,13 +2633,11 @@
         const sel = directId || document.getElementById('select-region').value;
         if (!sel) return alert('Lütfen bir Bölge Müdürü seçin.');
 
-        let currentRegionPass = globalData.settings?.regionPassword || "0000";
-
-        openPasswordModal(
+        openAuthModal(
             "Bölge Müdürü Girişi", 
             "Giriş yapmak için lütfen şifrenizi girin.", 
             "fa-solid fa-map-location-dot text-indigo-500", 
-            currentRegionPass, 
+            ADMIN_EMAILS.region, 
             () => {
                 navStack = []; 
                 currentRole = 'region'; 
@@ -2836,11 +2933,11 @@
     // === GENEL YÖNETİM (GÜLİZ ATİK) - GİRİŞ VE RAPOR (geri eklendi) ===
     // =====================================================================
     window.loginAsGeneral = function(isDirect = false) {
-        openPasswordModal(
+        openAuthModal(
             "Güliz Atik Bölge Yönetimi",
             "Giriş yapmak için lütfen şifrenizi girin.",
             "fa-solid fa-crown text-emerald-500",
-            "1244",
+            ADMIN_EMAILS.general,
             () => {
                 navStack = [];
                 currentRole = 'general';
@@ -2857,11 +2954,11 @@
     // === SİSTEM MERKEZİ (ADMIN) - GİRİŞ VE İŞLEMLER (geri eklendi) ===
     // =====================================================================
     window.loginAsCentral = function() {
-        openPasswordModal(
+        openAuthModal(
             "Sistem Merkezi",
-            "Yönetici paneline giriş için güvenlik kodunu girin.",
+            "Yönetici paneline giriş için şifrenizi girin.",
             "fa-solid fa-server text-purple-500",
-            "1988",
+            ADMIN_EMAILS.central,
             () => {
                 navStack = [];
                 currentRole = 'central';
@@ -2944,24 +3041,6 @@
             allStoresList.forEach(s => { updates[`${s.name}/isLocked`] = false; });
             dbRoot.child('daily').child(ACTIVE_DATE).update(updates).then(() => alert("Tüm kilitler başarıyla açıldı!"));
         }
-    }
-
-    window.changeRegionPassword = function() {
-        openPasswordModal(
-            "Yetki Doğrulaması",
-            "Bu işlemi yapmak için Genel Yönetim şifresini girmelisiniz.",
-            "fa-solid fa-shield-halved text-rose-500",
-            "1244",
-            () => {
-                const newPass = prompt("Lütfen yeni 'Bölge Müdürü' şifresini belirleyin:");
-                if (newPass && newPass.trim() !== "") {
-                    dbRoot.child('settings').update({ regionPassword: newPass.trim() });
-                    alert("Bölge Müdürü şifresi başarıyla güncellendi!");
-                } else {
-                    alert("Geçersiz şifre girdiniz, işlem iptal edildi.");
-                }
-            }
-        );
     }
 
     // =====================================================================
