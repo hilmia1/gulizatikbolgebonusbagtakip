@@ -318,6 +318,22 @@
         </div>
     </div>
 
+    <!-- BİLDİRİM PANELİ -->
+    <div id="notif-panel" class="hidden fixed z-[95] left-2 right-2 sm:left-auto sm:right-4 sm:w-[24rem] bg-white rounded-2xl shadow-2xl border border-pink-200 overflow-hidden">
+        <div class="bg-gradient-to-r from-pink-500 to-rose-500 text-white px-4 py-3 flex items-center justify-between">
+            <div class="font-black text-base flex items-center gap-2"><i class="fa-solid fa-bell"></i> Bildirimler</div>
+            <button type="button" onclick="closeNotifPanel()" class="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 text-sm" title="Kapat"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="px-4 py-2 bg-pink-50 border-b border-pink-100 flex items-center justify-between gap-3 text-[11px]">
+            <div class="text-slate-600 font-bold">📲 Telefon bildirimi: <span id="notif-push-state" class="text-pink-600">kapalı</span></div>
+            <button type="button" id="notif-push-btn" onclick="toggleNotifications()" class="px-3 py-1 bg-pink-600 hover:bg-pink-700 text-white rounded-lg font-black">Aç</button>
+        </div>
+        <div id="notif-feed" class="max-h-[60vh] overflow-y-auto"></div>
+        <div id="notif-foot" class="hidden px-4 py-2 border-t border-slate-100 text-right">
+            <button type="button" onclick="clearNotifLog()" class="text-[11px] font-bold text-rose-500 hover:text-rose-700"><i class="fa-solid fa-broom mr-1"></i> Geçmişi temizle</button>
+        </div>
+    </div>
+
     <!-- ÜRÜN BİTTİ MODALI -->
     <div id="stockout-modal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[115] flex items-center justify-center p-2 sm:p-6">
         <div class="bg-white rounded-2xl shadow-2xl relative w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden border border-red-400/40">
@@ -403,7 +419,7 @@
 
                 <button type="button" id="topbar-mode-btn" onclick="switchMode()" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm border text-white bg-gradient-to-r from-violet-600 to-cyan-600 border-violet-400"><i class="fa-solid fa-trophy"></i> <span class="hidden sm:inline">KPI Yarışması</span></button>
 
-                <button type="button" id="notif-btn" onclick="toggleNotifications()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-bold transition flex items-center gap-1.5 border border-slate-700 shadow-sm" title="Bildirimleri aç"><i id="notif-icon" class="fa-solid fa-bell-slash"></i></button>
+                <button type="button" id="notif-btn" onclick="toggleNotifPanel()" class="relative px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-bold transition flex items-center gap-1.5 border border-slate-700 shadow-sm" title="Bildirimler"><i id="notif-icon" class="fa-solid fa-bell"></i><span id="notif-badge" class="hidden absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-pink-500 text-white text-[10px] font-black leading-[18px] text-center shadow">0</span></button>
 
                 <button type="button" onclick="toggleDarkMode()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-bold transition flex items-center gap-1.5 border border-slate-700 shadow-sm" title="Gece/Gündüz Modu">
                     <i id="dark-mode-icon" class="fa-solid"></i>
@@ -536,10 +552,12 @@
                     <input type="time" id="central-start" class="w-full sm:w-auto bg-slate-900 text-slate-300 border border-cyan-500/50 rounded-xl px-2 py-2.5 text-sm focus:outline-none focus:border-cyan-400 transition-colors dark-time-input [color-scheme:dark]" title="Başlama Saati">
                     <input type="time" id="central-end" class="w-full sm:w-auto bg-slate-900 text-slate-300 border border-cyan-500/50 rounded-xl px-2 py-2.5 text-sm focus:outline-none focus:border-cyan-400 transition-colors dark-time-input [color-scheme:dark]" title="Bitiş Saati">
                     
-                    <button onclick="publishCentralAnnouncement()" class="flex-1 sm:flex-none px-5 py-2.5 bg-cyan-700 hover:bg-cyan-600 text-white font-bold rounded-xl transition shadow-md text-sm whitespace-nowrap"><i class="fa-solid fa-bullhorn mr-1"></i> Yayınla</button>
-                    <button onclick="clearCentralAnnouncement()" class="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-rose-400 font-bold rounded-xl transition shadow-sm text-sm" title="Duyuruyu Kaldır"><i class="fa-solid fa-trash"></i></button>
+                    <button onclick="publishCentralAnnouncement()" class="flex-1 sm:flex-none px-5 py-2.5 bg-cyan-700 hover:bg-cyan-600 text-white font-bold rounded-xl transition shadow-md text-sm whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i> Ekle / Yayınla</button>
+                    <button onclick="clearCentralAnnouncement()" class="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-rose-400 font-bold rounded-xl transition shadow-sm text-sm" title="Tüm sistem duyurularını kaldır"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </div>
+
+            <div id="central-ann-list" class="space-y-2"></div>
 
             <!-- ODAK ÜRÜN YÖNETİMİ -->
             <div class="bg-purple-900/80 p-4 rounded-2xl border border-purple-700/50 flex flex-col sm:flex-row gap-3 items-center shadow-lg mt-2">
@@ -1212,7 +1230,12 @@
         comp.daily[dk][s.name] = { b1: Math.round(t.b1 / totalDays * f()), b2: Math.round(t.b2 / totalDays * f() / 50) * 50, b3: Math.round(t.b3 / totalDays * f()) };
       });
     }
-    root = { settings: { contestBrands: brands.join(', ') }, master_staff: master, daily, kpi: { active: 'demo', comps: { demo: comp } } };
+    const nowT = Date.now();
+    const announcement_log = {
+      a1: { message: 'Bu hafta Opalescence odak ürün, her mağaza vitrine ürünleri çıkarsın!', time: nowT - 2 * 3600e3, by: 'Sistem Merkezi', kind: 'central' },
+      a3: { message: 'Yeni kampanya broşürleri mağazalara ulaştı, kontrol edin.', time: nowT - 26 * 3600e3, by: 'Sistem Merkezi', kind: 'central' }
+    };
+    root = { settings: { contestBrands: brands.join(', ') }, master_staff: master, daily, announcement_log, kpi: { active: 'demo', comps: { demo: comp } } };
   };
 
   const bar = document.createElement('div');
@@ -2174,41 +2197,59 @@
     }
     window.addEventListener && window.addEventListener('resize', () => { fitTicker('central-announcement-bar'); fitTicker('global-announcement-bar'); });
 
+    // Sistem duyuruları: birden fazla duyuru aynı anda yayında olabilir (legacy tek kayıt + yeni liste)
+    function centralAnnItems() {
+        const out = [];
+        const leg = window.centralAnnData;
+        if (leg && typeof leg.message === 'string' && leg.message) out.push({ id: '_legacy', message: leg.message, time: Number(leg.time) || 0, startTime: leg.startTime || '', endTime: leg.endTime || '' });
+        const m = window.centralAnnMulti || {};
+        Object.keys(m).forEach(id => {
+            const a = m[id];
+            if (a && typeof a.message === 'string' && a.message && /^[A-Za-z0-9_-]{1,40}$/.test(id))
+                out.push({ id, message: a.message, time: Number(a.time) || 0, startTime: a.startTime || '', endTime: a.endTime || '' });
+        });
+        return out.sort((x, y) => x.time - y.time);
+    }
+    function annInWindow(a) {
+        const now = new Date();
+        const cur = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
+        if (a.startTime && cur < a.startTime) return false;
+        if (a.endTime && cur > a.endTime) return false;
+        return true;
+    }
     function checkCentralAnnouncementVisibility() {
-        let ann = window.centralAnnData;
-        let bar = document.getElementById('central-announcement-bar');
-        let textEl = document.getElementById('central-announcement-text');
-        
-        if (!ann || !ann.message) {
-            bar.classList.add('hidden');
-            return;
-        }
-
-        let now = new Date();
-        let currentStr = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
-        
-        let isVisible = true;
-        if (ann.startTime && currentStr < ann.startTime) isVisible = false;
-        
-        if (ann.endTime && currentStr > ann.endTime) {
-            isVisible = false;
-        }
-        
-        if (isVisible) {
-            textEl.textContent = ann.message;
-            bar.classList.remove('hidden');
-            fitTicker('central-announcement-bar');
-        } else {
-            bar.classList.add('hidden');
-        }
+        const bar = document.getElementById('central-announcement-bar');
+        const textEl = document.getElementById('central-announcement-text');
+        const items = centralAnnItems().filter(annInWindow);
+        if (!items.length) { bar.classList.add('hidden'); return; }
+        textEl.innerHTML = items.map(a => escHtml(a.message)).join('<span class="mx-6 text-white/40">|</span>');
+        bar.classList.remove('hidden');
+        fitTicker('central-announcement-bar');
+    }
+    function renderCentralAnnList() {
+        const box = document.getElementById('central-ann-list');
+        if (!box) return;
+        const items = centralAnnItems().sort((x, y) => y.time - x.time);
+        if (!items.length) { box.innerHTML = '<div class="text-xs text-slate-400 px-1">Şu an yayında sistem duyurusu yok.</div>'; return; }
+        box.innerHTML = '<div class="text-[11px] font-bold text-slate-500 px-1">Yayındaki sistem duyuruları (' + items.length + ') — hepsi üst bantta birlikte kayar</div>' + items.map(a => {
+            const win = (a.startTime || a.endTime) ? ((a.startTime || '00:00') + '–' + (a.endTime || '24:00')) : 'sürekli';
+            const live = annInWindow(a);
+            return `<div class="flex items-start gap-2 bg-slate-900 border border-cyan-800/50 rounded-xl px-3 py-2">
+                <div class="flex-1 min-w-0"><div class="text-sm font-bold text-white break-words">${escHtml(a.message)}</div>
+                <div class="mt-0.5 flex flex-wrap gap-2 text-[10px]"><span class="px-2 py-0.5 rounded-full font-black ${live ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}">${live ? 'yayında' : 'saat dışı'}</span><span class="text-slate-400">${escHtml(win)}</span><span class="text-slate-500">${a.time ? stockoutAgo(a.time) : ''}</span></div></div>
+                <button type="button" onclick="removeCentralAnnouncement('${a.id}')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-rose-400 rounded-lg text-xs font-bold" title="Bu duyuruyu kaldır"><i class="fa-solid fa-trash"></i></button></div>`;
+        }).join('');
     }
 
     function initCentralAnnouncementListener() {
-        dbRoot.child('central_announcement').on('value', snap => {
-            window.centralAnnData = snap.val();
+        window.centralAnnLoaded = { a: false, b: false };
+        const upd = () => {
             try { notifyCentral(); } catch (e) {}
             checkCentralAnnouncementVisibility();
-        });
+            try { renderCentralAnnList(); } catch (e) {}
+        };
+        dbRoot.child('central_announcement').on('value', snap => { window.centralAnnData = snap.val(); window.centralAnnLoaded.a = true; upd(); });
+        dbRoot.child('central_announcements').on('value', snap => { window.centralAnnMulti = snap.val() || {}; window.centralAnnLoaded.b = true; upd(); });
         setInterval(checkCentralAnnouncementVisibility, 15000);
     }
 
@@ -2219,20 +2260,30 @@
 
         if(!msg) return alert("Lütfen duyuru metnini girin.");
         if(confirm("Bu sistem duyurusu yayınlanacak. Onaylıyor musunuz?")) {
-            dbRoot.child('central_announcement').set({ 
+            const tNow = Date.now();
+            dbRoot.child('central_announcements').push({ 
                 message: msg, 
-                time: Date.now(),
+                time: tNow,
                 startTime: st,
                 endTime: et
             });
+            dbRoot.child('announcement_log').push({ message: msg, time: tNow, by: 'Sistem Merkezi', kind: 'central' });
             document.getElementById('central-announcement-input').value = "";
         }
     }
 
     window.clearCentralAnnouncement = function() {
-        if(confirm("Sistem duyurusunu kaldırmak istediğinize emin misiniz?")) {
+        if (!centralAnnItems().length) return alert('Yayında sistem duyurusu yok.');
+        if(confirm("Yayındaki TÜM sistem duyurularını kaldırmak istediğinize emin misiniz?")) {
             dbRoot.child('central_announcement').remove();
+            dbRoot.child('central_announcements').remove();
         }
+    }
+    window.removeCentralAnnouncement = function(id) {
+        if (id !== '_legacy' && !/^[A-Za-z0-9_-]{1,40}$/.test(id)) return;
+        if (!confirm('Bu sistem duyurusu kaldırılsın mı?')) return;
+        if (id === '_legacy') dbRoot.child('central_announcement').remove();
+        else dbRoot.child('central_announcements').child(id).remove();
     }
 
     function updateAnnouncementUI() {
@@ -2357,9 +2408,10 @@
             : `Bu mesaj TÜM BÖLGELERDE ve mağazalarda dönecek. Onaylıyor musunuz? ${timeMsg}`;
 
         if(confirm(confirmMsg)) {
+            const tNow = Date.now();
             dbRoot.child('global_announcement').child(senderName).set({ 
                 message: msg, 
-                time: Date.now(),
+                time: tNow,
                 target: targetType,
                 bm: senderName,
                 startTime: st,
@@ -2813,8 +2865,10 @@
         function paint() {
             const i = document.getElementById('notif-icon'), b = document.getElementById('notif-btn'), bn = document.getElementById('notif-banner');
             const on = enabled();
-            if (i) i.className = 'fa-solid ' + (on ? 'fa-bell' : 'fa-bell-slash');
-            if (b) { b.title = on ? 'Bildirimler açık (kapatmak için dokunun)' : 'Bildirimleri aç'; b.classList.toggle('text-amber-300', on); }
+            if (b) b.classList.toggle('text-amber-300', on);
+            const ps = document.getElementById('notif-push-state'), pb = document.getElementById('notif-push-btn');
+            if (ps) ps.textContent = !supported() ? 'bu cihazda desteklenmiyor' : (Notification.permission === 'denied' ? 'engellendi' : (on ? 'açık' : 'kapalı'));
+            if (pb) pb.textContent = on ? 'Kapat' : 'Aç';
             if (bn) {
                 const showIt = supported() && Notification.permission === 'default' && lsGet('bb_notif_dismissed') !== '1';
                 bn.classList.toggle('hidden', !showIt); bn.classList.toggle('flex', showIt);
@@ -2837,6 +2891,7 @@
         // 1) Telsiz duyurusu
         const annSeen = {}; let annBase = false;
         window.notifyAnnouncements = function () {
+            setTimeout(() => { try { refreshFeed(); } catch (e) {} }, 0);
             const data = window.lastAnnouncementsData || {};
             const cur = hhmm();
             Object.keys(data).forEach(sender => {
@@ -2861,15 +2916,17 @@
         // 2) Merkez sistem duyurusu
         let cenSeen = null;
         window.notifyCentral = function () {
-            const a = window.centralAnnData;
-            const key = a && a.message ? a.time + '|' + a.message : '';
-            if (cenSeen === null) { cenSeen = key; return; }
-            const changed = key && key !== cenSeen;
-            cenSeen = key;
-            if (!changed) return;
-            const cur = hhmm();
-            if ((a.endTime && cur > a.endTime) || (a.startTime && cur < a.startTime)) return;
-            show('🛰️ Merkez duyurusu', cleanText(a.message), 'central');
+            setTimeout(() => { try { refreshFeed(); } catch (e) {} }, 0);
+            const L = window.centralAnnLoaded;
+            if (!L || !L.a || !L.b) return;          // iki liste de yüklenmeden karşılaştırma yapma
+            const items = centralAnnItems();
+            if (cenSeen === null) { cenSeen = new Set(items.map(i => i.id + '|' + i.time)); return; }
+            items.forEach(i => {
+                const k = i.id + '|' + i.time;
+                if (cenSeen.has(k)) return;
+                cenSeen.add(k);
+                if (annInWindow(i)) show('🛰️ Merkez duyurusu', cleanText(i.message), 'central-' + k);
+            });
         };
 
         // 4) Hedef çizgisi (%100 ve %150)
@@ -2894,8 +2951,89 @@
             });
         };
 
+        // ===== BİLDİRİM PANELİ (duyuru geçmişi) =====
+        // "Okundu" işareti, telefonun saatine değil bildirimlerin kendi zamanına göre tutulur (saat farkı sorun olmasın)
+        let panelSeen = null;
+        function initSeen() {
+            if (lsGet('bb_feed_seen') !== null || !globalData || !Object.keys(globalData).length) return;
+            lsSet('bb_feed_seen', String(feedItems().reduce((m, i) => Math.max(m, i.time), 0)));
+        }
+        function feedItems() {
+            const out = {}, cut = Date.now() - 14 * 864e5;
+            const add = a => {
+                if (!a || typeof a.message !== 'string' || !a.message || !(Number(a.time) > cut)) return;
+                const it = { time: Number(a.time), message: a.message, by: 'Sistem Merkezi' };
+                out[Math.round(it.time / 1000) + '|' + it.message.slice(0, 40)] = it;
+            };
+            const log = globalData.announcement_log || {};
+            Object.keys(log).forEach(id => { const a = log[id]; if (a && a.kind === 'central') add(a); });
+            centralAnnItems().forEach(add);
+            return Object.values(out).sort((x, y) => y.time - x.time).slice(0, 30);
+        }
+        function updateBadge() {
+            const bd = document.getElementById('notif-badge');
+            if (!bd) return;
+            initSeen();
+            const seen = Number(lsGet('bb_feed_seen')) || 0;
+            const n = feedItems().filter(i => i.time > seen).length;
+            bd.textContent = n > 9 ? '9+' : String(n);
+            bd.classList.toggle('hidden', n === 0);
+        }
+        function renderPanel() {
+            const box = document.getElementById('notif-feed');
+            if (!box) return;
+            const seen = panelSeen !== null ? panelSeen : (Number(lsGet('bb_feed_seen')) || 0);
+            const items = feedItems();
+            box.innerHTML = items.length ? items.map(it => {
+                const fresh = it.time > seen;
+                return `<div class="px-4 py-3 border-b border-pink-50 flex gap-3 ${fresh ? 'bg-pink-50/70' : ''}">
+                    <div class="w-9 h-9 rounded-full flex-none flex items-center justify-center text-lg bg-cyan-100">🛰️</div>
+                    <div class="min-w-0 flex-1">
+                        <div class="text-sm font-bold text-slate-800 break-words">${escHtml(it.message)}</div>
+                        <div class="mt-1 flex flex-wrap items-center gap-2 text-[10px]"><span class="px-2 py-0.5 rounded-full font-black text-white bg-cyan-600">${escHtml(it.by)}</span><span class="text-slate-400">${stockoutAgo(it.time)}</span>${fresh ? '<span class="text-pink-600 font-black">YENİ</span>' : ''}</div>
+                    </div></div>`;
+            }).join('') : '<div class="p-8 text-center text-sm text-slate-400 font-bold"><div class="text-3xl mb-2">🔔</div>Henüz bildirim yok</div>';
+            const foot = document.getElementById('notif-foot');
+            if (foot) foot.classList.toggle('hidden', currentRole !== 'central');
+        }
+        function refreshFeed() { try { updateBadge(); if (panelSeen !== null) renderPanel(); } catch (e) {} }
+        window.notifFeedOnData = refreshFeed;
+        window.closeNotifPanel = function () {
+            const pn = document.getElementById('notif-panel');
+            if (pn) pn.classList.add('hidden');
+            panelSeen = null;
+        };
+        window.toggleNotifPanel = function () {
+            const pn = document.getElementById('notif-panel'), btn = document.getElementById('notif-btn');
+            if (!pn) return;
+            if (!pn.classList.contains('hidden')) return closeNotifPanel();
+            try { if (btn && btn.getBoundingClientRect) pn.style.top = Math.round(btn.getBoundingClientRect().bottom + 8) + 'px'; } catch (e) {}
+            panelSeen = Number(lsGet('bb_feed_seen')) || 0;
+            paint();
+            renderPanel();
+            pn.classList.remove('hidden');
+            lsSet('bb_feed_seen', String(feedItems().reduce((m, i) => Math.max(m, i.time), Number(lsGet('bb_feed_seen')) || 0)));
+            updateBadge();
+        };
+        window.clearNotifLog = function () {
+            if (currentRole !== 'central') return;
+            const log = globalData.announcement_log || {}, upd = {};
+            Object.keys(log).forEach(id => { upd['announcement_log/' + id] = null; });
+            if (!Object.keys(upd).length) return alert('Temizlenecek bildirim yok.');
+            if (confirm('Bildirim geçmişi (' + Object.keys(upd).length + ' kayıt) herkes için silinsin mi?')) dbRoot.update(upd);
+        };
+        if (typeof document.addEventListener === 'function') {
+            document.addEventListener('click', e => {
+                const pn = document.getElementById('notif-panel'), btn = document.getElementById('notif-btn');
+                if (!pn || pn.classList.contains('hidden') || !e || !e.target) return;
+                const inside = el => typeof el.contains === 'function' && el.contains(e.target);
+                if (!inside(pn) && !(btn && inside(btn))) closeNotifPanel();
+            });
+            document.addEventListener('keydown', e => { if (e && e.key === 'Escape') closeNotifPanel(); });
+        }
+
         paint();
-        if (typeof window.addEventListener === 'function') window.addEventListener('load', paint);
+        if (typeof window.addEventListener === 'function') window.addEventListener('load', () => { paint(); updateBadge(); });
     })();
 
     // ===== YEDEK İNDİR (Sistem Merkezi) =====
@@ -3169,6 +3307,7 @@
     };
 
     window.socialOnData = function () {
+        try { notifFeedOnData(); } catch (e) {}
         renderStars();
         if (window.currentProfileStaffId && !document.getElementById('staff-profile-modal').classList.contains('hidden')) renderProfileBadges(window.currentProfileStaffId);
     };
