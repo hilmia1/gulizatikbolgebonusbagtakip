@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Güliz Atik Bölgesi Satış Platformu</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Satış">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" href="icon-192.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -393,6 +401,16 @@
         
         <!-- ================= 1. GİRİŞ VE SEÇİM EKRANI ================= -->
         <div id="screen-home" class="screen space-y-6 hidden">
+            <div id="install-banner" class="hidden items-center justify-between gap-3 bg-gradient-to-r from-slate-900 to-indigo-900 text-white rounded-2xl p-3 sm:p-4 shadow-lg border border-indigo-500/40">
+                <div class="flex items-center gap-3 min-w-0">
+                    <img src="icon-192.png" alt="" class="w-11 h-11 rounded-xl shadow flex-none">
+                    <div class="min-w-0"><div class="font-black text-sm sm:text-base leading-tight">Telefonuna uygulama gibi ekle</div><div class="text-[11px] sm:text-xs text-indigo-200 leading-snug">Tek dokunuşla aç, mağazanı hatırlasın.</div></div>
+                </div>
+                <div class="flex items-center gap-2 flex-none">
+                    <button type="button" onclick="installApp()" class="px-4 py-2 bg-pink-500 hover:bg-pink-400 rounded-xl text-xs font-black shadow whitespace-nowrap"><i class="fa-solid fa-download mr-1"></i> Ekle</button>
+                    <button type="button" onclick="dismissInstall()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-sm" title="Kapat"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
             <div class="flex justify-center"><div class="inline-flex bg-white border border-slate-200 rounded-2xl p-1 shadow-sm gap-1">
                 <button type="button" onclick="setMode('bonus')" class="mode-btn-bonus"><i class="fa-solid fa-gift"></i> Bonus Bag</button>
                 <button type="button" onclick="setMode('kpi')" class="mode-btn-kpi"><i class="fa-solid fa-trophy"></i> KPI Yarışması</button>
@@ -2381,6 +2399,7 @@
         else if (urlParams.get('region')) loginAsRegion(urlParams.get('region'));
         else if (urlParams.get('general')) loginAsGeneral(true);
         else if (urlParams.get('central')) loginAsCentral();
+        else if (window.__isStandalone && window.__isStandalone() && window.__lastStore() && allStoresList.some(s => s.name === window.__lastStore())) loginAsStore(window.__lastStore());
         else {
             document.getElementById('screen-home').classList.remove('hidden');
             updateAnnouncementUI();
@@ -2635,11 +2654,70 @@
         return { isLocked: sData.isLocked || false, storeTarget: sData.target || 0, targetBy: sData.targetBy || '', staff: staffObj, hourly: sData.hourly || {} };
     }
 
+    // ===== TELEFONA UYGULAMA GİBİ EKLE (PWA) =====
+    (function () {
+        let deferred = null;
+        const nav = window.navigator || {};
+        const isStandalone = () => (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || nav.standalone === true;
+        const ua = (nav.userAgent || '');
+        const isIOS = /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && nav.maxTouchPoints > 1);
+        const isMobile = isIOS || /Android/i.test(ua);
+        const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+        const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+        window.__isStandalone = isStandalone;
+
+        function showBanner() {
+            const b = document.getElementById('install-banner');
+            if (!b || window.__DEMO || isStandalone() || lsGet('bb_install_dismissed') === '1') return;
+            if (!isMobile && !deferred) return;
+            b.classList.remove('hidden'); b.classList.add('flex');
+        }
+        function hideBanner() {
+            const b = document.getElementById('install-banner');
+            if (b) { b.classList.add('hidden'); b.classList.remove('flex'); }
+        }
+        window.dismissInstall = function () { lsSet('bb_install_dismissed', '1'); hideBanner(); };
+
+        function helpModal() {
+            const steps = isIOS
+                ? ['Siteyi <b>Safari</b> ile açın (Chrome değil).', 'Alttaki <b>Paylaş</b> düğmesine <i class="fa-solid fa-arrow-up-from-bracket"></i> basın.', '<b>"Ana Ekrana Ekle"</b> seçeneğini seçin.', 'Sağ üstte <b>Ekle</b>\'ye basın.']
+                : /Android/i.test(ua)
+                    ? ['Chrome\'da sağ üstteki <b>⋮</b> menüsünü açın.', '<b>"Uygulamayı yükle"</b> ya da <b>"Ana ekrana ekle"</b> seçeneğine basın.', '<b>Yükle / Ekle</b> diyerek onaylayın.']
+                    : ['Adres çubuğunun sağındaki <b>yükle</b> simgesine <i class="fa-solid fa-download"></i> basın.', 'Yoksa tarayıcı menüsünden <b>"Uygulamayı yükle"</b> seçeneğini kullanın.'];
+            const el = document.createElement('div');
+            el.setAttribute('style', 'position:fixed;inset:0;z-index:99990;background:rgba(15,23,42,.8);display:flex;align-items:center;justify-content:center;padding:16px');
+            el.innerHTML = '<div style="background:#fff;border-radius:20px;max-width:380px;width:100%;padding:22px;font-family:inherit;color:#0f172a">' +
+                '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><img src="icon-192.png" alt="" style="width:48px;height:48px;border-radius:12px"><div style="font-weight:900;font-size:17px">Ana ekrana ekle</div></div>' +
+                '<ol style="padding-left:20px;margin:0 0 16px;font-size:14px;line-height:1.7;color:#334155">' + steps.map(t => '<li>' + t + '</li>').join('') + '</ol>' +
+                '<button type="button" style="width:100%;padding:12px;border:0;border-radius:12px;background:#0f172a;color:#fff;font-weight:900;font-size:14px;cursor:pointer">Tamam</button></div>';
+            el.addEventListener('click', e => { if (e.target === el || (e.target.tagName === 'BUTTON')) el.remove(); });
+            document.body.appendChild(el);
+        }
+        window.installApp = function () {
+            if (deferred) {
+                deferred.prompt();
+                deferred.userChoice.then(r => { if (r && r.outcome === 'accepted') hideBanner(); deferred = null; }).catch(() => {});
+            } else helpModal();
+        };
+        window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; showBanner(); });
+        window.addEventListener('appinstalled', () => { hideBanner(); lsSet('bb_install_dismissed', '1'); });
+        window.addEventListener('load', showBanner);
+
+        // Servis çalışanı (sadece gerçek sitede, önizlemede değil)
+        if (nav.serviceWorker && /^https:$/.test(window.location.protocol) && !window.__DEMO) {
+            window.addEventListener('load', () => { nav.serviceWorker.register('sw.js').catch(() => {}); });
+        }
+        // Son girilen mağazayı hatırla: uygulama olarak açılınca doğrudan mağazaya git
+        window.__rememberStore = id => lsSet('bb_last_store', id);
+        window.__lastStore = () => lsGet('bb_last_store');
+    })();
+
     window.loginAsStore = function(directId) {
         const sel = directId || document.getElementById('select-store').value;
         if (!sel) return alert('Lütfen bir mağaza seçin.');
         navStack = []; 
         currentRole = 'store'; currentId = sel;
+        try { window.__rememberStore(sel); } catch (e) {}
         isStoreHistorical = false;
         window.firedConfetti = { store: false }; 
         setURLParam('store', currentId);
