@@ -233,7 +233,7 @@
 
     <!-- PERSONEL PERFORMANS KARNESİ MODALI -->
     <div id="staff-profile-modal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[120] flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all border border-pink-300">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-sm max-h-[92vh] overflow-y-auto relative transform transition-all border border-pink-300">
             <button type="button" onclick="closeStaffProfile()" class="absolute top-4 right-4 text-slate-400 hover:text-pink-600 transition-colors"><i class="fa-solid fa-xmark text-2xl"></i></button>
             <div class="text-center mb-6 mt-2">
                 <div class="w-20 h-20 bg-pink-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-3 shadow-inner text-pink-500 border border-pink-200">
@@ -276,6 +276,14 @@
                     <div class="text-3xl font-black text-rose-600 relative z-10" id="profile-fire-count">0</div>
                 </div>
                 
+                <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="text-[10px] font-black text-slate-500 uppercase"><i class="fa-solid fa-medal text-amber-500 mr-1"></i> Rozetler</div>
+                        <div class="text-[10px] font-bold text-amber-600" id="profile-badges-count"></div>
+                    </div>
+                    <div id="profile-badges" class="grid grid-cols-4 gap-2"></div>
+                </div>
+
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm relative overflow-hidden mt-3">
                     <div class="absolute right-[-10px] top-[-10px] opacity-10 text-6xl text-orange-500"><i class="fa-solid fa-hands-clapping"></i></div>
                     <div class="flex items-center gap-3 relative z-10">
@@ -307,6 +315,44 @@
             <div class="overflow-y-auto p-0 flex-1 bg-slate-100 flex justify-center custom-scrollbar">
                 <img src="katalog.jpg" alt="Bonus Pack Kataloğu" class="w-full h-auto object-contain">
             </div>
+        </div>
+    </div>
+
+    <!-- TEBRİK MODALI -->
+    <div id="kudos-modal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[116] flex items-center justify-center p-2 sm:p-6">
+        <div class="bg-white rounded-2xl shadow-2xl relative w-full max-w-md max-h-[92vh] flex flex-col overflow-hidden border border-pink-400/40">
+            <div class="bg-gradient-to-r from-pink-500 to-rose-600 p-3 sm:p-4 text-white flex justify-between items-center shadow-md">
+                <h3 class="font-black text-sm sm:text-lg flex items-center gap-2"><span>💌</span> Tebrik / Teşekkür Gönder</h3>
+                <button type="button" onclick="closeKudosModal()" class="text-white bg-white/10 px-3 py-1 rounded-lg"><i class="fa-solid fa-xmark text-xl"></i> Kapat</button>
+            </div>
+            <div class="p-4 space-y-3 overflow-y-auto custom-scrollbar">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase">Hangi mağaza?</label>
+                    <select id="kudos-to" onchange="kudosToChanged()" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium mt-1 focus:outline-none focus:border-pink-500"></select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase">Kişi (isteğe bağlı)</label>
+                    <select id="kudos-staff" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium mt-1 focus:outline-none focus:border-pink-500"><option value="">Tüm ekip</option></select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase">Mesaj</label>
+                    <div id="kudos-msgs" class="space-y-1.5 mt-1"></div>
+                </div>
+                <button type="button" onclick="sendKudos()" class="w-full py-3 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white font-black rounded-xl shadow-lg transition"><i class="fa-solid fa-paper-plane mr-1"></i> Gönder</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ÜRÜN BİTTİ MODALI -->
+    <div id="stockout-modal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[115] flex items-center justify-center p-2 sm:p-6">
+        <div class="bg-white rounded-2xl shadow-2xl relative w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden border border-red-400/40">
+            <div class="bg-gradient-to-r from-orange-500 to-red-600 p-3 sm:p-4 text-white flex justify-between items-center shadow-md z-10">
+                <h3 class="font-black text-sm sm:text-lg flex items-center gap-2"><i class="fa-solid fa-box-open"></i> Ürün Bitti Bildirimi</h3>
+                <button type="button" onclick="closeStockoutModal()" class="text-white hover:text-red-100 transition-colors bg-white/10 px-3 py-1 rounded-lg"><i class="fa-solid fa-xmark text-xl"></i> Kapat</button>
+            </div>
+            <div class="px-4 pt-3 text-[11px] text-slate-500 font-bold" id="stockout-store-line"></div>
+            <div class="px-4 pb-1 text-[11px] text-slate-500">Rafta/depoda biten ürüne dokunun, <b class="text-red-600">BİTTİ</b> olarak merkeze bildirilir. Ürün geri gelince tekrar dokunup kaldırın.</div>
+            <div id="stockout-list" class="overflow-y-auto p-4 space-y-2 flex-1 bg-slate-50 custom-scrollbar"></div>
         </div>
     </div>
 
@@ -465,6 +511,15 @@
                     </div>
                 </div>
             </div>
+
+            <div id="home-social" class="space-y-4">
+                <div id="home-stars" class="hidden"></div>
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+                    <h3 class="font-black text-slate-800 text-base"><span class="mr-1">💌</span> Tebrik Duvarı</h3>
+                    <p class="text-[11px] text-slate-400">Mağazalar birbirini tebrik eder. Tebrik göndermek için mağaza panelinize girin.</p>
+                    <div id="kudos-wall-home" class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3"></div>
+                </div>
+            </div>
         </div>
 
         <!-- ================= SİSTEM MERKEZİ EKRANI ================= -->
@@ -475,6 +530,7 @@
                     <span class="bg-cyan-700 text-white px-2 py-1 rounded text-[10px] font-black tracking-widest uppercase shadow-sm">Sadece Size Özel</span>
                     <h2 class="text-3xl font-black mb-1 mt-2 text-cyan-300">SİSTEM MERKEZİ</h2>
                     <p class="text-xs text-slate-400">Merkezi duyuru, toplu hedef atama ve kilit mekanizması.</p>
+                    <button type="button" onclick="downloadBackup()" class="mt-3 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-cyan-600/60 text-cyan-200 font-bold rounded-xl text-xs transition flex items-center gap-2" title="Tüm verilerin yedeğini dosya olarak bilgisayarına indirir"><i class="fa-solid fa-cloud-arrow-down"></i> Yedeği İndir</button>
                 </div>
                 <div class="relative z-10 flex gap-4 w-full lg:w-auto">
                     <div class="bg-slate-800/80 p-4 rounded-xl shadow-inner border border-slate-700 text-center flex-1">
@@ -510,6 +566,25 @@
                 </div>
                 <input type="text" id="central-contest-input" class="flex-1 w-full bg-purple-950 text-white border border-purple-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-purple-400 transition-colors" placeholder="Örn: Opalescence Diş Macunu, Revolution Ruj (Virgülle ayırın)">
                 <button onclick="saveContestBrands('central-contest-input')" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition shadow-md text-sm whitespace-nowrap"><i class="fa-solid fa-floppy-disk mr-1"></i> Kaydet</button>
+            </div>
+
+            <!-- ÜRÜN BİTTİ YÖNETİMİ -->
+            <div class="bg-red-950/80 p-4 rounded-2xl border border-red-700/50 shadow-lg mt-2">
+                <div class="flex flex-col sm:flex-row gap-3 items-center">
+                    <div class="flex items-center gap-2 text-orange-300 font-black whitespace-nowrap"><i class="fa-solid fa-box-open text-xl"></i> ÜRÜN BİTTİ LİSTESİ:</div>
+                    <input type="text" id="stockout-new-input" maxlength="300" class="flex-1 w-full bg-red-950 text-white border border-red-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-orange-400 transition-colors" placeholder="Mağazaların işaretleyeceği ürün adı (birden fazlaysa virgülle ayırın)">
+                    <button type="button" onclick="addStockoutProducts()" class="px-5 py-2.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl transition shadow-md text-sm whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i> Ekle</button>
+                </div>
+                <div id="stockout-admin-body" class="mt-3 space-y-2"></div>
+            </div>
+
+            <!-- TEBRİK DUVARI YÖNETİMİ -->
+            <div class="bg-pink-950/80 p-4 rounded-2xl border border-pink-800/50 shadow-lg mt-2">
+                <div class="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
+                    <div class="flex items-center gap-2 text-pink-300 font-black"><span class="text-xl">💌</span> TEBRİK DUVARI (Son mesajlar)</div>
+                    <button type="button" onclick="cleanOldKudos()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-pink-200 rounded-xl text-xs font-bold whitespace-nowrap"><i class="fa-solid fa-broom mr-1"></i> 7 günden eskileri temizle</button>
+                </div>
+                <div id="kudos-admin-body" class="mt-3 space-y-1.5 max-h-72 overflow-y-auto custom-scrollbar"></div>
             </div>
 
             <div class="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-4">
@@ -548,6 +623,14 @@
             <!-- Sadece Personeller (Tüm Mağazalar Arası) -->
             <div id="store-focus-top3-banner" class="hidden"></div>
             <div id="store-top3-banner" class="hidden"></div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-pink-200 p-4">
+                <div class="flex items-center justify-between gap-2">
+                    <h3 class="font-black text-sm text-slate-800"><span class="mr-1">💌</span> Tebrik Duvarı</h3>
+                    <button type="button" onclick="openKudosModal()" class="px-3 py-1.5 bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold rounded-xl shadow transition"><i class="fa-solid fa-paper-plane mr-1"></i> Tebrik Gönder</button>
+                </div>
+                <div id="kudos-wall-store" class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3"></div>
+            </div>
             
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 relative overflow-hidden">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-5 relative z-10">
@@ -561,6 +644,9 @@
                             </button>
                             <button type="button" onclick="openOdakModal()" class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5 w-max">
                                 <i class="fa-solid fa-star animate-pulse text-amber-300"></i> Odak Ürün
+                            </button>
+                            <button type="button" id="stockout-btn" onclick="openStockoutModal()" class="px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5 w-max">
+                                <i class="fa-solid fa-box-open"></i> Ürün Bitti <span id="stockout-badge" class="hidden bg-white text-red-600 rounded-full px-1.5 min-w-[18px] text-center text-[10px] font-black leading-[18px]">0</span>
                             </button>
                         </div>
                         
@@ -1139,7 +1225,7 @@
         ids.forEach(id => {
           const sales = Math.floor(per * (0.1 + r() * 1.6) * (off === 0 ? 0.75 : 1));
           const contest = {}; brands.forEach(b => { const c = Math.floor(sales * r() * 0.5); if (c > 0) contest[b] = c; });
-          st.staff[id] = { sales, target: per, contest }; total += sales;
+          st.staff[id] = { sales, target: per, contest, applause: r() < 0.35 ? 1 + Math.floor(r() * 5) : 0 }; total += sales;
         });
         const endH = off === 0 ? Math.max(10, Math.min(21, new Date().getHours())) : 21;
         let left = total;
@@ -1161,7 +1247,9 @@
         comp.daily[dk][s.name] = { b1: Math.round(t.b1 / totalDays * f()), b2: Math.round(t.b2 / totalDays * f() / 50) * 50, b3: Math.round(t.b3 / totalDays * f()) };
       });
     }
-    root = { settings: { contestBrands: brands.join(', ') }, master_staff: master, daily, kpi: { active: 'demo', comps: { demo: comp } } };
+    const kudos = {};
+    for (let i = 0; i < 5; i++) { const a2 = stores[(i * 3) % stores.length].name, b2 = stores[(i * 3 + 2) % stores.length].name; kudos['dk' + i] = { from: a2, to: b2, msg: 'k' + (1 + i), ts: Date.now() - (i + 1) * 5400000 }; }
+    root = { settings: { contestBrands: brands.join(', ') }, master_staff: master, daily, kudos, kpi: { active: 'demo', comps: { demo: comp } } };
   };
 
   const bar = document.createElement('div');
@@ -1646,6 +1734,7 @@
         document.getElementById('profile-best-day').innerText = bestDaySales;
         document.getElementById('profile-best-date').innerText = formattedDate;
         document.getElementById('profile-fire-count').innerText = fireCount;
+        try { renderProfileBadges(stfId); } catch (e) { console.error(e); }
         
         let applauseEl = document.getElementById('profile-applause-count');
         if(applauseEl) applauseEl.innerText = todayApplause;
@@ -2421,6 +2510,8 @@
             globalData = snap.val() || {};
             sanitizeGlobalData();
             try { if (window.kpiOnData) kpiOnData(); } catch (e) { console.error(e); }
+            try { if (window.stockoutOnData) stockoutOnData(); } catch (e) { console.error(e); }
+            try { if (window.socialOnData) socialOnData(); } catch (e) { console.error(e); }
             
             if(globalData.settings && globalData.settings.contestBrands) {
                 window.activeContestBrands = String(globalData.settings.contestBrands).split(',').map(s => cleanText(s).replace(/[.$#\[\]\/]/g, '').trim()).filter(s => s);
@@ -2713,6 +2804,378 @@
         window.__lastStore = () => lsGet('bb_last_store');
     })();
 
+    // ===== YEDEK İNDİR (Sistem Merkezi) =====
+
+    // ================= ÜRÜN BİTTİ =================
+    function stockoutProducts() {
+        const p = (globalData.stockout && globalData.stockout.products) || {};
+        return Object.keys(p).filter(k => /^[A-Za-z0-9_-]{1,30}$/.test(k) && p[k] && p[k].name)
+            .map(k => ({ id: k, name: cleanText(p[k].name) }))
+            .sort((a, b) => a.name.localeCompare(b.name, 'tr'));
+    }
+    function stockoutReports() { return (globalData.stockout && globalData.stockout.reports) || {}; }
+    function stockoutAgo(ts) {
+        const m = Math.max(0, Math.round((Date.now() - Number(ts || 0)) / 60000));
+        if (m < 1) return 'şimdi';
+        if (m < 60) return m + ' dk önce';
+        if (m < 1440) return Math.floor(m / 60) + ' sa önce';
+        return Math.floor(m / 1440) + ' gün önce';
+    }
+    function stockoutMine() {
+        if (currentRole !== 'store' || !currentId) return {};
+        return stockoutReports()[currentId] || {};
+    }
+    function renderStockoutStore() {
+        const prods = stockoutProducts();
+        const mine = stockoutMine();
+        const ids = new Set(prods.map(p => p.id));
+        const count = Object.keys(mine).filter(k => ids.has(k)).length;
+        const badge = document.getElementById('stockout-badge');
+        if (badge) { badge.textContent = count; badge.classList.toggle('hidden', count === 0); }
+        const line = document.getElementById('stockout-store-line');
+        if (line) line.textContent = currentRole === 'store' ? currentId : '';
+        const list = document.getElementById('stockout-list');
+        if (!list) return;
+        if (!prods.length) {
+            list.innerHTML = '<div class="text-center text-sm text-slate-400 font-bold py-8"><i class="fa-solid fa-box-open text-3xl mb-2 block"></i>Merkez henüz ürün listesi eklemedi.</div>';
+            return;
+        }
+        list.innerHTML = prods.map(p => {
+            const r = mine[p.id];
+            return r
+                ? `<button type="button" onclick="stockoutToggle('${p.id}')" class="w-full flex items-center justify-between gap-3 p-3 rounded-xl border-2 border-red-400 bg-red-50 text-left active:scale-[0.99] transition"><span class="font-bold text-slate-800 text-sm">${escHtml(p.name)}<span class="block text-[10px] text-red-500 font-bold">${stockoutAgo(r.ts)} bildirildi · geri gelince dokunun</span></span><span class="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-black whitespace-nowrap"><i class="fa-solid fa-circle-xmark mr-1"></i>BİTTİ</span></button>`
+                : `<button type="button" onclick="stockoutToggle('${p.id}')" class="w-full flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200 bg-white text-left hover:border-orange-300 active:scale-[0.99] transition"><span class="font-bold text-slate-700 text-sm">${escHtml(p.name)}</span><span class="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-black whitespace-nowrap">Var</span></button>`;
+        }).join('');
+    }
+    window.openStockoutModal = function () {
+        renderStockoutStore();
+        document.getElementById('stockout-modal').classList.remove('hidden');
+    };
+    window.closeStockoutModal = function () { document.getElementById('stockout-modal').classList.add('hidden'); };
+    window.stockoutToggle = function (pid) {
+        if (currentRole !== 'store' || !currentId) return alert('Bu işlem mağaza ekranından yapılır.');
+        if (!/^[A-Za-z0-9_-]{1,30}$/.test(pid)) return;
+        const ref = dbRoot.child('stockout').child('reports').child(currentId).child(pid);
+        if (stockoutMine()[pid]) ref.remove();
+        else ref.set({ ts: Date.now() });
+    };
+    window.addStockoutProducts = function () {
+        if (!window.__DEMO && !hasAdminSession()) return alert('Ürün eklemek için yönetici girişi gerekir.');
+        const inp = document.getElementById('stockout-new-input');
+        const names = String(inp.value).split(/[,\n;]/).map(x => cleanText(x).replace(/\s+/g, ' ').trim().slice(0, 60)).filter(Boolean);
+        if (!names.length) return alert('Lütfen ürün adını yazın.');
+        const have = new Set(stockoutProducts().map(p => p.name.toLocaleLowerCase('tr')));
+        const upd = {};
+        let n = 0;
+        names.forEach(nm => {
+            const key = nm.toLocaleLowerCase('tr');
+            if (have.has(key)) return;
+            have.add(key);
+            const id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+            upd['stockout/products/' + id] = { name: nm };
+            n++;
+        });
+        if (!n) return alert('Bu ürünler zaten listede.');
+        if (stockoutProducts().length + n > 60) return alert('Listede en fazla 60 ürün olabilir.');
+        dbRoot.update(upd);
+        inp.value = '';
+    };
+    window.removeStockoutProduct = function (pid) {
+        if (!/^[A-Za-z0-9_-]{1,30}$/.test(pid)) return;
+        const p = stockoutProducts().find(x => x.id === pid);
+        if (!confirm('"' + (p ? p.name : '') + '" listeden silinsin mi? Mağazaların bu ürün için bildirimleri de silinir.')) return;
+        const upd = { ['stockout/products/' + pid]: null };
+        const rep = stockoutReports();
+        Object.keys(rep).forEach(st => { if (rep[st] && rep[st][pid]) upd['stockout/reports/' + st + '/' + pid] = null; });
+        dbRoot.update(upd);
+    };
+    window.resetStockoutProduct = function (pid) {
+        if (!/^[A-Za-z0-9_-]{1,30}$/.test(pid)) return;
+        const p = stockoutProducts().find(x => x.id === pid);
+        if (!confirm('"' + (p ? p.name : '') + '" için tüm mağaza bildirimleri temizlensin mi? (Ürün geldi)')) return;
+        const upd = {};
+        const rep = stockoutReports();
+        Object.keys(rep).forEach(st => { if (rep[st] && rep[st][pid]) upd['stockout/reports/' + st + '/' + pid] = null; });
+        if (Object.keys(upd).length) dbRoot.update(upd);
+    };
+    function renderStockoutAdmin() {
+        const box = document.getElementById('stockout-admin-body');
+        if (!box) return;
+        const prods = stockoutProducts();
+        const rep = stockoutReports();
+        if (!prods.length) { box.innerHTML = '<div class="text-xs text-red-200/70">Henüz ürün eklenmedi. Yukarıya yazıp Ekle\'ye basın, mağaza ekranlarında "Ürün Bitti" düğmesinde görünür.</div>'; return; }
+        const known = new Set(allStoresList.map(s => s.name));
+        box.innerHTML = prods.map(p => {
+            const stores = Object.keys(rep).filter(st => known.has(st) && rep[st] && rep[st][p.id]).sort();
+            const names = stores.map(st => escHtml(st)).join(' · ');
+            return `<div class="bg-red-900/50 border border-red-800/60 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center gap-2">
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap"><span class="font-black text-white text-sm">${escHtml(p.name)}</span>${stores.length ? `<span class="px-2 py-0.5 bg-red-600 text-white rounded-full text-[10px] font-black">${stores.length} mağazada bitti</span>` : '<span class="px-2 py-0.5 bg-emerald-700/60 text-emerald-100 rounded-full text-[10px] font-bold">bildirim yok</span>'}</div>
+                    ${stores.length ? `<div class="text-[11px] text-red-100/80 mt-1 break-words">${names}</div>` : ''}
+                </div>
+                <div class="flex gap-2 shrink-0">
+                    ${stores.length ? `<button type="button" onclick="resetStockoutProduct('${p.id}')" class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg text-[11px] font-bold">Sıfırla</button>` : ''}
+                    <button type="button" onclick="removeStockoutProduct('${p.id}')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-rose-400 rounded-lg text-[11px] font-bold" title="Ürünü listeden sil"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </div>`;
+        }).join('');
+    }
+    window.stockoutOnData = function () {
+        renderStockoutAdmin();
+        if (currentRole === 'store' || !document.getElementById('stockout-modal').classList.contains('hidden')) renderStockoutStore();
+    };
+    if (typeof document.addEventListener === 'function') document.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && e.target && e.target.id === 'stockout-new-input') addStockoutProducts();
+    });
+
+
+    // ================= SOSYAL: YILDIZLAR · ROZETLER · TEBRİK DUVARI =================
+    function socDayKey(off) {
+        const p = ACTIVE_DATE.split('-').map(Number);
+        const d = new Date(p[0], p[1] - 1, p[2] + off);
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    function socKnown() { return new Set(allStoresList.map(s => s.name)); }
+    function socNameOf(id, store) {
+        const ms = globalData.master_staff;
+        const r = ms && ms[store] && ms[store][id];
+        return r && r.name ? cleanText(r.name) : findStaffNameGlobal(id);
+    }
+    function socTotals(dates) {
+        const known = socKnown(), staff = {}, stores = {};
+        dates.forEach(dk => {
+            const day = (globalData.daily || {})[dk];
+            if (!day) return;
+            Object.keys(day).forEach(st => {
+                if (!known.has(st)) return;
+                const sf = (day[st] && day[st].staff) || {};
+                Object.keys(sf).forEach(id => {
+                    const v = Number(sf[id] && sf[id].sales) || 0;
+                    if (v <= 0) return;
+                    if (!staff[id]) staff[id] = { id, store: st, sales: 0 };
+                    staff[id].sales += v; staff[id].store = st;
+                    stores[st] = (stores[st] || 0) + v;
+                });
+            });
+        });
+        return { staff: Object.values(staff), stores };
+    }
+    function socStar(dates) {
+        const t = socTotals(dates);
+        const s = t.staff.sort((a, b) => b.sales - a.sales || socNameOf(a.id, a.store).localeCompare(socNameOf(b.id, b.store), 'tr'))[0];
+        const st = Object.keys(t.stores).sort((a, b) => t.stores[b] - t.stores[a] || a.localeCompare(b, 'tr'))[0];
+        return {
+            staff: s ? { name: socNameOf(s.id, s.store), store: s.store, sales: s.sales } : null,
+            store: st ? { name: st, sales: t.stores[st] } : null
+        };
+    }
+    function renderStars() {
+        const box = document.getElementById('home-stars');
+        if (!box) return;
+        const week = [0, -1, -2, -3, -4, -5, -6].map(socDayKey);
+        const cols = [
+            ['Dünün Yıldızı', '🌙', socStar([socDayKey(-1)]), 'from-indigo-500 to-violet-600'],
+            ['Bugünün Lideri', '☀️', socStar([ACTIVE_DATE]), 'from-amber-400 to-orange-500'],
+            ['Haftanın Yıldızı', '👑', socStar(week), 'from-pink-500 to-rose-600']
+        ];
+        if (!cols.some(c => c[2].staff)) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+        box.classList.remove('hidden');
+        box.innerHTML = `<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+            <h3 class="font-black text-slate-800 text-base"><span class="mr-1">🌟</span> Yıldızlar</h3>
+            <p class="text-[11px] text-slate-400 mb-3">Bonus Pack satışında tüm mağazalar arasında en çok satan personel ve mağaza.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">` + cols.map(c => {
+            const st = c[2].staff, sh = c[2].store;
+            return `<div class="rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
+                <div class="bg-gradient-to-r ${c[3]} text-white px-3 py-2 text-xs font-black flex items-center gap-2"><span class="text-base">${c[1]}</span>${c[0]}</div>
+                <div class="p-3 bg-white">` + (st
+                ? `<div class="font-black text-slate-800 text-sm leading-tight">${escHtml(st.name)}</div>
+                   <div class="text-[11px] text-slate-500 leading-tight">${escHtml(st.store)}</div>
+                   <div class="text-2xl font-black text-pink-600 mt-1">${st.sales} <span class="text-[11px] font-bold text-slate-400">adet</span></div>
+                   <div class="mt-2 pt-2 border-t border-slate-100 text-[11px] text-slate-500"><i class="fa-solid fa-store text-indigo-400 mr-1"></i>Mağaza: <b class="text-slate-700">${escHtml(sh.name)}</b> · ${sh.sales} adet</div>`
+                : `<div class="text-xs text-slate-400 font-bold py-4 text-center">Henüz satış yok</div>`) + `</div></div>`;
+        }).join('') + `</div></div>`;
+    }
+
+    const BADGES = [
+        { k: 'hedef', icon: '🎯', name: 'Hedef Avcısı', desc: 'Kendi hedefine ulaştığı gün sayısı', lv: [3, 10, 20] },
+        { k: 'alev', icon: '🔥', name: 'Alev Ustası', desc: "Hedefin %150'sini aştığı gün sayısı", lv: [1, 3, 7] },
+        { k: 'seri', icon: '📈', name: 'Seri', desc: 'Üst üste hedefe ulaştığı gün sayısı', lv: [3, 5, 7] },
+        { k: 'yildiz', icon: '🌟', name: 'Günün Yıldızı', desc: 'Tüm mağazalar arasında günün birincisi olduğu gün sayısı', lv: [1, 3, 5] },
+        { k: 'alkis', icon: '👏', name: 'Alkış Şampiyonu', desc: 'Aldığı toplam alkış', lv: [10, 30, 100] },
+        { k: 'odak', icon: '⭐', name: 'Odak Ustası', desc: 'Toplam odak ürün satışı', lv: [10, 30, 100] },
+        { k: 'yuzler', icon: '💯', name: 'Yüzler Kulübü', desc: 'Toplam satış adedi', lv: [100, 250, 500] }
+    ];
+    function socBadgeValues(id) {
+        const daily = globalData.daily || {}, known = socKnown();
+        const dates = Object.keys(daily).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
+        const v = { hedef: 0, alev: 0, seri: 0, yildiz: 0, alkis: 0, odak: 0, yuzler: 0 };
+        const hit = {};
+        dates.forEach(dk => {
+            const day = daily[dk] || {};
+            let bestId = null, bestS = 0;
+            Object.keys(day).forEach(st => {
+                if (!known.has(st)) return;
+                const sf = (day[st] && day[st].staff) || {};
+                Object.keys(sf).forEach(sid => {
+                    const r = sf[sid] || {};
+                    const sales = Number(r.sales) || 0;
+                    if (sales > bestS) { bestS = sales; bestId = sid; }
+                    if (sid !== id) return;
+                    const t = Number(r.target) || 0;
+                    v.yuzler += sales;
+                    v.alkis += Number(r.applause) || 0;
+                    if (r.contest) Object.keys(r.contest).forEach(b => { v.odak += Number(r.contest[b]) || 0; });
+                    if (sales > 0 && t > 0 && sales >= t) { v.hedef++; hit[dk] = true; }
+                    if (sales > 0 && t > 0 && sales / t >= 1.5) v.alev++;
+                });
+            });
+            if (dk < ACTIVE_DATE && bestId === id && bestS > 0) v.yildiz++;
+        });
+        let off = hit[ACTIVE_DATE] ? 0 : -1, n = 0;
+        while (hit[socDayKey(off)] && n < 400) { n++; off--; }
+        v.seri = n;
+        return v;
+    }
+    window.renderProfileBadges = function (id) {
+        const box = document.getElementById('profile-badges');
+        if (!box || !id) return;
+        const v = socBadgeValues(id);
+        let earned = 0;
+        box.innerHTML = BADGES.map(b => {
+            const val = v[b.k];
+            let lvl = 0;
+            b.lv.forEach((x, i) => { if (val >= x) lvl = i + 1; });
+            if (lvl) earned++;
+            const next = lvl < 3 ? ' / ' + b.lv[lvl] : '';
+            return `<div class="rounded-xl border p-1.5 text-center ${lvl ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200'}" title="${escHtml(b.desc)}">
+                <div class="text-2xl ${lvl ? '' : 'grayscale opacity-40'}">${b.icon}</div>
+                <div class="text-[9px] font-black text-slate-700 leading-tight mt-0.5">${b.name}</div>
+                <div class="text-[10px] font-bold ${lvl ? 'text-amber-600' : 'text-slate-400'}">${['', '🥉', '🥈', '🥇'][lvl]}${lvl ? ' ' : ''}${val}${next}</div></div>`;
+        }).join('');
+        const c = document.getElementById('profile-badges-count');
+        if (c) c.textContent = earned + ' / ' + BADGES.length + ' kazanıldı';
+    };
+
+    const KUDOS_MSGS = {
+        k1: 'Tebrikler, harika iş! 🎉', k2: 'Teşekkürler, çok yardımcı oldunuz 🙏', k3: 'Sizinle gurur duyuyoruz 💪',
+        k4: 'Süper takım ruhu ⭐', k5: 'Hedefi geçtiniz, helal olsun 🚀', k6: 'Müşteri memnuniyetinde harikasınız 💖', k7: 'Bugünün yıldızı sizdiniz 🌟'
+    };
+    function socKudos(limit, all) {
+        const known = socKnown(), cut = Date.now() - 7 * 864e5;
+        const k = globalData.kudos || {};
+        return Object.keys(k).filter(id => /^[A-Za-z0-9_-]{1,40}$/.test(id)).map(id => Object.assign({ id }, k[id]))
+            .filter(x => x && KUDOS_MSGS[x.msg] && known.has(x.from) && known.has(x.to) && Number(x.ts) > 0 && (all || Number(x.ts) > cut))
+            .sort((a, b) => b.ts - a.ts).slice(0, limit);
+    }
+    function kudosItemHtml(x, me) {
+        const ms = globalData.master_staff;
+        const who = x.toStaff && ms && ms[x.to] && ms[x.to][x.toStaff] ? ' · ' + socNameOf(x.toStaff, x.to) : '';
+        const mine = me && x.to === me;
+        return `<div class="rounded-xl border p-3 ${mine ? 'bg-pink-50 border-pink-300' : 'bg-white border-slate-200'}">
+            <div class="text-[11px] font-bold text-slate-500">${escHtml(x.from)} <i class="fa-solid fa-arrow-right text-pink-400 mx-1"></i> ${escHtml(x.to)}${escHtml(who)}${mine ? ' <span class="ml-1 px-1.5 py-0.5 bg-pink-600 text-white rounded text-[9px]">SİZE</span>' : ''}</div>
+            <div class="text-sm font-black text-slate-800 mt-0.5">${escHtml(KUDOS_MSGS[x.msg])}</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">${stockoutAgo(x.ts)}</div></div>`;
+    }
+    function renderKudosWalls() {
+        const empty = '<div class="sm:col-span-2 text-center text-xs text-slate-400 font-bold py-4">Henüz tebrik yok. İlk tebriği siz gönderin! 💌</div>';
+        const h = document.getElementById('kudos-wall-home');
+        if (h) { const l = socKudos(6); h.innerHTML = l.length ? l.map(x => kudosItemHtml(x, '')).join('') : empty; }
+        const s = document.getElementById('kudos-wall-store');
+        if (s) {
+            const me = currentRole === 'store' ? currentId : '';
+            const l = socKudos(30).sort((a, b) => (b.to === me) - (a.to === me) || b.ts - a.ts).slice(0, 6);
+            s.innerHTML = l.length ? l.map(x => kudosItemHtml(x, me)).join('') : empty;
+        }
+    }
+    function renderKudosAdmin() {
+        const box = document.getElementById('kudos-admin-body');
+        if (!box) return;
+        const l = socKudos(40, true);
+        box.innerHTML = l.length ? l.map(x => `<div class="flex items-center gap-2 bg-pink-900/40 border border-pink-800/50 rounded-lg px-3 py-2">
+            <div class="flex-1 min-w-0 text-[11px] text-pink-100 break-words"><b>${escHtml(x.from)}</b> → <b>${escHtml(x.to)}</b> · ${escHtml(KUDOS_MSGS[x.msg])} <span class="text-pink-300/60">(${stockoutAgo(x.ts)})</span></div>
+            <button type="button" onclick="removeKudos('${x.id}')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-rose-400 rounded text-[11px]" title="Sil"><i class="fa-solid fa-trash"></i></button></div>`).join('')
+            : '<div class="text-xs text-pink-200/70">Henüz tebrik yok.</div>';
+    }
+    window.removeKudos = function (id) {
+        if (!/^[A-Za-z0-9_-]{1,40}$/.test(id)) return;
+        if (!window.__DEMO && !hasAdminSession()) return alert('Silmek için yönetici girişi gerekir.');
+        dbRoot.child('kudos').child(id).remove();
+    };
+    window.cleanOldKudos = function () {
+        if (!window.__DEMO && !hasAdminSession()) return alert('Yönetici girişi gerekir.');
+        const k = globalData.kudos || {}, cut = Date.now() - 7 * 864e5, upd = {};
+        Object.keys(k).forEach(id => { if (!k[id] || !(Number(k[id].ts) > cut)) upd['kudos/' + id] = null; });
+        const n = Object.keys(upd).length;
+        if (!n) return alert('Temizlenecek eski tebrik yok.');
+        if (confirm(n + ' eski tebrik silinsin mi?')) dbRoot.update(upd);
+    };
+    window.openKudosModal = function () {
+        if (currentRole !== 'store' || !currentId) return alert('Tebrik göndermek için mağaza panelinden girin.');
+        const to = document.getElementById('kudos-to');
+        to.innerHTML = '<option value="">Mağaza seçin...</option>' + allStoresList.map(s => s.name).filter(n => n !== currentId)
+            .sort((a, b) => a.localeCompare(b, 'tr', { numeric: true })).map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('');
+        kudosToChanged();
+        window.__kudosMsg = '';
+        document.getElementById('kudos-msgs').innerHTML = Object.keys(KUDOS_MSGS).map(k =>
+            `<button type="button" data-k="${k}" onclick="pickKudosMsg('${k}')" class="kudos-opt w-full text-left px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 hover:border-pink-300 transition">${escHtml(KUDOS_MSGS[k])}</button>`).join('');
+        document.getElementById('kudos-modal').classList.remove('hidden');
+    };
+    window.closeKudosModal = function () { document.getElementById('kudos-modal').classList.add('hidden'); };
+    window.kudosToChanged = function () {
+        const to = document.getElementById('kudos-to').value;
+        const sel = document.getElementById('kudos-staff');
+        const ms = (globalData.master_staff && globalData.master_staff[to]) || {};
+        sel.innerHTML = '<option value="">Tüm ekip</option>' + Object.keys(ms).filter(id => /^[A-Za-z0-9_-]{1,40}$/.test(id) && ms[id] && ms[id].name)
+            .sort((a, b) => cleanText(ms[a].name).localeCompare(cleanText(ms[b].name), 'tr'))
+            .map(id => `<option value="${id}">${escHtml(cleanText(ms[id].name))}</option>`).join('');
+    };
+    window.pickKudosMsg = function (k) {
+        window.__kudosMsg = k;
+        document.querySelectorAll('#kudos-msgs .kudos-opt').forEach(b => {
+            const on = b.getAttribute('data-k') === k;
+            b.classList.toggle('border-pink-500', on); b.classList.toggle('bg-pink-50', on);
+            b.classList.toggle('border-slate-200', !on); b.classList.toggle('bg-white', !on);
+        });
+    };
+    window.sendKudos = function () {
+        if (currentRole !== 'store' || !currentId) return alert('Tebrik göndermek için mağaza panelinden girin.');
+        const to = document.getElementById('kudos-to').value;
+        const staff = document.getElementById('kudos-staff').value;
+        const msg = window.__kudosMsg;
+        if (!to || !socKnown().has(to) || to === currentId) return alert('Lütfen tebrik edeceğiniz mağazayı seçin.');
+        if (!KUDOS_MSGS[msg]) return alert('Lütfen bir mesaj seçin.');
+        if (Date.now() - (window.__kudosLast || 0) < 20000) return alert('Çok hızlı! Birkaç saniye sonra tekrar deneyin.');
+        const rec = { from: currentId, to, msg, ts: Date.now() };
+        if (staff && /^[A-Za-z0-9_-]{1,40}$/.test(staff)) rec.toStaff = staff;
+        window.__kudosLast = Date.now();
+        dbRoot.child('kudos').push(rec);
+        closeKudosModal();
+        try { confetti({ particleCount: 90, spread: 70, origin: { y: 0.7 } }); } catch (e) {}
+    };
+    window.socialOnData = function () {
+        renderStars();
+        renderKudosWalls();
+        renderKudosAdmin();
+        if (window.currentProfileStaffId && !document.getElementById('staff-profile-modal').classList.contains('hidden')) renderProfileBadges(window.currentProfileStaffId);
+    };
+
+    window.downloadBackup = function () {
+        if (!window.__DEMO && !hasAdminSession()) return alert('Yedek indirmek için yönetici girişi gerekir.');
+        dbRoot.once('value').then(snap => {
+            const data = snap.val();
+            if (!data) return alert('Veritabanı boş görünüyor, yedek indirilmedi.');
+            const d = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            const name = `satis-platformu-yedek-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}.json`;
+            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = name;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 2000);
+        }).catch(e => alert('Yedek alınamadı: ' + ((e && e.message) || e)));
+    };
+
     window.loginAsStore = function(directId) {
         const sel = directId || document.getElementById('select-store').value;
         if (!sel) return alert('Lütfen bir mağaza seçin.');
@@ -2756,6 +3219,7 @@
 
     function renderStoreUI() {
         if (currentRole !== 'store') return;
+        try { renderStockoutStore(); renderKudosWalls(); } catch (e) {}
         const stats = isStoreHistorical ? storeHistoricalData : getStoreDailyStats(currentId, ACTIVE_DATE);
 
         updateAnnouncementUI();
