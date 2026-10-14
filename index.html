@@ -327,7 +327,11 @@
             </div>
             <div class="p-4 space-y-3 overflow-y-auto custom-scrollbar">
                 <div>
-                    <label class="text-[10px] font-bold text-slate-500 uppercase">Hangi mağaza?</label>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase">Gönderen</label>
+                    <select id="kudos-from" onchange="kudosFromChanged()" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium mt-1 focus:outline-none focus:border-pink-500"></select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase">Tebrik edilen mağaza</label>
                     <select id="kudos-to" onchange="kudosToChanged()" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium mt-1 focus:outline-none focus:border-pink-500"></select>
                 </div>
                 <div>
@@ -428,6 +432,8 @@
 
                 <button type="button" id="topbar-mode-btn" onclick="switchMode()" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm border text-white bg-gradient-to-r from-violet-600 to-cyan-600 border-violet-400"><i class="fa-solid fa-trophy"></i> <span class="hidden sm:inline">KPI Yarışması</span></button>
 
+                <button type="button" id="notif-btn" onclick="toggleNotifications()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-bold transition flex items-center gap-1.5 border border-slate-700 shadow-sm" title="Bildirimleri aç"><i id="notif-icon" class="fa-solid fa-bell-slash"></i></button>
+
                 <button type="button" onclick="toggleDarkMode()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-bold transition flex items-center gap-1.5 border border-slate-700 shadow-sm" title="Gece/Gündüz Modu">
                     <i id="dark-mode-icon" class="fa-solid"></i>
                 </button>
@@ -455,6 +461,16 @@
                 <div class="flex items-center gap-2 flex-none">
                     <button type="button" onclick="installApp()" class="px-4 py-2 bg-pink-500 hover:bg-pink-400 rounded-xl text-xs font-black shadow whitespace-nowrap"><i class="fa-solid fa-download mr-1"></i> Ekle</button>
                     <button type="button" onclick="dismissInstall()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-sm" title="Kapat"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+            <div id="notif-banner" class="hidden items-center justify-between gap-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-2xl p-3 sm:p-4 shadow-lg">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl flex-none">🔔</div>
+                    <div class="min-w-0"><div class="font-black text-sm sm:text-base leading-tight">Bildirimleri aç</div><div class="text-[11px] sm:text-xs text-amber-50 leading-snug">Telsiz duyurusu, size gelen tebrik ve hedef haberleri telefonuna düşsün.</div></div>
+                </div>
+                <div class="flex items-center gap-2 flex-none">
+                    <button type="button" onclick="toggleNotifications()" class="px-4 py-2 bg-white text-orange-600 rounded-xl text-xs font-black shadow whitespace-nowrap">Aç</button>
+                    <button type="button" onclick="dismissNotifBanner()" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-sm" title="Kapat"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
             <div class="flex justify-center"><div class="inline-flex bg-white border border-slate-200 rounded-2xl p-1 shadow-sm gap-1">
@@ -748,6 +764,14 @@
         <div id="screen-region" class="screen hidden space-y-5">
             <div id="region-focus-top5-banner" class="hidden"></div>
             <div id="region-top5-banner" class="hidden"></div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-pink-200 p-4">
+                <div class="flex items-center justify-between gap-2">
+                    <h3 class="font-black text-sm text-slate-800"><span class="mr-1">💌</span> Tebrik Duvarı</h3>
+                    <button type="button" onclick="openKudosModal()" class="px-3 py-1.5 bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold rounded-xl shadow transition"><i class="fa-solid fa-paper-plane mr-1"></i> Tebrik Gönder</button>
+                </div>
+                <div id="kudos-wall-region" class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3"></div>
+            </div>
             
             <div id="region-walkie-talkie" class="bg-indigo-900/80 p-4 rounded-2xl border border-indigo-700/50 flex flex-col xl:flex-row gap-3 items-center shadow-lg">
                 <div class="flex items-center gap-2 text-rose-400 font-black whitespace-nowrap">
@@ -842,6 +866,14 @@
         <div id="screen-general" class="screen hidden space-y-6">
             <div id="general-top3-stores-banner" class="hidden"></div>
             <div id="general-top3-banner" class="hidden"></div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-pink-200 p-4">
+                <div class="flex items-center justify-between gap-2">
+                    <h3 class="font-black text-sm text-slate-800"><span class="mr-1">💌</span> Tebrik Duvarı</h3>
+                    <button type="button" onclick="openKudosModal()" class="px-3 py-1.5 bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold rounded-xl shadow transition"><i class="fa-solid fa-paper-plane mr-1"></i> Tebrik Gönder</button>
+                </div>
+                <div id="kudos-wall-general" class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3"></div>
+            </div>
 
             <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 flex flex-col xl:flex-row gap-3 items-center shadow-lg">
                 <div class="flex items-center gap-2 text-rose-400 font-black whitespace-nowrap">
@@ -1248,7 +1280,7 @@
       });
     }
     const kudos = {};
-    for (let i = 0; i < 5; i++) { const a2 = stores[(i * 3) % stores.length].name, b2 = stores[(i * 3 + 2) % stores.length].name; kudos['dk' + i] = { from: a2, to: b2, msg: 'k' + (1 + i), ts: Date.now() - (i + 1) * 5400000 }; }
+    for (let i = 0; i < 5; i++) { const a2 = stores[(i * 3) % stores.length].name, b2 = stores[(i * 3 + 2) % stores.length].name; kudos['dk' + i] = { from: a2, to: b2, msg: ['k1', 'k3', 'k4', 'k5', 'k6'][i], ts: Date.now() - (i + 1) * 5400000 }; }
     root = { settings: { contestBrands: brands.join(', ') }, master_staff: master, daily, kudos, kpi: { active: 'demo', comps: { demo: comp } } };
   };
 
@@ -2228,6 +2260,7 @@
     function initCentralAnnouncementListener() {
         dbRoot.child('central_announcement').on('value', snap => {
             window.centralAnnData = snap.val();
+            try { notifyCentral(); } catch (e) {}
             checkCentralAnnouncementVisibility();
         });
         setInterval(checkCentralAnnouncementVisibility, 15000);
@@ -2320,6 +2353,7 @@
     function initGlobalAnnouncementListener() {
         dbRoot.child('global_announcement').on('value', snap => {
             window.lastAnnouncementsData = snap.val() || {};
+            try { notifyAnnouncements(); } catch (e) {}
             updateAnnouncementUI();
         });
 
@@ -2804,6 +2838,134 @@
         window.__lastStore = () => lsGet('bb_last_store');
     })();
 
+
+    // ===== BİLDİRİMLER (uygulama açıkken veya arka plandayken) =====
+    (function () {
+        const nav = window.navigator || {};
+        const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+        const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+        const supported = () => typeof Notification !== 'undefined';
+        const enabled = () => supported() && Notification.permission === 'granted' && lsGet('bb_notif') === '1';
+        const away = () => document.hidden || (typeof document.hasFocus === 'function' && !document.hasFocus());
+        const hhmm = () => { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+        function myStore() {
+            if (currentRole === 'store' && currentId) return currentId;
+            const l = lsGet('bb_last_store');
+            return l && allStoresList.some(x => x.name === l) ? l : '';
+        }
+        function show(title, body, tag, force) {
+            if (!enabled() || (!force && !away())) return;
+            const opts = { body: String(body || ''), tag, icon: 'icon-192.png', badge: 'icon-192.png', lang: 'tr' };
+            const fallback = () => { try { new Notification(title, opts); } catch (e) {} };
+            try {
+                if (nav.serviceWorker && nav.serviceWorker.getRegistration) {
+                    nav.serviceWorker.getRegistration().then(reg => { if (reg && reg.showNotification) reg.showNotification(title, opts); else fallback(); }).catch(fallback);
+                } else fallback();
+            } catch (e) { fallback(); }
+        }
+        function paint() {
+            const i = document.getElementById('notif-icon'), b = document.getElementById('notif-btn'), bn = document.getElementById('notif-banner');
+            const on = enabled();
+            if (i) i.className = 'fa-solid ' + (on ? 'fa-bell' : 'fa-bell-slash');
+            if (b) { b.title = on ? 'Bildirimler açık (kapatmak için dokunun)' : 'Bildirimleri aç'; b.classList.toggle('text-amber-300', on); }
+            if (bn) {
+                const showIt = supported() && Notification.permission === 'default' && lsGet('bb_notif_dismissed') !== '1';
+                bn.classList.toggle('hidden', !showIt); bn.classList.toggle('flex', showIt);
+            }
+        }
+        window.dismissNotifBanner = function () { lsSet('bb_notif_dismissed', '1'); paint(); };
+        window.toggleNotifications = function () {
+            if (!supported()) return alert('Bu tarayıcı bildirim desteklemiyor. iPhone\'da önce sayfayı "Ana Ekrana Ekle" ile uygulama gibi ekleyip uygulamadan açın (iOS 16.4 ve üstü gerekir).');
+            if (Notification.permission === 'denied') return alert('Bildirim izni engellenmiş. Telefon veya tarayıcı ayarlarında bu site için bildirimlere izin verip tekrar deneyin.');
+            const turnOn = () => { lsSet('bb_notif', '1'); paint(); show('🔔 Bildirimler açık', 'Duyuru, tebrik ve hedef haberlerini artık size bildireceğiz.', 'test', true); };
+            if (Notification.permission === 'granted') {
+                if (lsGet('bb_notif') === '1') { lsSet('bb_notif', '0'); paint(); return alert('Bildirimler kapatıldı.'); }
+                return turnOn();
+            }
+            let done = false;
+            const cb = p => { if (done) return; done = true; if (p === 'granted') turnOn(); else paint(); };
+            try { const r = Notification.requestPermission(cb); if (r && r.then) r.then(cb); } catch (e) { paint(); }
+        };
+
+        // 1) Telsiz duyurusu
+        const annSeen = {}; let annBase = false;
+        window.notifyAnnouncements = function () {
+            const data = window.lastAnnouncementsData || {};
+            const cur = hhmm();
+            Object.keys(data).forEach(sender => {
+                const a = data[sender];
+                if (!a || !a.message) return;
+                const key = sender + '|' + a.time;
+                if (annSeen[key]) return;
+                annSeen[key] = 1;
+                if (!annBase) return;
+                if ((a.endTime && cur > a.endTime) || (a.startTime && cur < a.startTime)) return;
+                let ok = a.target === 'global' || !a.target;
+                if (!ok && a.target === 'regional') {
+                    if (currentRole === 'general' || currentRole === 'central') ok = true;
+                    else if (currentRole === 'region' && currentId === a.bm) ok = true;
+                    else { const st = allStoresList.find(x => x.name === myStore()); if (st && st.bm === a.bm) ok = true; }
+                }
+                if (ok) show('📢 ' + cleanText(sender), cleanText(a.message), 'ann-' + key);
+            });
+            annBase = true;
+        };
+
+        // 2) Merkez sistem duyurusu
+        let cenSeen = null;
+        window.notifyCentral = function () {
+            const a = window.centralAnnData;
+            const key = a && a.message ? a.time + '|' + a.message : '';
+            if (cenSeen === null) { cenSeen = key; return; }
+            const changed = key && key !== cenSeen;
+            cenSeen = key;
+            if (!changed) return;
+            const cur = hhmm();
+            if ((a.endTime && cur > a.endTime) || (a.startTime && cur < a.startTime)) return;
+            show('🛰️ Merkez duyurusu', cleanText(a.message), 'central');
+        };
+
+        // 3) Mağazaya gelen tebrik
+        let kudosBase = false; const kudosSeen = {};
+        window.notifyKudos = function () {
+            const k = globalData.kudos || {};
+            const me = myStore();
+            Object.keys(k).forEach(id => {
+                if (kudosSeen[id]) return;
+                kudosSeen[id] = 1;
+                const x = k[id];
+                if (!kudosBase || !x || !me || x.to !== me || !KUDOS_MSGS[x.msg] || !socSenders().has(x.from)) return;
+                show('💌 ' + senderLabel(x.from) + ' sizi tebrik etti', KUDOS_MSGS[x.msg], 'kudos-' + id);
+            });
+            kudosBase = true;
+        };
+
+        // 4) Hedef çizgisi (%100 ve %150)
+        const msPrev = {};
+        window.notifyMilestones = function () {
+            if (currentRole !== 'store' || !currentId || isStoreHistorical) return;
+            const st = getStoreDailyStats(currentId, ACTIVE_DATE);
+            let sales = 0, tsum = 0;
+            Object.keys(st.staff).forEach(i => { sales += st.staff[i].sales || 0; tsum += st.staff[i].target || 0; });
+            const target = st.storeTarget > 0 ? st.storeTarget : tsum;
+            if (!(target > 0)) return;
+            const pct = sales / target * 100, key = currentId + '|' + ACTIVE_DATE, prev = msPrev[key];
+            msPrev[key] = pct;
+            if (prev === undefined) return;
+            [[100, '🎯 Hedef tamamlandı!', 'bugünkü hedefi geçti. Tebrikler ekip!'], [150, '🔥 %150 barajı aşıldı!', 'muhteşem bir gün, ekibi kutlayın!']].forEach(m => {
+                if (prev < m[0] && pct >= m[0]) {
+                    const k = 'bb_ms_' + ACTIVE_DATE + '_' + currentId + '_' + m[0];
+                    if (lsGet(k) === '1') return;
+                    lsSet(k, '1');
+                    show(m[1], currentId + ': ' + m[2], 'ms-' + m[0]);
+                }
+            });
+        };
+
+        paint();
+        if (typeof window.addEventListener === 'function') window.addEventListener('load', paint);
+    })();
+
     // ===== YEDEK İNDİR (Sistem Merkezi) =====
 
     // ================= ÜRÜN BİTTİ =================
@@ -3057,14 +3219,26 @@
     };
 
     const KUDOS_MSGS = {
-        k1: 'Tebrikler, harika iş! 🎉', k2: 'Teşekkürler, çok yardımcı oldunuz 🙏', k3: 'Sizinle gurur duyuyoruz 💪',
+        k1: 'Tebrikler, harika iş! 🎉', k3: 'Sizinle gurur duyuyoruz 💪',
         k4: 'Süper takım ruhu ⭐', k5: 'Hedefi geçtiniz, helal olsun 🚀', k6: 'Müşteri memnuniyetinde harikasınız 💖', k7: 'Bugünün yıldızı sizdiniz 🌟'
     };
+    const GA_NAME = 'Güliz Atik';
+    function socSenders() {
+        const set = socKnown();
+        Object.keys(effectiveHierarchy).forEach(b => set.add(b));
+        set.add(GA_NAME);
+        return set;
+    }
+    function senderLabel(n) {
+        if (n === GA_NAME) return '👑 ' + n;
+        if (effectiveHierarchy[n]) return '📍 ' + n + ' (Bölge Müdürü)';
+        return n;
+    }
     function socKudos(limit, all) {
-        const known = socKnown(), cut = Date.now() - 7 * 864e5;
+        const known = socKnown(), senders = socSenders(), cut = Date.now() - 7 * 864e5;
         const k = globalData.kudos || {};
         return Object.keys(k).filter(id => /^[A-Za-z0-9_-]{1,40}$/.test(id)).map(id => Object.assign({ id }, k[id]))
-            .filter(x => x && KUDOS_MSGS[x.msg] && known.has(x.from) && known.has(x.to) && Number(x.ts) > 0 && (all || Number(x.ts) > cut))
+            .filter(x => x && KUDOS_MSGS[x.msg] && senders.has(x.from) && known.has(x.to) && Number(x.ts) > 0 && (all || Number(x.ts) > cut))
             .sort((a, b) => b.ts - a.ts).slice(0, limit);
     }
     function kudosItemHtml(x, me) {
@@ -3072,7 +3246,7 @@
         const who = x.toStaff && ms && ms[x.to] && ms[x.to][x.toStaff] ? ' · ' + socNameOf(x.toStaff, x.to) : '';
         const mine = me && x.to === me;
         return `<div class="rounded-xl border p-3 ${mine ? 'bg-pink-50 border-pink-300' : 'bg-white border-slate-200'}">
-            <div class="text-[11px] font-bold text-slate-500">${escHtml(x.from)} <i class="fa-solid fa-arrow-right text-pink-400 mx-1"></i> ${escHtml(x.to)}${escHtml(who)}${mine ? ' <span class="ml-1 px-1.5 py-0.5 bg-pink-600 text-white rounded text-[9px]">SİZE</span>' : ''}</div>
+            <div class="text-[11px] font-bold text-slate-500">${escHtml(senderLabel(x.from))} <i class="fa-solid fa-arrow-right text-pink-400 mx-1"></i> ${escHtml(x.to)}${escHtml(who)}${mine ? ' <span class="ml-1 px-1.5 py-0.5 bg-pink-600 text-white rounded text-[9px]">SİZE</span>' : ''}</div>
             <div class="text-sm font-black text-slate-800 mt-0.5">${escHtml(KUDOS_MSGS[x.msg])}</div>
             <div class="text-[10px] text-slate-400 mt-0.5">${stockoutAgo(x.ts)}</div></div>`;
     }
@@ -3080,6 +3254,10 @@
         const empty = '<div class="sm:col-span-2 text-center text-xs text-slate-400 font-bold py-4">Henüz tebrik yok. İlk tebriği siz gönderin! 💌</div>';
         const h = document.getElementById('kudos-wall-home');
         if (h) { const l = socKudos(6); h.innerHTML = l.length ? l.map(x => kudosItemHtml(x, '')).join('') : empty; }
+        ['region', 'general'].forEach(r => {
+            const el = document.getElementById('kudos-wall-' + r);
+            if (el && currentRole === r) { const l = socKudos(6); el.innerHTML = l.length ? l.map(x => kudosItemHtml(x, '')).join('') : empty; }
+        });
         const s = document.getElementById('kudos-wall-store');
         if (s) {
             const me = currentRole === 'store' ? currentId : '';
@@ -3092,7 +3270,7 @@
         if (!box) return;
         const l = socKudos(40, true);
         box.innerHTML = l.length ? l.map(x => `<div class="flex items-center gap-2 bg-pink-900/40 border border-pink-800/50 rounded-lg px-3 py-2">
-            <div class="flex-1 min-w-0 text-[11px] text-pink-100 break-words"><b>${escHtml(x.from)}</b> → <b>${escHtml(x.to)}</b> · ${escHtml(KUDOS_MSGS[x.msg])} <span class="text-pink-300/60">(${stockoutAgo(x.ts)})</span></div>
+            <div class="flex-1 min-w-0 text-[11px] text-pink-100 break-words"><b>${escHtml(senderLabel(x.from))}</b> → <b>${escHtml(x.to)}</b> · ${escHtml(KUDOS_MSGS[x.msg])} <span class="text-pink-300/60">(${stockoutAgo(x.ts)})</span></div>
             <button type="button" onclick="removeKudos('${x.id}')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-rose-400 rounded text-[11px]" title="Sil"><i class="fa-solid fa-trash"></i></button></div>`).join('')
             : '<div class="text-xs text-pink-200/70">Henüz tebrik yok.</div>';
     }
@@ -3109,17 +3287,46 @@
         if (!n) return alert('Temizlenecek eski tebrik yok.');
         if (confirm(n + ' eski tebrik silinsin mi?')) dbRoot.update(upd);
     };
-    window.openKudosModal = function () {
-        if (currentRole !== 'store' || !currentId) return alert('Tebrik göndermek için mağaza panelinden girin.');
+    function kudosAllowedFrom() {
+        const stores = allStoresList.map(x => x.name).sort((x, y) => x.localeCompare(y, 'tr', { numeric: true }));
+        if (currentRole === 'store' && currentId) return { own: [], stores };
+        if (currentRole === 'region' && currentId && effectiveHierarchy[currentId]) return { own: [currentId], stores };
+        if (currentRole === 'general') return { own: [GA_NAME], stores };
+        return null;
+    }
+    function kudosFillTo() {
+        const from = document.getElementById('kudos-from').value;
         const to = document.getElementById('kudos-to');
-        to.innerHTML = '<option value="">Mağaza seçin...</option>' + allStoresList.map(s => s.name).filter(n => n !== currentId)
-            .sort((a, b) => a.localeCompare(b, 'tr', { numeric: true })).map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('');
+        const keep = to.value;
+        to.innerHTML = '<option value="">Mağaza seçin...</option>' + allStoresList.map(x => x.name).filter(n => n !== from)
+            .sort((x, y) => x.localeCompare(y, 'tr', { numeric: true })).map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('');
+        if (keep && keep !== from) to.value = keep;
         kudosToChanged();
+    }
+    window.openKudosModal = function () {
+        const al = kudosAllowedFrom();
+        if (!al) return alert('Tebrik göndermek için mağaza, bölge müdürü veya Güliz Atik panelinden girin.');
+        const from = document.getElementById('kudos-from');
+        const isStore = currentRole === 'store';
+        from.innerHTML = (isStore ? '<option value="">Kendi mağazanızı seçin...</option>' : '')
+            + al.own.map(n => `<option value="${escHtml(n)}">${escHtml(senderLabel(n))}</option>`).join('')
+            + (al.stores.length ? (isStore ? al.stores.map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('')
+                : '<optgroup label="Mağaza adına gönder">' + al.stores.map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('') + '</optgroup>') : '');
+        from.disabled = false;
+        if (isStore) {
+            let mine = '';
+            try { mine = localStorage.getItem('bb_kudos_from') || (window.__lastStore ? window.__lastStore() : '') || ''; } catch (e) {}
+            from.value = al.stores.indexOf(mine) >= 0 ? mine : '';
+        } else if (al.own.length) from.value = al.own[0];
+        document.getElementById('kudos-to').innerHTML = '';
+        kudosFillTo();
+        if (isStore && from.value !== currentId) { document.getElementById('kudos-to').value = currentId; kudosToChanged(); }
         window.__kudosMsg = '';
         document.getElementById('kudos-msgs').innerHTML = Object.keys(KUDOS_MSGS).map(k =>
             `<button type="button" data-k="${k}" onclick="pickKudosMsg('${k}')" class="kudos-opt w-full text-left px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 hover:border-pink-300 transition">${escHtml(KUDOS_MSGS[k])}</button>`).join('');
         document.getElementById('kudos-modal').classList.remove('hidden');
     };
+    window.kudosFromChanged = function () { kudosFillTo(); };
     window.closeKudosModal = function () { document.getElementById('kudos-modal').classList.add('hidden'); };
     window.kudosToChanged = function () {
         const to = document.getElementById('kudos-to').value;
@@ -3138,21 +3345,28 @@
         });
     };
     window.sendKudos = function () {
-        if (currentRole !== 'store' || !currentId) return alert('Tebrik göndermek için mağaza panelinden girin.');
+        const al = kudosAllowedFrom();
+        if (!al) return alert('Tebrik göndermek için mağaza, bölge müdürü veya Güliz Atik panelinden girin.');
+        const from = document.getElementById('kudos-from').value;
+        if (!from) return alert('Lütfen kendi mağazanızı (gönderen) seçin.');
         const to = document.getElementById('kudos-to').value;
         const staff = document.getElementById('kudos-staff').value;
         const msg = window.__kudosMsg;
-        if (!to || !socKnown().has(to) || to === currentId) return alert('Lütfen tebrik edeceğiniz mağazayı seçin.');
+        if (al.own.indexOf(from) < 0 && al.stores.indexOf(from) < 0) return alert('Lütfen gönderen seçin.');
+        if (!to || !socKnown().has(to)) return alert('Lütfen tebrik edilecek mağazayı seçin.');
+        if (to === from) return alert('Gönderen ve tebrik edilen mağaza aynı olamaz.');
         if (!KUDOS_MSGS[msg]) return alert('Lütfen bir mesaj seçin.');
         if (Date.now() - (window.__kudosLast || 0) < 20000) return alert('Çok hızlı! Birkaç saniye sonra tekrar deneyin.');
-        const rec = { from: currentId, to, msg, ts: Date.now() };
+        const rec = { from, to, msg, ts: Date.now() };
         if (staff && /^[A-Za-z0-9_-]{1,40}$/.test(staff)) rec.toStaff = staff;
         window.__kudosLast = Date.now();
+        if (currentRole === 'store') { try { localStorage.setItem('bb_kudos_from', from); } catch (e) {} }
         dbRoot.child('kudos').push(rec);
         closeKudosModal();
         try { confetti({ particleCount: 90, spread: 70, origin: { y: 0.7 } }); } catch (e) {}
     };
     window.socialOnData = function () {
+        try { notifyKudos(); } catch (e) {}
         renderStars();
         renderKudosWalls();
         renderKudosAdmin();
@@ -3220,6 +3434,7 @@
     function renderStoreUI() {
         if (currentRole !== 'store') return;
         try { renderStockoutStore(); renderKudosWalls(); } catch (e) {}
+        try { notifyMilestones(); } catch (e) {}
         const stats = isStoreHistorical ? storeHistoricalData : getStoreDailyStats(currentId, ACTIVE_DATE);
 
         updateAnnouncementUI();
@@ -3542,6 +3757,7 @@
 
     function renderRegionUI() {
         if (currentRole !== 'region') return;
+        try { renderKudosWalls(); } catch (e) {}
         
         let isReadOnlyBM = (currentId === "GÜLÇİN FAKILAR");
 
@@ -4241,6 +4457,7 @@
     }
 
     function renderGeneralUI(aggData) {
+        try { renderKudosWalls(); } catch (e) {}
         updateAnnouncementUI();
         calculateGlobalTrendAndHeatmap();
 
