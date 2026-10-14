@@ -46,9 +46,8 @@
         .light-date-input::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 
         /* Duyuru Bandı Animasyonu */
-        @keyframes alert-ticker { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-        .alert-track { display: inline-block; white-space: nowrap; animation: alert-ticker 35s linear infinite; }
-        @media (max-width: 768px) { .alert-track { animation: alert-ticker 15s linear infinite; } }
+        @keyframes alert-ticker { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
+        .alert-track, .alert-track.w-full { display: flex; width: max-content; max-width: none; white-space: nowrap; will-change: transform; animation: alert-ticker 35s linear infinite; }
 
         /* Uçuşan Emoji Animasyonu */
         @keyframes floatUp { 0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translateY(-120px) scale(1.8) rotate(25deg); opacity: 0; } }
@@ -281,6 +280,7 @@
                         <div class="text-[10px] font-black text-slate-500 uppercase"><i class="fa-solid fa-medal text-amber-500 mr-1"></i> Rozetler</div>
                         <div class="text-[10px] font-bold text-amber-600" id="profile-badges-count"></div>
                     </div>
+                    <div class="text-[10px] text-slate-400 -mt-1 mb-2" id="profile-badges-week"></div>
                     <div id="profile-badges" class="grid grid-cols-4 gap-2"></div>
                 </div>
 
@@ -2229,6 +2229,20 @@
         }
     }
 
+    // Duyuru bandı: yazının tamamı ekrandan geçsin, hız (yaklaşık 80 px/sn) metin uzunluğuna göre ayarlansın
+    function fitTicker(barId) {
+        try {
+            const bar = document.getElementById(barId);
+            const tr = bar && bar.querySelector('.alert-track');
+            if (!tr) return;
+            const w = tr.scrollWidth || tr.offsetWidth || 0;
+            const vw = window.innerWidth || 360;
+            const v = Math.max(12, Math.round((w + vw) / 80)) + 's';
+            if (tr.style.animationDuration !== v) tr.style.animationDuration = v;
+        } catch (e) {}
+    }
+    window.addEventListener && window.addEventListener('resize', () => { fitTicker('central-announcement-bar'); fitTicker('global-announcement-bar'); });
+
     function checkCentralAnnouncementVisibility() {
         let ann = window.centralAnnData;
         let bar = document.getElementById('central-announcement-bar');
@@ -2252,6 +2266,7 @@
         if (isVisible) {
             textEl.textContent = ann.message;
             bar.classList.remove('hidden');
+            fitTicker('central-announcement-bar');
         } else {
             bar.classList.add('hidden');
         }
@@ -2345,6 +2360,7 @@
         if (activeMessages.length > 0) {
             textEl.innerHTML = activeMessages.join('<span class="mx-6 text-white/40">|</span>');
             bar.classList.remove('hidden');
+            fitTicker('global-announcement-bar');
         } else {
             bar.classList.add('hidden');
         }
@@ -3097,6 +3113,17 @@
         const d = new Date(p[0], p[1] - 1, p[2] + off);
         return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     }
+    // Hafta Pazartesi başlar. Rozetler ve "Haftanın Yıldızı" her Pazartesi sıfırdan başlar.
+    function socDow() {
+        const p = ACTIVE_DATE.split('-').map(Number);
+        return (new Date(p[0], p[1] - 1, p[2]).getDay() + 6) % 7;   // Pazartesi = 0
+    }
+    function socWeekStart() { return socDayKey(-socDow()); }
+    function socWeekDates() {
+        const d = socDow(), out = [];
+        for (let o = 0; o <= d; o++) out.push(socDayKey(o - d));
+        return out;
+    }
     function socKnown() { return new Set(allStoresList.map(s => s.name)); }
     function socNameOf(id, store) {
         const ms = globalData.master_staff;
@@ -3134,17 +3161,17 @@
     function renderStars() {
         const box = document.getElementById('home-stars');
         if (!box) return;
-        const week = [0, -1, -2, -3, -4, -5, -6].map(socDayKey);
+        const week = socWeekDates();
         const cols = [
             ['Dünün Yıldızı', '🌙', socStar([socDayKey(-1)]), 'from-indigo-500 to-violet-600'],
             ['Bugünün Lideri', '☀️', socStar([ACTIVE_DATE]), 'from-amber-400 to-orange-500'],
-            ['Haftanın Yıldızı', '👑', socStar(week), 'from-pink-500 to-rose-600']
+            ['Bu Haftanın Yıldızı', '👑', socStar(week), 'from-pink-500 to-rose-600']
         ];
         if (!cols.some(c => c[2].staff)) { box.classList.add('hidden'); box.innerHTML = ''; return; }
         box.classList.remove('hidden');
         box.innerHTML = `<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
             <h3 class="font-black text-slate-800 text-base"><span class="mr-1">🌟</span> Yıldızlar</h3>
-            <p class="text-[11px] text-slate-400 mb-3">Bonus Pack satışında tüm mağazalar arasında en çok satan personel ve mağaza.</p>
+            <p class="text-[11px] text-slate-400 mb-3">Bonus Pack satışında tüm mağazalar arasında en çok satan personel ve mağaza. Hafta her Pazartesi yeniden başlar.</p>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">` + cols.map(c => {
             const st = c[2].staff, sh = c[2].store;
             return `<div class="rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
@@ -3158,18 +3185,20 @@
         }).join('') + `</div></div>`;
     }
 
+    // Rozetler haftalıktır: her Pazartesi sıfırlanır (eşikler: bronz, gümüş, altın)
     const BADGES = [
-        { k: 'hedef', icon: '🎯', name: 'Hedef Avcısı', desc: 'Kendi hedefine ulaştığı gün sayısı', lv: [3, 10, 20] },
-        { k: 'alev', icon: '🔥', name: 'Alev Ustası', desc: "Hedefin %150'sini aştığı gün sayısı", lv: [1, 3, 7] },
-        { k: 'seri', icon: '📈', name: 'Seri', desc: 'Üst üste hedefe ulaştığı gün sayısı', lv: [3, 5, 7] },
-        { k: 'yildiz', icon: '🌟', name: 'Günün Yıldızı', desc: 'Tüm mağazalar arasında günün birincisi olduğu gün sayısı', lv: [1, 3, 5] },
-        { k: 'alkis', icon: '👏', name: 'Alkış Şampiyonu', desc: 'Aldığı toplam alkış', lv: [10, 30, 100] },
-        { k: 'odak', icon: '⭐', name: 'Odak Ustası', desc: 'Toplam odak ürün satışı', lv: [10, 30, 100] },
-        { k: 'yuzler', icon: '💯', name: 'Yüzler Kulübü', desc: 'Toplam satış adedi', lv: [100, 250, 500] }
+        { k: 'hedef', icon: '🎯', name: 'Hedef Avcısı', desc: 'Bu hafta kendi hedefine ulaştığı gün sayısı', lv: [2, 4, 6] },
+        { k: 'alev', icon: '🔥', name: 'Alev Ustası', desc: "Bu hafta hedefin %150'sini aştığı gün sayısı", lv: [1, 2, 3] },
+        { k: 'seri', icon: '📈', name: 'Seri', desc: 'Bu hafta üst üste hedefe ulaştığı gün sayısı', lv: [2, 3, 5] },
+        { k: 'yildiz', icon: '🌟', name: 'Günün Yıldızı', desc: 'Bu hafta tüm mağazalar arasında günün birincisi olduğu gün sayısı', lv: [1, 2, 3] },
+        { k: 'alkis', icon: '👏', name: 'Alkış Şampiyonu', desc: 'Bu hafta aldığı toplam alkış', lv: [5, 15, 30] },
+        { k: 'odak', icon: '⭐', name: 'Odak Ustası', desc: 'Bu hafta toplam odak ürün satışı', lv: [5, 15, 30] },
+        { k: 'yuzler', icon: '💯', name: 'Satış Kulübü', desc: 'Bu hafta toplam satış adedi', lv: [40, 80, 150] }
     ];
     function socBadgeValues(id) {
         const daily = globalData.daily || {}, known = socKnown();
-        const dates = Object.keys(daily).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
+        const ws = socWeekStart();
+        const dates = Object.keys(daily).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d) && d >= ws && d <= ACTIVE_DATE).sort();
         const v = { hedef: 0, alev: 0, seri: 0, yildiz: 0, alkis: 0, odak: 0, yuzler: 0 };
         const hit = {};
         dates.forEach(dk => {
@@ -3194,7 +3223,7 @@
             if (dk < ACTIVE_DATE && bestId === id && bestS > 0) v.yildiz++;
         });
         let off = hit[ACTIVE_DATE] ? 0 : -1, n = 0;
-        while (hit[socDayKey(off)] && n < 400) { n++; off--; }
+        while (hit[socDayKey(off)] && socDayKey(off) >= ws && n < 8) { n++; off--; }
         v.seri = n;
         return v;
     }
@@ -3216,6 +3245,11 @@
         }).join('');
         const c = document.getElementById('profile-badges-count');
         if (c) c.textContent = earned + ' / ' + BADGES.length + ' kazanıldı';
+        const wk = document.getElementById('profile-badges-week');
+        if (wk) {
+            const f = d => d.slice(8, 10) + '.' + d.slice(5, 7);
+            wk.textContent = 'Bu hafta (' + f(socWeekStart()) + ' – ' + f(socDayKey(6 - socDow())) + ') · her Pazartesi sıfırlanır';
+        }
     };
 
     const KUDOS_MSGS = {
