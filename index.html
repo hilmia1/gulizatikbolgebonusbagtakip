@@ -2594,7 +2594,6 @@
         else if (urlParams.get('region')) loginAsRegion(urlParams.get('region'));
         else if (urlParams.get('general')) loginAsGeneral(true);
         else if (urlParams.get('central')) loginAsCentral();
-        else if (window.__isStandalone && window.__isStandalone() && window.__lastStore() && allStoresList.some(s => s.name === window.__lastStore())) loginAsStore(window.__lastStore());
         else {
             document.getElementById('screen-home').classList.remove('hidden');
             updateAnnouncementUI();
