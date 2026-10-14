@@ -27,6 +27,52 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
+    /* ===== Podyum banner ===== */
+    .pd-wrap{--pd-a:#0f172a;--pd-b:#1e293b;--pd-acc:#fbbf24;--pd-txt:#fde68a;position:relative;overflow:hidden;margin-bottom:1.25rem;border-radius:1rem;padding:.9rem .75rem .75rem;background:radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.10),transparent 60%),linear-gradient(135deg,var(--pd-a),var(--pd-b));border:1px solid color-mix(in srgb,var(--pd-acc) 35%,transparent);box-shadow:0 10px 25px -8px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.08)}
+    .pd-navy{--pd-a:#0f172a;--pd-b:#1e293b;--pd-acc:#fbbf24;--pd-txt:#fde68a}
+    .pd-green{--pd-a:#064e3b;--pd-b:#115e59;--pd-acc:#34d399;--pd-txt:#a7f3d0}
+    .pd-purple{--pd-a:#4c1d95;--pd-b:#312e81;--pd-acc:#c084fc;--pd-txt:#e9d5ff}
+    .pd-indigo{--pd-a:#312e81;--pd-b:#1e293b;--pd-acc:#818cf8;--pd-txt:#c7d2fe}
+    .pd-bgicon{position:absolute;right:-.5rem;top:-.5rem;font-size:6rem;color:rgba(255,255,255,.05);pointer-events:none}
+    .pd-head{display:flex;align-items:center;gap:.65rem;position:relative;z-index:2;margin-bottom:.6rem}
+    .pd-head-ic{width:2.5rem;height:2.5rem;flex:none;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--pd-acc);background:color-mix(in srgb,var(--pd-acc) 18%,transparent);border:1px solid color-mix(in srgb,var(--pd-acc) 50%,transparent);box-shadow:0 0 16px color-mix(in srgb,var(--pd-acc) 35%,transparent)}
+    .pd-title{font-weight:900;font-size:.85rem;color:#fff;letter-spacing:.02em;display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
+    .pd-subtitle{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--pd-txt);opacity:.85;margin-top:.1rem}
+    .pd-stage{position:relative;z-index:2;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem;align-items:end;max-width:34rem;margin:0 auto}
+    .pd-stage.pd-n1{grid-template-columns:minmax(0,12rem);justify-content:center}
+    .pd-stage.pd-n2{grid-template-columns:repeat(2,minmax(0,1fr));max-width:22rem}
+    .pd-col{position:relative;display:flex;flex-direction:column;align-items:center;cursor:pointer;min-width:0;transition:transform .2s}
+    .pd-col:hover{transform:translateY(-3px)}
+    .pd-av-wrap{position:relative;margin-top:.9rem}
+    .pd-crown{position:absolute;left:50%;top:-1.05rem;transform:translateX(-50%) rotate(-8deg);color:#fbbf24;font-size:1.15rem;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5));animation:pdFloat 2.4s ease-in-out infinite}
+    @keyframes pdFloat{0%,100%{transform:translateX(-50%) rotate(-8deg) translateY(0)}50%{transform:translateX(-50%) rotate(-8deg) translateY(-3px)}}
+    .pd-av{width:2.6rem;height:2.6rem;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.85rem;color:#1e293b;border:2px solid #fff;box-shadow:0 4px 10px rgba(0,0,0,.35)}
+    .pd-r1 .pd-av{width:3.2rem;height:3.2rem;font-size:1rem;box-shadow:0 0 0 3px rgba(251,191,36,.45),0 0 22px rgba(251,191,36,.55)}
+    .pd-r1 .pd-av{background:linear-gradient(135deg,#fde68a,#f59e0b)}
+    .pd-r2 .pd-av{background:linear-gradient(135deg,#f1f5f9,#94a3b8)}
+    .pd-r3 .pd-av{background:linear-gradient(135deg,#fed7aa,#ea580c)}
+    .pd-name{margin-top:.3rem;max-width:100%;font-weight:900;font-size:.68rem;color:#fff;text-transform:uppercase;text-align:center;line-height:1.1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+    .pd-sub{max-width:100%;font-size:.55rem;font-weight:700;color:var(--pd-txt);opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:.1rem 0 .3rem}
+    .pd-sub:hover{text-decoration:underline;opacity:1}
+    .pd-block{width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.05rem;border-radius:.6rem .6rem 0 0;border:1px solid rgba(255,255,255,.35);border-bottom:0;position:relative;overflow:hidden}
+    .pd-block::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.35) 50%,transparent 65%);transform:translateX(-120%);animation:pdShine 4.5s ease-in-out infinite}
+    @keyframes pdShine{0%,60%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+    .pd-r1 .pd-block{height:4.6rem;background:linear-gradient(180deg,#fcd34d,#d97706);color:#451a03}
+    .pd-r2 .pd-block{height:3.4rem;background:linear-gradient(180deg,#e2e8f0,#94a3b8);color:#1e293b}
+    .pd-r3 .pd-block{height:2.7rem;background:linear-gradient(180deg,#fdba74,#c2410c);color:#431407}
+    .pd-r2 .pd-block::after{animation-delay:.6s}.pd-r3 .pd-block::after{animation-delay:1.2s}
+    .pd-num{font-weight:900;font-size:1.05rem;line-height:1;opacity:.9}
+    .pd-val{font-weight:900;font-size:.8rem;line-height:1;background:rgba(255,255,255,.55);padding:.1rem .45rem;border-radius:9999px}
+    .pd-gb{position:absolute;top:-.15rem;right:-.2rem;z-index:5;background:linear-gradient(90deg,#fbbf24,#eab308);color:#0f172a;font-size:.5rem;font-weight:900;padding:.1rem .35rem;border-radius:9999px;border:1px solid #fde68a;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+    .pd-rest{position:relative;z-index:2;display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem;margin-top:.55rem}
+    .pd-chip{display:flex;align-items:center;gap:.4rem;padding:.2rem .55rem;border-radius:9999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:.62rem;cursor:pointer;max-width:100%}
+    .pd-chip:hover{background:rgba(255,255,255,.2)}
+    .pd-chip b{color:var(--pd-acc);font-weight:900}
+    .pd-chip-n{font-weight:800;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:8rem}
+    .pd-chip-v{font-weight:900;color:var(--pd-txt)}
+    @media (min-width:640px){.pd-wrap{padding:1rem 1.25rem .9rem}.pd-name{font-size:.78rem}.pd-sub{font-size:.62rem}.pd-av{width:3rem;height:3rem}.pd-r1 .pd-av{width:3.7rem;height:3.7rem}.pd-r1 .pd-block{height:5.2rem}.pd-r2 .pd-block{height:3.8rem}.pd-r3 .pd-block{height:3rem}.pd-val{font-size:.9rem}}
+    @media (prefers-reduced-motion:reduce){.pd-block::after,.pd-crown{animation:none}}
+
         .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -2022,157 +2068,81 @@
 
     const BONUS_PACK_PILL = '<span class="inline-flex items-center gap-1 bg-pink-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full border border-pink-300 shadow-md whitespace-nowrap tracking-wider"><i class="fa-solid fa-gift"></i> BONUS PACK</span>';
 
-    function updateTop3Banners(containerId, staffArr, mainTitle, subTitle) {
+    // ===== PODYUM BANNER (ortak) =====
+    function pdInit(n){ n=String(n||'').trim(); const p=n.split(/\s+/); return ((p[0]||'?')[0]+(p.length>1?p[p.length-1][0]:'')).toLocaleUpperCase('tr-TR'); }
+    function pdJs(v){ return String(v==null?'':v).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+    function renderPodium(containerId, items, o) {
         const container = document.getElementById(containerId);
         if(!container) return;
-        if (!staffArr || staffArr.length === 0) {
-            container.innerHTML = '';
-            container.classList.add('hidden');
-            return;
-        }
+        if (!items || !Array.isArray(items) || items.length === 0) { container.innerHTML = ''; container.classList.add('hidden'); return; }
         container.classList.remove('hidden');
-        let html = `<div class="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl shadow-lg p-3 sm:p-4 mb-5 flex flex-col lg:flex-row items-center gap-4 justify-between border border-amber-500/30 relative overflow-hidden">
-            <div class="absolute right-0 top-0 text-white/5 text-6xl font-black transform translate-x-2 -translate-y-2"><i class="fa-solid fa-ranking-star"></i></div>
-            <div class="flex items-center gap-3 relative z-10 w-full lg:w-auto justify-center lg:justify-start">
-                <div class="w-10 h-10 rounded-full bg-amber-400/20 flex items-center justify-center border border-amber-400/50 shadow-[0_0_15px_rgba(251,191,36,0.3)]">
-                    <i class="fa-solid fa-gift text-xl text-pink-400 animate-pulse"></i>
-                </div>
-                <div class="text-center lg:text-left">
-                    <div class="font-black text-sm text-white tracking-wide flex items-center gap-2 flex-wrap justify-center lg:justify-start">${mainTitle} ${BONUS_PACK_PILL}</div>
-                    <div class="text-[10px] text-amber-200/80 font-bold uppercase tracking-wider">${subTitle}</div>
+        const top = items.slice(0, 3), rest = items.slice(3, o.limit || 3);
+        const order = top.length >= 3 ? [1, 0, 2] : top.length === 2 ? [1, 0] : [0];
+        const ranks = ['pd-r1', 'pd-r2', 'pd-r3'];
+        const cell = (it, idx) => {
+            const badge = o.badge ? o.badge(it) : '';
+            const main = o.nameOf(it);
+            return `<div class="pd-col ${ranks[idx]}" onclick="${o.onMain(it)}" title="${escHtml(o.mainTitle)}">
+                ${badge}
+                <div class="pd-av-wrap">${idx === 0 ? '<i class="fa-solid fa-crown pd-crown"></i>' : ''}<div class="pd-av">${o.isStore ? '<i class="fa-solid fa-store"></i>' : escHtml(pdInit(main))}</div></div>
+                <div class="pd-name">${escHtml(main)}</div>
+                <div class="pd-sub" onclick="event.stopPropagation(); ${o.onSub(it)}" title="${escHtml(o.subTitle)}">${escHtml(o.subOf(it) || '')}</div>
+                <div class="pd-block"><span class="pd-num">${idx + 1}</span><span class="pd-val">${o.valOf(it)}</span></div>
+            </div>`;
+        };
+        let html = `<div class="pd-wrap ${o.theme}">
+            <i class="fa-solid ${o.bgIcon} pd-bgicon"></i>
+            <div class="pd-head">
+                <div class="pd-head-ic"><i class="fa-solid ${o.icon}"></i></div>
+                <div class="pd-head-tx">
+                    <div class="pd-title">${o.title} ${o.pill ? BONUS_PACK_PILL : ''}</div>
+                    <div class="pd-subtitle">${o.sub}</div>
                 </div>
             </div>
-            <div class="flex flex-wrap justify-center lg:justify-end gap-2 sm:gap-3 w-full lg:w-auto relative z-10">`;
-        const medals = ['<i class="fa-solid fa-crown text-amber-500 text-lg"></i>', '<i class="fa-solid fa-medal text-slate-400 text-lg"></i>', '<i class="fa-solid fa-medal text-orange-400 text-lg"></i>'];
-        const colors = ['bg-gradient-to-br from-amber-100 to-amber-50 border-amber-300 ring-2 ring-amber-400/50', 'bg-gradient-to-br from-slate-100 to-slate-50 border-slate-300', 'bg-gradient-to-br from-orange-100 to-orange-50 border-orange-300'];
-        staffArr.slice(0, 3).forEach((st, idx) => {
-            html += `<div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[150px] cursor-pointer hover:shadow-lg transition-shadow" onclick="openStaffProfile('${st.id}')" title="Karne için tıkla">
-                <div class="flex items-center justify-center w-6">${medals[idx]}</div>
-                <div class="flex flex-col">
-                    <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-pink-600 ml-1">${st.sales}</span></span>
-                    <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1 hover:text-pink-500 transition-colors" onclick="event.stopPropagation(); goToStore('${st.store}')" title="Mağazaya Git">${st.store}</span>
-                </div>
-            </div>`;
-        });
-        html += `</div></div>`;
+            <div class="pd-stage pd-n${top.length}">${order.map(i => cell(top[i], i)).join('')}</div>`;
+        if (rest.length) {
+            html += `<div class="pd-rest">` + rest.map((it, k) => `<div class="pd-chip" onclick="${o.onMain(it)}"><b>${k + 4}</b><span class="pd-chip-n">${escHtml(o.nameOf(it))}</span><span class="pd-chip-v">${o.valOf(it)}</span></div>`).join('') + `</div>`;
+        }
+        html += `</div>`;
         container.innerHTML = html;
+    }
+
+    function updateTop3Banners(containerId, staffArr, mainTitle, subTitle) {
+        renderPodium(containerId, staffArr, {
+            theme: 'pd-navy', icon: 'fa-gift', bgIcon: 'fa-ranking-star', title: mainTitle, sub: subTitle, pill: true, limit: 3,
+            nameOf: st => st.name, subOf: st => st.store, valOf: st => st.sales,
+            onMain: st => `openStaffProfile('${pdJs(st.id)}')`, onSub: st => `goToStore('${pdJs(st.store)}')`,
+            mainTitle: 'Karne için tıkla', subTitle: 'Mağazaya Git'
+        });
     }
 
     function updateTop3StoresBanner(containerId, storeArr, mainTitle, subTitle) {
-        const container = document.getElementById(containerId);
-        if(!container) return;
-        if (!storeArr || storeArr.length === 0) {
-            container.innerHTML = '';
-            container.classList.add('hidden');
-            return;
-        }
-        container.classList.remove('hidden');
-        let html = `<div class="bg-gradient-to-r from-emerald-900 to-teal-800 rounded-2xl shadow-lg p-3 sm:p-4 mb-5 flex flex-col lg:flex-row items-center gap-4 justify-between border border-emerald-500/30 relative overflow-hidden">
-            <div class="absolute right-0 top-0 text-white/5 text-6xl font-black transform translate-x-2 -translate-y-2"><i class="fa-solid fa-store"></i></div>
-            <div class="flex items-center gap-3 relative z-10 w-full lg:w-auto justify-center lg:justify-start">
-                <div class="w-10 h-10 rounded-full bg-emerald-400/20 flex items-center justify-center border border-emerald-400/50 shadow-[0_0_15px_rgba(52,211,153,0.3)]">
-                    <i class="fa-solid fa-gift text-xl text-pink-300 animate-pulse"></i>
-                </div>
-                <div class="text-center lg:text-left">
-                    <div class="font-black text-sm text-white tracking-wide flex items-center gap-2 flex-wrap justify-center lg:justify-start">${mainTitle} ${BONUS_PACK_PILL}</div>
-                    <div class="text-[10px] text-emerald-200/80 font-bold uppercase tracking-wider">${subTitle}</div>
-                </div>
-            </div>
-            <div class="flex flex-wrap justify-center lg:justify-end gap-2 sm:gap-3 w-full lg:w-auto relative z-10">`;
-        const medals = ['<i class="fa-solid fa-crown text-amber-500 text-lg"></i>', '<i class="fa-solid fa-medal text-slate-400 text-lg"></i>', '<i class="fa-solid fa-medal text-orange-400 text-lg"></i>'];
-        const colors = ['bg-gradient-to-br from-amber-100 to-amber-50 border-amber-300 ring-2 ring-amber-400/50', 'bg-gradient-to-br from-slate-100 to-slate-50 border-slate-300', 'bg-gradient-to-br from-orange-100 to-orange-50 border-orange-300'];
-        storeArr.slice(0, 3).forEach((st, idx) => {
-            html += `<div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[150px] cursor-pointer hover:shadow-lg transition-shadow" onclick="goToStore('${st.name}')" title="Mağazaya Git">
-                <div class="flex items-center justify-center w-6">${medals[idx]}</div>
-                <div class="flex flex-col">
-                    <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-emerald-600 ml-1">${st.sales}</span></span>
-                    <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1 hover:text-emerald-600 transition-colors" onclick="event.stopPropagation(); goToRegion('${st.bm}')" title="Bölge Paneline Git">${st.bm}</span>
-                </div>
-            </div>`;
+        renderPodium(containerId, storeArr, {
+            theme: 'pd-green', icon: 'fa-gift', bgIcon: 'fa-store', title: mainTitle, sub: subTitle, pill: true, limit: 3, isStore: true,
+            nameOf: st => st.name, subOf: st => st.bm, valOf: st => st.sales,
+            onMain: st => `goToStore('${pdJs(st.name)}')`, onSub: st => `goToRegion('${pdJs(st.bm)}')`,
+            mainTitle: 'Mağazaya Git', subTitle: 'Bölge Paneline Git'
         });
-        html += `</div></div>`;
-        container.innerHTML = html;
     }
 
     function updateFocusTopBanners(containerId, staffArr, mainTitle, subTitle, limit = 3) {
-        const container = document.getElementById(containerId);
-        if(!container) return;
-        if (!staffArr || staffArr.length === 0) {
-            container.innerHTML = '';
-            container.classList.add('hidden');
-            return;
-        }
-        container.classList.remove('hidden');
-        let html = `<div class="bg-gradient-to-r from-purple-900 to-indigo-900 rounded-2xl shadow-lg p-3 sm:p-4 mb-5 flex flex-col lg:flex-row items-center gap-4 justify-between border border-purple-500/50 relative overflow-hidden">
-            <div class="absolute right-0 top-0 text-white/5 text-6xl font-black transform translate-x-2 -translate-y-2"><i class="fa-solid fa-star"></i></div>
-            <div class="flex items-center gap-3 relative z-10 w-full lg:w-auto justify-center lg:justify-start">
-                <div class="w-10 h-10 rounded-full bg-purple-400/20 flex items-center justify-center border border-purple-400/50 shadow-[0_0_15px_rgba(168,85,247,0.3)]">
-                    <i class="fa-solid fa-star text-xl text-amber-300 animate-pulse"></i>
-                </div>
-                <div class="text-center lg:text-left">
-                    <div class="font-black text-sm text-white tracking-wide">${mainTitle}</div>
-                    <div class="text-[10px] text-purple-200/80 font-bold uppercase tracking-wider">${subTitle}</div>
-                </div>
-            </div>
-            <div class="flex flex-wrap justify-center lg:justify-end gap-2 sm:gap-3 w-full lg:w-auto relative z-10">`;
-        const medals = ['<i class="fa-solid fa-crown text-amber-500 text-lg"></i>', '<i class="fa-solid fa-medal text-slate-400 text-lg"></i>', '<i class="fa-solid fa-medal text-orange-400 text-lg"></i>', '<span class="font-black text-purple-400 text-sm">4.</span>','<span class="font-black text-purple-400 text-sm">5.</span>'];
-        const colors = ['bg-gradient-to-br from-amber-100 to-amber-50 border-amber-300 ring-2 ring-amber-400/50', 'bg-gradient-to-br from-slate-100 to-slate-50 border-slate-300', 'bg-gradient-to-br from-orange-100 to-orange-50 border-orange-300', 'bg-white border-purple-200', 'bg-white border-purple-200'];
-        
-        staffArr.slice(0, limit).forEach((st, idx) => {
-            html += `<div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[150px] cursor-pointer hover:shadow-lg transition-shadow" onclick="openStaffProfile('${st.id}')" title="Karne için tıkla">
-                <div class="flex items-center justify-center w-6">${medals[idx]}</div>
-                <div class="flex flex-col">
-                    <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-purple-600 ml-1">${st.focusSales}</span></span>
-                    <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1 hover:text-purple-500 transition-colors" onclick="event.stopPropagation(); goToStore('${st.store}')" title="Mağazaya Git">${st.store}</span>
-                </div>
-            </div>`;
+        renderPodium(containerId, staffArr, {
+            theme: 'pd-purple', icon: 'fa-star', bgIcon: 'fa-star', title: mainTitle, sub: subTitle, pill: false, limit: limit,
+            nameOf: st => st.name, subOf: st => st.store, valOf: st => st.focusSales,
+            onMain: st => `openStaffProfile('${pdJs(st.id)}')`, onSub: st => `goToStore('${pdJs(st.store)}')`,
+            mainTitle: 'Karne için tıkla', subTitle: 'Mağazaya Git'
         });
-        html += `</div></div>`;
-        container.innerHTML = html;
     }
 
     function updateRegionTop5Banner(containerId, staffArr, globalTop3, customTitle = "BÖLGE YILDIZLARI (İLK 5)", customSub = "Bonus Pack Satışında Kendi Bölgenizdeki En İyi Personeller", limit = 5) {
-        const container = document.getElementById(containerId);
-        if(!container) return;
-        if (!staffArr || !Array.isArray(staffArr) || staffArr.length === 0) {
-            container.innerHTML = '';
-            container.classList.add('hidden');
-            return;
-        }
-        container.classList.remove('hidden');
-        let html = `<div class="bg-gradient-to-r from-indigo-900 to-slate-800 rounded-2xl shadow-lg p-3 sm:p-4 mb-5 flex flex-col lg:flex-row items-center gap-4 justify-between border border-indigo-500/30 relative overflow-hidden">
-            <div class="absolute right-0 top-0 text-white/5 text-6xl font-black transform translate-x-2 -translate-y-2"><i class="fa-solid fa-ranking-star"></i></div>
-            <div class="flex items-center gap-3 relative z-10 w-full lg:w-auto justify-center lg:justify-start">
-                <div class="w-10 h-10 rounded-full bg-indigo-400/20 flex items-center justify-center border border-indigo-400/50 shadow-[0_0_15px_rgba(99,102,241,0.3)]">
-                    <i class="fa-solid fa-star text-xl text-indigo-400 animate-pulse"></i>
-                </div>
-                <div class="text-center lg:text-left">
-                    <div class="font-black text-sm text-white tracking-wide flex items-center gap-2 flex-wrap justify-center lg:justify-start">${customTitle} ${BONUS_PACK_PILL}</div>
-                    <div class="text-[10px] text-indigo-200/80 font-bold uppercase tracking-wider">${customSub}</div>
-                </div>
-            </div>
-            <div class="flex flex-wrap justify-center lg:justify-end gap-2 sm:gap-3 w-full lg:w-auto relative z-10">`;
-        const medals = ['<i class="fa-solid fa-crown text-amber-500 text-lg"></i>', '<i class="fa-solid fa-medal text-slate-400 text-lg"></i>', '<i class="fa-solid fa-medal text-orange-400 text-lg"></i>','<span class="font-black text-indigo-400 text-sm">4.</span>','<span class="font-black text-indigo-400 text-sm">5.</span>'];
-        const colors = ['bg-gradient-to-br from-amber-100 to-amber-50 border-amber-300 ring-2 ring-amber-400/50', 'bg-gradient-to-br from-slate-100 to-slate-50 border-slate-300', 'bg-gradient-to-br from-orange-100 to-orange-50 border-orange-300','bg-white border-indigo-100','bg-white border-indigo-100'];
-        
-        staffArr.slice(0, limit).forEach((st, idx) => {
-            let globalRank = (globalTop3 && Array.isArray(globalTop3)) ? globalTop3.findIndex(g => g.id === st.id) : -1;
-            let globalBadge = '';
-            if (globalRank === 0) globalBadge = `<span class="absolute -top-3 -right-2 bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-amber-300 animate-bounce whitespace-nowrap z-20">👑 EGE BÖLGE 1.Sİ</span>`;
-            else if (globalRank === 1) globalBadge = `<span class="absolute -top-3 -right-2 bg-slate-200 text-slate-800 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-slate-400 animate-bounce whitespace-nowrap z-20">🥈 EGE BÖLGE 2.Sİ</span>`;
-            else if (globalRank === 2) globalBadge = `<span class="absolute -top-3 -right-2 bg-orange-300 text-orange-900 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-orange-400 animate-bounce whitespace-nowrap z-20">🥉 EGE BÖLGE 3.SÜ</span>`;
-            
-            html += `<div class="relative flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx] || colors[3]} shadow-md min-w-[130px] cursor-pointer hover:shadow-lg transition-shadow" onclick="openStaffProfile('${st.id}')" title="Karne için tıkla">
-                ${globalBadge}
-                <div class="flex items-center justify-center w-6">${medals[idx] || (idx+1)+'.'}</div>
-                <div class="flex flex-col">
-                    <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-indigo-600 ml-1">${st.sales}</span></span>
-                    <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1 hover:text-indigo-500 transition-colors" onclick="event.stopPropagation(); goToStore('${st.store}')" title="Mağazaya Git">${st.store}</span>
-                </div>
-            </div>`;
+        const lbl = ['👑 EGE 1.Sİ', '🥈 EGE 2.Sİ', '🥉 EGE 3.SÜ'];
+        renderPodium(containerId, staffArr, {
+            theme: 'pd-indigo', icon: 'fa-star', bgIcon: 'fa-ranking-star', title: customTitle, sub: customSub, pill: true, limit: limit,
+            nameOf: st => st.name, subOf: st => st.store, valOf: st => st.sales,
+            onMain: st => `openStaffProfile('${pdJs(st.id)}')`, onSub: st => `goToStore('${pdJs(st.store)}')`,
+            mainTitle: 'Karne için tıkla', subTitle: 'Mağazaya Git',
+            badge: st => { const r = (globalTop3 && Array.isArray(globalTop3)) ? globalTop3.findIndex(g => g.id === st.id) : -1; return r >= 0 && r < 3 ? `<span class="pd-gb">${lbl[r]}</span>` : ''; }
         });
-        html += `</div></div>`;
-        container.innerHTML = html;
     }
 
     function renderHeatmap(hourlyData, containerId, colorClass) {
