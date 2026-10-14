@@ -65,14 +65,13 @@
         .dark-mode .shadow-sm, .dark-mode .shadow-md { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5) !important; }
         .dark-mode .shadow-inner { box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.5) !important; }
 
-        .dark-mode .bg-pink-100, .dark-mode .bg-emerald-100, .dark-mode .bg-rose-100, .dark-mode .bg-indigo-100, .dark-mode .bg-amber-100, .dark-mode .bg-orange-100 {
+        .dark-mode .bg-pink-100, .dark-mode .bg-emerald-100, .dark-mode .bg-rose-100, .dark-mode .bg-indigo-100, .dark-mode .bg-amber-100, .dark-mode .bg-orange-100, .dark-mode .bg-purple-100 {
             background-color: transparent !important; border: 1px solid currentColor !important;
         }
 
         .dark-mode #dark-mode-icon::before { content: "\f185"; color: #facc15; } 
         #dark-mode-icon::before { content: "\f186"; } 
 
-        /* --- DARK MODE TABLO VE LİSTE RENK DÜZELTMELERİ --- */
         .dark-mode .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.1) !important; }
         .dark-mode .hover\:bg-emerald-100:hover { background-color: rgba(16, 185, 129, 0.2) !important; }
         
@@ -81,6 +80,8 @@
         
         .dark-mode .bg-rose-50 { background-color: rgba(244, 63, 94, 0.1) !important; }
         .dark-mode .hover\:bg-rose-100:hover { background-color: rgba(244, 63, 94, 0.2) !important; }
+
+        .dark-mode .bg-purple-50 { background-color: rgba(168, 85, 247, 0.1) !important; }
         
         .dark-mode .bg-amber-50\/70 { background-color: rgba(245, 158, 11, 0.15) !important; }
         .dark-mode .bg-slate-100\/70 { background-color: rgba(148, 163, 184, 0.15) !important; }
@@ -94,14 +95,17 @@
         
         .dark-mode .from-orange-100 { --tw-gradient-from: rgba(249, 115, 22, 0.2) !important; --tw-gradient-to: rgba(249, 115, 22, 0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
         .dark-mode .to-orange-50 { --tw-gradient-to: rgba(249, 115, 22, 0.05) !important; }
+        
+        .dark-mode .from-purple-100 { --tw-gradient-from: rgba(168, 85, 247, 0.2) !important; --tw-gradient-to: rgba(168, 85, 247, 0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+        .dark-mode .to-purple-50 { --tw-gradient-to: rgba(168, 85, 247, 0.05) !important; }
 
         .dark-mode .border-indigo-100 { border-color: rgba(99, 102, 241, 0.3) !important; }
-        /* -------------------------------------------------------- */
+        .dark-mode .border-purple-300 { border-color: rgba(168, 85, 247, 0.3) !important; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen font-sans relative pb-16 transition-colors duration-300">
 
-    <!-- ⚡ MERKEZ DUYURU BANDI (SİSTEM YÖNETİCİSİ İÇİN - YENİ RENK) -->
+    <!-- ⚡ MERKEZ DUYURU BANDI -->
     <div id="central-announcement-bar" class="hidden bg-gradient-to-r from-cyan-950 to-slate-900 border-b border-cyan-500 py-2 text-sm font-black tracking-widest overflow-hidden shadow-lg sticky top-0 z-[65]">
         <div class="alert-track w-full flex items-center gap-4 text-cyan-400">
             <i class="fa-solid fa-satellite-dish animate-pulse"></i>
@@ -110,7 +114,7 @@
         </div>
     </div>
 
-    <!-- 📢 GLOBAL DUYURU BANDI (TELSİZ) -->
+    <!-- 📢 GLOBAL DUYURU BANDI -->
     <div id="global-announcement-bar" class="hidden bg-gradient-to-r from-amber-500 to-rose-600 text-white py-1.5 text-sm font-black tracking-wide overflow-hidden shadow-md sticky top-[42px] z-[60]">
         <div class="alert-track w-full flex items-center gap-4">
             <i class="fa-solid fa-bullhorn animate-pulse"></i>
@@ -232,15 +236,70 @@
         </div>
     </div>
 
-    <!-- KATALOG MODALI -->
+    <!-- KATALOG MODALI (BONUS PACK) -->
     <div id="catalog-modal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[110] flex items-center justify-center p-2 sm:p-6">
         <div class="bg-white rounded-2xl shadow-2xl relative w-full max-w-3xl max-h-[95vh] flex flex-col overflow-hidden border border-pink-500/30">
             <div class="bg-gradient-to-r from-pink-600 to-rose-600 p-3 sm:p-4 text-white flex justify-between items-center shadow-md z-10">
-                <h3 class="font-black text-sm sm:text-lg flex items-center gap-2"><i class="fa-solid fa-gift text-pink-200"></i> Güncel Kombinasyonlar</h3>
+                <h3 class="font-black text-sm sm:text-lg flex items-center gap-2"><i class="fa-solid fa-gift text-pink-200"></i> Bonus Pack Kombinasyonları</h3>
                 <button type="button" onclick="closeCatalogModal()" class="text-white hover:text-pink-200 transition-colors bg-white/10 px-3 py-1 rounded-lg"><i class="fa-solid fa-xmark text-xl"></i> Kapat</button>
             </div>
             <div class="overflow-y-auto p-0 flex-1 bg-slate-100 flex justify-center custom-scrollbar">
-                <img src="katalog.jpg" alt="Bonuspack Kataloğu" class="w-full h-auto object-contain">
+                <img src="katalog.jpg" alt="Bonus Pack Kataloğu" class="w-full h-auto object-contain">
+            </div>
+        </div>
+    </div>
+
+    <!-- ODAK ÜRÜN GÖRSEL MODALI -->
+    <div id="odak-modal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[110] flex items-center justify-center p-2 sm:p-6">
+        <div class="bg-white rounded-2xl shadow-2xl relative w-full max-w-3xl max-h-[95vh] flex flex-col overflow-hidden border border-purple-500/30">
+            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-3 sm:p-4 text-white flex justify-between items-center shadow-md z-10">
+                <h3 class="font-black text-sm sm:text-lg flex items-center gap-2"><i class="fa-solid fa-star text-amber-300"></i> Odak Ürün</h3>
+                <button type="button" onclick="closeOdakModal()" class="text-white hover:text-purple-200 transition-colors bg-white/10 px-3 py-1 rounded-lg"><i class="fa-solid fa-xmark text-xl"></i> Kapat</button>
+            </div>
+            <div class="overflow-y-auto p-0 flex-1 bg-slate-100 flex justify-center custom-scrollbar">
+                <img src="odak.jpg" alt="Odak Ürün" class="w-full h-auto object-contain">
+            </div>
+        </div>
+    </div>
+
+    <!-- 🏆 ODAK ÜRÜN GİRİŞ MODALI -->
+    <div id="contest-input-modal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[130] flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all border border-purple-300">
+            <button type="button" onclick="closeContestInputModal()" class="absolute top-4 right-4 text-slate-400 hover:text-purple-600 transition-colors"><i class="fa-solid fa-xmark text-2xl"></i></button>
+            <div class="text-center mb-5 mt-2">
+                <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-3 shadow-inner text-purple-600">
+                    <i class="fa-solid fa-crosshairs animate-pulse"></i>
+                </div>
+                <h3 class="font-black text-xl text-slate-800 dark:text-white uppercase" id="contest-input-name">Personel Adı</h3>
+                <p class="text-[10px] text-purple-500 mt-1 font-bold tracking-wider uppercase">Odak Ürün Satış Girişi</p>
+            </div>
+            <div id="contest-input-list" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <!-- 🏆 ODAK ÜRÜN LİDER TABLOSU MODALI -->
+    <div id="contest-leaderboard-modal" class="hidden fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[140] flex items-center justify-center p-2 sm:p-6">
+        <div class="bg-slate-50 dark:bg-slate-900 rounded-2xl shadow-2xl relative w-full max-w-3xl max-h-[95vh] flex flex-col overflow-hidden border border-purple-500/50">
+            <div class="bg-gradient-to-r from-purple-700 to-indigo-700 p-4 sm:p-5 text-white flex justify-between items-center shadow-lg z-10 relative overflow-hidden">
+                <div class="absolute right-0 top-0 opacity-10 text-8xl transform translate-x-4 -translate-y-4"><i class="fa-solid fa-trophy"></i></div>
+                <h3 class="font-black text-lg sm:text-xl flex items-center gap-2 relative z-10"><i class="fa-solid fa-crown text-amber-300 animate-pulse"></i> Odak Ürün Ligi</h3>
+                <button type="button" onclick="closeContestLeaderboard()" class="text-white hover:text-purple-200 transition-colors bg-white/10 px-3 py-1.5 rounded-lg text-sm font-bold relative z-10"><i class="fa-solid fa-xmark"></i> Kapat</button>
+            </div>
+            <div class="overflow-y-auto p-4 sm:p-6 flex-1 custom-scrollbar space-y-6">
+                <div>
+                    <h4 class="font-black text-slate-700 dark:text-slate-200 text-sm mb-3 border-b border-slate-200 dark:border-slate-700 pb-2"><i class="fa-solid fa-chart-simple text-purple-500 mr-1"></i> Odak Ürünler Toplam Satış</h4>
+                    <div id="cb-brand-totals" class="flex flex-wrap gap-3"></div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                        <h4 class="font-black text-slate-700 dark:text-slate-200 text-sm mb-3"><i class="fa-solid fa-store text-indigo-500 mr-1"></i> Lider Mağazalar (İlk 50)</h4>
+                        <div id="cb-top-stores" class="space-y-1 max-h-[24rem] overflow-y-auto pr-1 custom-scrollbar"></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                        <h4 class="font-black text-slate-700 dark:text-slate-200 text-sm mb-3"><i class="fa-solid fa-users text-pink-500 mr-1"></i> Lider Personeller (İlk 5)</h4>
+                        <div id="cb-top-staff" class="space-y-1"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -254,7 +313,12 @@
             </div>
             <div class="flex items-center gap-2 sm:gap-3">
                 <span id="active-date-badge" class="hidden sm:inline-block px-3 py-1 bg-slate-800 rounded-lg text-xs font-bold text-slate-300 border border-slate-700"></span>
-                
+
+                <!-- 🌟 ODAK ÜRÜN BUTONU -->
+                <button type="button" onclick="openContestLeaderboard()" class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow border border-purple-400 text-white" title="Odak Ürün / Marka Ligi">
+                    <i class="fa-solid fa-star animate-pulse text-amber-300"></i> <span class="hidden sm:inline">Odak Ligi</span>
+                </button>
+
                 <button type="button" onclick="toggleDarkMode()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-bold transition flex items-center gap-1.5 border border-slate-700 shadow-sm" title="Gece/Gündüz Modu">
                     <i id="dark-mode-icon" class="fa-solid"></i>
                 </button>
@@ -313,7 +377,6 @@
                     </div>
                 </div>
 
-                <!-- SİSTEM MERKEZİ BUTONU -->
                 <div class="bg-slate-900 p-6 rounded-2xl shadow-lg border border-slate-700 flex flex-col items-center text-center relative overflow-hidden text-white">
                     <div class="absolute top-4 right-4 text-cyan-500"><i class="fa-solid fa-key"></i></div>
                     <div class="w-16 h-16 bg-teal-900/50 border border-cyan-500 text-cyan-400 rounded-full flex items-center justify-center text-2xl mb-4 shadow-[0_0_15px_rgba(34,211,238,0.2)]">
@@ -327,9 +390,8 @@
             </div>
         </div>
 
-        <!-- ================= SİSTEM MERKEZİ (ADMIN) EKRANI ================= -->
+        <!-- ================= SİSTEM MERKEZİ EKRANI ================= -->
         <div id="screen-central" class="screen hidden space-y-6">
-            <!-- Header -->
             <div class="bg-slate-900 rounded-2xl shadow-xl p-6 text-white flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative overflow-hidden border border-cyan-500/50">
                 <div class="absolute right-4 bottom-[-20px] text-white/5 text-9xl font-black pointer-events-none"><i class="fa-solid fa-server"></i></div>
                 <div class="relative z-10 w-full lg:w-1/2">
@@ -349,7 +411,6 @@
                 </div>
             </div>
 
-            <!-- Central Duyuru -->
             <div class="bg-gradient-to-r from-teal-900 to-slate-800 p-4 rounded-2xl border border-cyan-700/50 flex flex-col xl:flex-row gap-3 items-center shadow-lg">
                 <div class="flex items-center gap-2 text-cyan-300 font-black whitespace-nowrap">
                     <i class="fa-solid fa-bolt text-xl animate-pulse"></i> SİSTEM DUYURUSU:
@@ -365,7 +426,15 @@
                 </div>
             </div>
 
-            <!-- Toplu İşlemler -->
+            <!-- ODAK ÜRÜN YÖNETİMİ -->
+            <div class="bg-purple-900/80 p-4 rounded-2xl border border-purple-700/50 flex flex-col sm:flex-row gap-3 items-center shadow-lg mt-2">
+                <div class="flex items-center gap-2 text-purple-300 font-black whitespace-nowrap">
+                    <i class="fa-solid fa-star text-xl animate-bounce"></i> ODAK ÜRÜNLER:
+                </div>
+                <input type="text" id="central-contest-input" class="flex-1 w-full bg-purple-950 text-white border border-purple-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-purple-400 transition-colors" placeholder="Örn: Opalescence Diş Macunu, Revolution Ruj (Virgülle ayırın)">
+                <button onclick="saveContestBrands('central-contest-input')" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition shadow-md text-sm whitespace-nowrap"><i class="fa-solid fa-floppy-disk mr-1"></i> Kaydet</button>
+            </div>
+
             <div class="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-4">
                 <div>
                     <h3 class="font-bold text-slate-700"><i class="fa-solid fa-list-ol text-cyan-600 mr-1"></i> Tüm Mağazalar Listesi</h3>
@@ -377,7 +446,6 @@
                 </div>
             </div>
 
-            <!-- Stores Table (Aşağı Doğru Uzar) -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="w-full">
                     <table class="w-full text-left text-sm relative">
@@ -399,9 +467,9 @@
 
         <!-- ================= 2. MAĞAZA EKRANI ================= -->
         <div id="screen-store" class="screen hidden space-y-5">
-            <!-- 🏆 MAĞAZALAR TOP 3 BARI -->
             <div id="store-top3-stores-banner" class="hidden"></div>
-            <!-- MEVCUT PERSONEL TOP 3 BARI -->
+            <!-- Sadece Personeller (Tüm Mağazalar Arası) -->
+            <div id="store-focus-top3-banner" class="hidden"></div>
             <div id="store-top3-banner" class="hidden"></div>
             
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 relative overflow-hidden">
@@ -410,13 +478,22 @@
                         <span class="px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-[11px] font-bold tracking-wider uppercase border border-pink-200" id="store-mode-badge">CANLI MAĞAZA PANELİ</span>
                         <h2 class="text-2xl sm:text-3xl font-black mt-2 text-slate-800" id="store-title">Mağaza Adı</h2>
                         
-                        <button type="button" onclick="openCatalogModal()" class="mt-2 mb-1 px-3 py-1.5 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5 w-max">
-                            <i class="fa-solid fa-gift animate-pulse"></i> Güncel Kombinasyonlar
-                        </button>
+                        <div class="flex flex-wrap gap-2 mt-2 mb-1">
+                            <button type="button" onclick="openCatalogModal()" class="px-3 py-1.5 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5 w-max">
+                                <i class="fa-solid fa-gift animate-pulse"></i> Bonus Pack
+                            </button>
+                            <button type="button" onclick="openOdakModal()" class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5 w-max">
+                                <i class="fa-solid fa-star animate-pulse text-amber-300"></i> Odak Ürün
+                            </button>
+                        </div>
                         
                         <div class="text-sm text-slate-500 mt-1" id="store-target-info">Yükleniyor...</div>
                         
-                        <!-- 📅 GÜZELLEŞTİRİLMİŞ AÇIK RENK TARİH KUTULARI -->
+                        <!-- YENİ: DİKKAT ÇEKİCİ BİLGİLENDİRME YAZISI -->
+                        <div id="store-instruction-banner" class="hidden bg-purple-100 text-purple-800 p-3 rounded-xl text-[11px] sm:text-xs font-bold border border-purple-300 mt-3 shadow-inner">
+                            <i class="fa-solid fa-circle-info mr-1 text-purple-600 animate-pulse"></i> <span class="text-purple-900">ODAK ÜRÜN:</span> Eğer "Odak Ürün" görselindeki üründen sattıysanız, isminizin yanındaki mor (<i class="fa-solid fa-crosshairs"></i>) tuşa basıp sıralamaya girebilir, odak ürün yarışında en çok satan kişi olabilirsiniz! 🚀
+                        </div>
+                        
                         <div class="bg-slate-50 p-2 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shadow-sm mt-3 w-full lg:w-max">
                             <div class="flex items-center justify-between gap-2 bg-white p-1.5 rounded-lg border border-slate-300 shadow-inner">
                                 <label class="text-[10px] text-slate-500 font-bold uppercase w-16 sm:w-auto ml-1">Başlangıç:</label>
@@ -450,7 +527,6 @@
                 </div>
             </div>
 
-            <!-- MAĞAZA SAATLİK ISI HARİTASI -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mt-4 overflow-hidden hidden" id="store-heatmap-card">
                 <h3 class="font-bold text-slate-700 text-sm mb-2"><i class="fa-solid fa-fire-flame-curved text-pink-500 mr-2"></i> Mağaza Saatlik Yoğunluk Haritası</h3>
                 <p class="text-[10px] text-slate-500 mb-4">Günün hangi saatlerinde satış girildiğini gösterir.</p>
@@ -507,9 +583,9 @@
 
         <!-- ================= 3. BÖLGE MÜDÜRÜ EKRANI ================= -->
         <div id="screen-region" class="screen hidden space-y-5">
+            <div id="region-focus-top5-banner" class="hidden"></div>
             <div id="region-top5-banner" class="hidden"></div>
             
-            <!-- BÖLGE MÜDÜRÜ TELSİZ YÖNETİMİ -->
             <div id="region-walkie-talkie" class="bg-indigo-900/80 p-4 rounded-2xl border border-indigo-700/50 flex flex-col xl:flex-row gap-3 items-center shadow-lg">
                 <div class="flex items-center gap-2 text-rose-400 font-black whitespace-nowrap">
                     <i class="fa-solid fa-tower-broadcast text-xl animate-pulse"></i> TELSİZ:
@@ -532,13 +608,12 @@
                     <div class="flex items-center gap-2">
                         <span class="px-3 py-1 bg-white/20 rounded-full text-[11px] font-bold tracking-wider uppercase backdrop-blur-sm border border-white/30" id="region-mode-badge">Bölge Yönetimi</span>
                         <button type="button" onclick="openCatalogModal()" class="px-2 py-1 bg-pink-500 hover:bg-pink-400 rounded-full shadow-md transition flex items-center gap-1 text-[10px] font-bold border border-pink-400">
-                            <i class="fa-solid fa-gift"></i> Kombinasyonlar
+                            <i class="fa-solid fa-gift"></i> Bonus Pack
                         </button>
                     </div>
                     
                     <h2 class="text-2xl sm:text-3xl font-black mt-2" id="region-title">Bölge Müdürü Adı</h2>
                     
-                    <!-- 📅 GÜZELLEŞTİRİLMİŞ KOYU MAVİ TARİH KUTULARI -->
                     <div class="bg-indigo-900/40 p-2.5 rounded-xl border border-indigo-500/30 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-3 w-full lg:w-max" id="region-date-filters">
                         <div class="flex items-center justify-between gap-2 bg-indigo-800 p-1.5 rounded-lg border border-indigo-400/50 shadow-inner">
                             <label class="text-[10px] text-indigo-200 font-bold uppercase w-16 sm:w-auto ml-1">Başlangıç:</label>
@@ -588,12 +663,9 @@
 
         <!-- ================= 4. GENEL YÖNETİM (GÜLİZ ATİK) EKRANI ================= -->
         <div id="screen-general" class="screen hidden space-y-6">
-            <!-- 🏆 EGE BÖLGESİ ŞAMPİYON MAĞAZALARI BANNERI -->
             <div id="general-top3-stores-banner" class="hidden"></div>
-            <!-- MEVCUT PERSONEL TOP 3 BARI -->
             <div id="general-top3-banner" class="hidden"></div>
 
-            <!-- DUYURU YÖNETİMİ -->
             <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 flex flex-col xl:flex-row gap-3 items-center shadow-lg">
                 <div class="flex items-center gap-2 text-rose-400 font-black whitespace-nowrap">
                     <i class="fa-solid fa-tower-broadcast text-xl animate-pulse"></i> TELSİZ:
@@ -604,13 +676,13 @@
                     <input type="time" id="gen-start" class="w-full sm:w-auto bg-slate-900 text-slate-300 border border-slate-600 rounded-xl px-2 py-2.5 text-sm focus:outline-none focus:border-rose-500 transition-colors dark-time-input [color-scheme:dark]" title="Başlama Saati">
                     <input type="time" id="gen-end" class="w-full sm:w-auto bg-slate-900 text-slate-300 border border-slate-600 rounded-xl px-2 py-2.5 text-sm focus:outline-none focus:border-rose-500 transition-colors dark-time-input [color-scheme:dark]" title="Bitiş Saati">
                     
-                    <!-- Güliz Atik Sadece Genele Yayınlar -->
                     <button onclick="publishAnnouncement('announcement-input', 'global', 'gen-start', 'gen-end')" class="flex-1 sm:flex-none px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl transition shadow-md text-sm whitespace-nowrap"><i class="fa-solid fa-paper-plane mr-1"></i> Yayınla</button>
                     <button onclick="clearAnnouncement()" class="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition shadow-sm text-sm" title="Kendi Duyurumu Kaldır"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </div>
+
             
-            <div class="bg-slate-900 rounded-2xl shadow-xl p-6 text-white flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 relative overflow-hidden border border-slate-700">
+            <div class="bg-slate-900 rounded-2xl shadow-xl p-6 text-white flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 relative overflow-hidden border border-slate-700 mt-6">
                 <div class="absolute right-4 bottom-[-20px] text-white/5 text-9xl font-black pointer-events-none"><i class="fa-solid fa-chart-pie"></i></div>
                 <div class="relative z-10 w-full xl:w-5/12">
                     <h2 class="text-3xl font-black mb-1">GÜLİZ ATİK BÖLGESİ</h2>
@@ -656,15 +728,12 @@
                 </div>
             </div>
 
-            <!-- GRAFİKLER BÖLÜMÜ (3 Sütunlu Izgara) -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-2">
-                <!-- 📊 GRAFİK 1: Pasta -->
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
                     <h3 class="font-bold text-slate-700 text-sm mb-4 text-center sm:text-left"><i class="fa-solid fa-chart-pie text-pink-500 mr-2"></i> Bölge Pay Dağılımı</h3>
                     <div class="relative h-48 w-full flex justify-center"><canvas id="pieChart"></canvas></div>
                 </div>
                 
-                <!-- 📈 GRAFİK 2: Trend Line (7 Günlük İvme) -->
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-slate-700 text-sm"><i class="fa-solid fa-arrow-trend-up text-indigo-500 mr-2"></i> 7 Günlük İvme</h3>
@@ -673,7 +742,6 @@
                     <div class="relative flex-1 min-h-[150px] w-full"><canvas id="trendChart"></canvas></div>
                 </div>
 
-                <!-- 🔥 GRAFİK 3: Heatmap (Saatlik Harita) -->
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
                     <h3 class="font-bold text-slate-700 text-sm mb-2"><i class="fa-solid fa-fire-flame-curved text-rose-500 mr-2"></i> Saatlik Yoğunluk Haritası</h3>
                     <p class="text-[10px] text-slate-500 mb-4">Günün hangi saatlerinde satış girildiğini gösterir.</p>
@@ -681,7 +749,6 @@
                 </div>
             </div>
 
-            <!-- Yapay Zeka Özeti ve Paylaşım Barı -->
             <div class="ai-gradient rounded-2xl p-6 shadow-lg relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div class="absolute right-0 top-0 text-white/5 text-8xl font-black transform translate-x-4 -translate-y-4"><i class="fa-solid fa-robot"></i></div>
                 <div class="relative z-10 flex-1">
@@ -711,12 +778,12 @@
                 </div>
             </div>
 
-            <!-- Bölge Müdürleri Sıralaması (MOBİL UYUMLU) -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="p-4 bg-slate-50 border-b border-slate-200">
+                <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center cursor-pointer select-none" onclick="toggleSection('gen-regions-body')">
                     <h3 class="font-bold text-slate-800"><i class="fa-solid fa-ranking-star text-amber-500 mr-2"></i> Bölge Müdürleri Performans Sıralaması (Seçili Aralık)</h3>
+                    <i id="sec-icon-gen-regions-body" class="fa-solid fa-chevron-up text-slate-400"></i>
                 </div>
-                <div class="overflow-x-auto">
+                <div id="gen-regions-body" class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
                         <thead>
                             <tr class="text-[10px] sm:text-[11px] uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-200">
@@ -733,12 +800,44 @@
                 </div>
             </div>
 
-            <!-- Mağazalar Analiz Listesi (MOBİL UYUMLU) -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-                    <h3 class="font-bold text-slate-800"><i class="fa-solid fa-list text-indigo-500 mr-2"></i> Tüm Mağazalar Performans Raporu</h3>
+            <div class="bg-white rounded-2xl shadow-sm border border-pink-200 overflow-hidden">
+                <div class="p-4 bg-pink-50 border-b border-pink-200 flex justify-between items-center gap-2 cursor-pointer select-none" onclick="toggleSection('gen-staff-body')">
+                    <h3 class="font-bold text-pink-800"><i class="fa-solid fa-gift text-pink-500 mr-2"></i> Bonus Pack Lider Personeller (Seçili Aralık)</h3>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="event.stopPropagation(); shareTopStaff()" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-lg text-[11px] shadow-sm flex items-center gap-1.5"><i class="fa-brands fa-whatsapp"></i> İlk 10'u Paylaş</button>
+                        <i id="sec-icon-gen-staff-body" class="fa-solid fa-chevron-up text-pink-400"></i>
+                    </div>
                 </div>
-                <div class="overflow-x-auto">
+                <div id="gen-staff-body">
+                    <div class="px-4 py-2 text-[10px] sm:text-xs text-slate-600 bg-emerald-50 border-b border-emerald-100 flex items-center gap-2"><i class="fa-brands fa-whatsapp text-emerald-500 text-sm"></i> <span><strong>İlk 10</strong> personel WhatsApp'tan paylaşılır.</span></div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead>
+                                <tr class="text-[10px] sm:text-[11px] uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-200">
+                                    <th class="py-2 px-1 sm:px-4 font-bold w-8 sm:w-12 text-center">#</th>
+                                    <th class="py-2 px-1 sm:px-4 font-bold">Personel</th>
+                                    <th class="py-2 px-1 sm:px-4 font-bold hidden sm:table-cell">Mağaza</th>
+                                    <th class="py-2 px-1 sm:px-4 font-bold hidden md:table-cell">Bölge M.</th>
+                                    <th class="py-2 px-1 sm:px-4 font-bold text-center">Hedef</th>
+                                    <th class="py-2 px-1 sm:px-4 font-bold text-center">Satış</th>
+                                    <th class="py-2 px-1 sm:px-4 font-bold text-center">Başarı</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gen-staff-list" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                    <div id="gen-staff-more-wrap" class="p-3 text-center border-t border-slate-100">
+                        <button type="button" id="gen-staff-more-btn" onclick="toggleAllGeneralStaff()" class="px-4 py-1.5 bg-pink-100 hover:bg-pink-200 text-pink-700 font-bold rounded-lg text-xs transition"></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center cursor-pointer select-none" onclick="toggleSection('gen-stores-body')">
+                    <h3 class="font-bold text-slate-800"><i class="fa-solid fa-list text-indigo-500 mr-2"></i> Tüm Mağazalar Performans Raporu</h3>
+                    <i id="sec-icon-gen-stores-body" class="fa-solid fa-chevron-down text-slate-400"></i>
+                </div>
+                <div id="gen-stores-body" class="overflow-x-auto hidden">
                     <table class="w-full text-left text-sm">
                         <thead>
                             <tr class="text-[10px] sm:text-[11px] uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-200">
@@ -754,12 +853,183 @@
                     </table>
                 </div>
             </div>
-        </div>
 
+            <!-- GÜLİZ ATİK İÇİN ODAK ÜRÜN DETAYLI RAPORU (açılır/kapanır) -->
+            <div id="general-focus-report" class="bg-white rounded-2xl shadow-sm border border-purple-200 overflow-hidden mt-6">
+                <div class="p-4 bg-purple-50 border-b border-purple-200 flex justify-between items-center cursor-pointer select-none" onclick="toggleSection('gen-focus-body')">
+                    <h3 class="font-bold text-purple-800"><i class="fa-solid fa-star text-purple-600 mr-2"></i> 🏆 ODAK ÜRÜN DETAYLI RAPORU <span id="gen-focus-brands-label" class="text-[10px] font-bold text-purple-500 ml-2"></span></h3>
+                    <i id="sec-icon-gen-focus-body" class="fa-solid fa-chevron-up text-purple-400"></i>
+                </div>
+                <div id="gen-focus-body" class="p-4 space-y-6">
+                    <div class="px-3 py-2 text-[10px] sm:text-xs text-slate-600 bg-emerald-50 border border-emerald-100 rounded-lg flex items-center gap-2"><i class="fa-brands fa-whatsapp text-emerald-500 text-sm"></i> <span>Mağaza ve personel listelerinde <strong>ilk 10</strong> WhatsApp'tan paylaşılır. Bölge listesinde tüm bölgeler gider.</span></div>
+                    <div>
+                        <h4 class="font-black text-slate-700 text-sm mb-3"><i class="fa-solid fa-boxes-stacked text-purple-500 mr-1"></i> Ürün Bazlı Toplam Satış</h4>
+                        <div id="gen-focus-brand-cards" class="flex flex-wrap gap-3"></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center gap-2 mb-3 flex-wrap"><h4 class="font-black text-slate-700 text-sm"><i class="fa-solid fa-map-location-dot text-indigo-500 mr-1"></i> Bölge Müdürlerine Göre Odak Ürün Satışı</h4><button type="button" onclick="shareFocusRegions()" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-lg text-[11px] shadow-sm flex items-center gap-1.5 whitespace-nowrap"><i class="fa-brands fa-whatsapp"></i> Bölgeleri Paylaş</button></div>
+                        <div class="overflow-x-auto border border-slate-200 rounded-xl"><table class="w-full text-left text-sm"><thead id="gen-focus-regions-head" class="bg-slate-50"></thead><tbody id="gen-focus-regions-list" class="divide-y divide-slate-100"></tbody></table></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center gap-2 mb-3 flex-wrap"><h4 class="font-black text-slate-700 text-sm"><i class="fa-solid fa-store text-pink-500 mr-1"></i> Tüm Mağazalar - Odak Ürün Satışı</h4><button type="button" onclick="shareFocusStores()" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-lg text-[11px] shadow-sm flex items-center gap-1.5 whitespace-nowrap"><i class="fa-brands fa-whatsapp"></i> İlk 10'u Paylaş</button></div>
+                        <div class="overflow-x-auto border border-slate-200 rounded-xl max-h-[28rem] overflow-y-auto"><table class="w-full text-left text-sm"><thead id="gen-focus-stores-head" class="bg-slate-50 sticky top-0"></thead><tbody id="gen-focus-stores-list" class="divide-y divide-slate-100"></tbody></table></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center gap-2 mb-3 flex-wrap"><h4 class="font-black text-slate-700 text-sm"><i class="fa-solid fa-user-astronaut text-amber-500 mr-1"></i> Lider Personeller (İlk 20)</h4><button type="button" onclick="shareFocusStaff()" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-lg text-[11px] shadow-sm flex items-center gap-1.5 whitespace-nowrap"><i class="fa-brands fa-whatsapp"></i> İlk 10'u Paylaş</button></div>
+                        <div class="overflow-x-auto border border-slate-200 rounded-xl"><table class="w-full text-left text-sm"><thead id="gen-focus-staff-head" class="bg-slate-50"></thead><tbody id="gen-focus-staff-list" class="divide-y divide-slate-100"></tbody></table></div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
     </div>
 
 <script>
-    // === DARK MODE LİSTENER ===
+    window.activeContestBrands = [];
+
+    window.toggleSection = function(id) {
+        const body = document.getElementById(id);
+        const icon = document.getElementById('sec-icon-' + id);
+        if (!body) return;
+        const nowHidden = body.classList.toggle('hidden');
+        if (icon) {
+            icon.classList.toggle('fa-chevron-down', nowHidden);
+            icon.classList.toggle('fa-chevron-up', !nowHidden);
+        }
+    };
+
+    window.saveContestBrands = function(inputId) {
+        let val = document.getElementById(inputId).value;
+        dbRoot.child('settings').update({ contestBrands: val });
+        alert("Odak ürünler başarıyla güncellendi!");
+    }
+
+    window.openContestInputModal = function(stfId, stfName) {
+        if(!window.activeContestBrands || window.activeContestBrands.length === 0) {
+            return alert("Şu an aktif bir odak ürün bulunmuyor.");
+        }
+        window.currentContestStaffId = stfId;
+        document.getElementById('contest-input-name').innerText = stfName;
+        renderContestInputList();
+        document.getElementById('contest-input-modal').classList.remove('hidden');
+    }
+
+    window.closeContestInputModal = function() {
+        document.getElementById('contest-input-modal').classList.add('hidden');
+        window.currentContestStaffId = null;
+    }
+
+    window.renderContestInputList = function() {
+        let container = document.getElementById('contest-input-list');
+        container.innerHTML = '';
+        let stfId = window.currentContestStaffId;
+        if(!stfId) return;
+        
+        let currentStats = globalData.daily?.[ACTIVE_DATE]?.[currentId]?.staff?.[stfId]?.contest || {};
+
+        window.activeContestBrands.forEach(brand => {
+            let count = currentStats[brand] || 0;
+            container.innerHTML += `
+                <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-700 p-3 rounded-xl border border-slate-200 dark:border-slate-600">
+                    <span class="font-bold text-slate-700 dark:text-slate-200">${brand}</span>
+                    <div class="flex items-center gap-3">
+                        <button onclick="updateContestCount('${stfId}', '${brand}', -1)" class="w-8 h-8 bg-white dark:bg-slate-600 border border-slate-300 dark:border-slate-500 rounded-lg font-bold text-slate-600 dark:text-slate-300 shadow-sm">-</button>
+                        <span class="font-black text-lg text-purple-600 dark:text-purple-400 w-6 text-center">${count}</span>
+                        <button onclick="updateContestCount('${stfId}', '${brand}', 1)" class="w-8 h-8 bg-purple-600 hover:bg-purple-700 rounded-lg font-bold text-white shadow-sm">+</button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    window.updateContestCount = function(stfId, brand, change) {
+        let current = globalData.daily?.[ACTIVE_DATE]?.[currentId]?.staff?.[stfId]?.contest?.[brand] || 0;
+        if(change < 0 && current === 0) return;
+        let next = current + change;
+        dbRoot.child('daily').child(ACTIVE_DATE).child(currentId).child('staff').child(stfId).child('contest').child(brand).set(next);
+    }
+
+    window.openContestLeaderboard = function() {
+        if(!window.activeContestBrands || window.activeContestBrands.length === 0) {
+            return alert("Sistemde aktif bir odak ürün bulunmuyor!");
+        }
+        
+        let brandTotals = {};
+        let storeTotals = {};
+        let staffTotals = {};
+        
+        window.activeContestBrands.forEach(b => brandTotals[b] = 0);
+        
+        let dailyData = globalData.daily?.[ACTIVE_DATE] || {};
+        
+        Object.keys(dailyData).forEach(store => {
+            if(store === 'isLocked' || store === 'central_announcement') return;
+            
+            let sData = dailyData[store];
+            let storeTotal = 0;
+            
+            if(sData.staff) {
+                Object.keys(sData.staff).forEach(stfId => {
+                    let stf = sData.staff[stfId];
+                    let stfTotal = 0;
+                    if(stf.contest) {
+                        Object.keys(stf.contest).forEach(brand => {
+                            if(window.activeContestBrands.includes(brand)) {
+                                let val = stf.contest[brand];
+                                brandTotals[brand] = (brandTotals[brand]||0) + val;
+                                stfTotal += val;
+                                storeTotal += val;
+                            }
+                        });
+                    }
+                    if(stfTotal > 0) {
+                        let name = stf.name || findStaffNameGlobal(stfId);
+                        staffTotals[stfId] = { name: name, store: store, total: stfTotal };
+                    }
+                });
+            }
+            if(storeTotal > 0) {
+                storeTotals[store] = storeTotal;
+            }
+        });
+        
+        let bHtml = '';
+        window.activeContestBrands.forEach(b => {
+            bHtml += `<div class="bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 p-3 rounded-xl text-center flex-1 min-w-[100px] shadow-sm">
+                <div class="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase">${b}</div>
+                <div class="text-2xl font-black text-purple-700 dark:text-purple-300">${brandTotals[b]||0}</div>
+            </div>`;
+        });
+        document.getElementById('cb-brand-totals').innerHTML = bHtml;
+        
+        let stArr = Object.keys(storeTotals).map(k => ({name: k, total: storeTotals[k]})).sort((a,b) => b.total - a.total).slice(0,50);
+        let stHtml = '';
+        stArr.forEach((s, i) => {
+            let badge = i===0?'🥇':i===1?'🥈':i===2?'🥉':`<span class="font-black text-slate-400 w-5 inline-block text-center">${i+1}.</span>`;
+            stHtml += `<div class="flex justify-between items-center py-2.5 border-b border-slate-100 dark:border-slate-700 last:border-0"><span class="font-bold text-sm text-slate-700 dark:text-slate-300">${badge} ${s.name}</span><span class="font-black text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/50 px-2 py-0.5 rounded shadow-sm border border-purple-200 dark:border-purple-800">${s.total}</span></div>`;
+        });
+        if(stArr.length===0) stHtml = '<div class="text-sm text-slate-400 py-2">Henüz odak ürün satışı girilmedi.</div>';
+        document.getElementById('cb-top-stores').innerHTML = stHtml;
+        
+        let pArr = Object.values(staffTotals).sort((a,b) => b.total - a.total).slice(0,5);
+        let pHtml = '';
+        pArr.forEach((p, i) => {
+            let badge = i===0?'🥇':i===1?'🥈':i===2?'🥉':`<span class="font-black text-slate-400 w-5 inline-block text-center">${i+1}.</span>`;
+            pHtml += `<div class="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-700 last:border-0">
+                <div class="flex flex-col"><span class="font-bold text-sm text-slate-700 dark:text-slate-300">${badge} ${p.name}</span><span class="text-[9px] font-bold text-slate-400 ml-6 uppercase">${p.store}</span></div>
+                <span class="font-black text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/50 px-2 py-0.5 rounded shadow-sm border border-purple-200 dark:border-purple-800">${p.total}</span>
+            </div>`;
+        });
+        if(pArr.length===0) pHtml = '<div class="text-sm text-slate-400 py-2">Henüz odak ürün satışı girilmedi.</div>';
+        document.getElementById('cb-top-staff').innerHTML = pHtml;
+        
+        document.getElementById('contest-leaderboard-modal').classList.remove('hidden');
+    }
+
+    window.closeContestLeaderboard = function() {
+        document.getElementById('contest-leaderboard-modal').classList.add('hidden');
+    }
+
     function toggleDarkMode() {
         const body = document.body;
         body.classList.toggle('dark-mode');
@@ -775,7 +1045,6 @@
     }
     initDarkMode(); 
 
-    // === FIREBASE AYARLARI ===
     const firebaseConfig = {
         apiKey: "AIzaSyB-KkoAiXqLZnzclUrjrFkMe_J0PhqFJUs",
         authDomain: "wattodolive.firebaseapp.com",
@@ -788,10 +1057,8 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
-    // Veritabanı Yolu
     const dbRoot = db.ref('watsons_v7'); 
 
-    // === MAĞAZA VE BÖLGE VERİLERİ ===
     const hierarchy = {
         "MÜGE IŞIKÖNDER": ["143-KİPA ÇİĞLİ", "251-NOVADA EDREMİT", "275-LİMAN AVM", "297-NOVADA MENEMEN", "327-AVLU BALIKESİR", "376-EFESUS OUTLET CENTER", "380-HİLLTOWN KARŞIYAKA", "399-KIRLANGIÇ", "433-AYVALIK", "435-BALIKESİR TİCARET MERKEZİ", "488-YASA AKÇAY", "551-10 BURDA"],
         "GÜLÇİN FAKILAR": ["101-KUŞADASI MARİNA", "154-KİPA SALİHLİ", "184-KUŞADASI AYM", "212-ŞAİR EŞREF", "267-MAVİBAHÇE", "283-EGE PERLA", "307-İZMİR PARK", "330-ALAYBEY", "342-ALPHARD ÇARŞI", "353-KONAK PİER", "378-KUŞADASI KALEİÇİ", "386-KARŞIYAKA ÇARŞI", "501-KUŞADASI İNÖNÜ BULVARI", "581-KARŞIYAKA İSKELE", "603-MANİSA TURGUTLU"],
@@ -838,7 +1105,6 @@
     });
     allStoresList.sort((a, b) => (parseInt(a.name.split('-')[0]) || 0) - (parseInt(b.name.split('-')[0]) || 0));
 
-    // === TARİH VE OTOMATİK SIFIRLAMA MANTIĞI ===
     function getActiveDateString() {
         const now = new Date();
         if (now.getHours() < 1) now.setDate(now.getDate() - 1);
@@ -863,13 +1129,13 @@
     window.currentProfileStore = null;
 
     window.top3Staff = [];
-    window.generalTop3Staff = [];
     window.top3StoresGlobal = []; 
     
+    window.allFocusStaffGlobal = [];
+    window.top3FocusStaffGlobal = [];
+
     window.lastAnnouncementsData = {};
     window.centralAnnData = null;
-
-    // Bekleme Süresi İçin Küresel Bellek
     window.saleCooldowns = window.saleCooldowns || {};
 
     let navStack = [];
@@ -1079,6 +1345,9 @@
 
     window.openCatalogModal = function() { document.getElementById('catalog-modal').classList.remove('hidden'); }
     window.closeCatalogModal = function() { document.getElementById('catalog-modal').classList.add('hidden'); }
+    
+    window.openOdakModal = function() { document.getElementById('odak-modal').classList.remove('hidden'); }
+    window.closeOdakModal = function() { document.getElementById('odak-modal').classList.add('hidden'); }
 
     window.openTransferModal = function(id, name) {
         currentTransferStaffId = id;
@@ -1151,6 +1420,8 @@
         }
     }
 
+    const BONUS_PACK_PILL = '<span class="inline-flex items-center gap-1 bg-pink-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full border border-pink-300 shadow-md whitespace-nowrap tracking-wider"><i class="fa-solid fa-gift"></i> BONUS PACK</span>';
+
     function updateTop3Banners(containerId, staffArr, mainTitle, subTitle) {
         const container = document.getElementById(containerId);
         if(!container) return;
@@ -1164,10 +1435,10 @@
             <div class="absolute right-0 top-0 text-white/5 text-6xl font-black transform translate-x-2 -translate-y-2"><i class="fa-solid fa-ranking-star"></i></div>
             <div class="flex items-center gap-3 relative z-10 w-full lg:w-auto justify-center lg:justify-start">
                 <div class="w-10 h-10 rounded-full bg-amber-400/20 flex items-center justify-center border border-amber-400/50 shadow-[0_0_15px_rgba(251,191,36,0.3)]">
-                    <i class="fa-solid fa-trophy text-xl text-amber-400 animate-pulse"></i>
+                    <i class="fa-solid fa-gift text-xl text-pink-400 animate-pulse"></i>
                 </div>
                 <div class="text-center lg:text-left">
-                    <div class="font-black text-sm text-white tracking-wide">${mainTitle}</div>
+                    <div class="font-black text-sm text-white tracking-wide flex items-center gap-2 flex-wrap justify-center lg:justify-start">${mainTitle} ${BONUS_PACK_PILL}</div>
                     <div class="text-[10px] text-amber-200/80 font-bold uppercase tracking-wider">${subTitle}</div>
                 </div>
             </div>
@@ -1200,10 +1471,10 @@
             <div class="absolute right-0 top-0 text-white/5 text-6xl font-black transform translate-x-2 -translate-y-2"><i class="fa-solid fa-store"></i></div>
             <div class="flex items-center gap-3 relative z-10 w-full lg:w-auto justify-center lg:justify-start">
                 <div class="w-10 h-10 rounded-full bg-emerald-400/20 flex items-center justify-center border border-emerald-400/50 shadow-[0_0_15px_rgba(52,211,153,0.3)]">
-                    <i class="fa-solid fa-trophy text-xl text-emerald-400 animate-pulse"></i>
+                    <i class="fa-solid fa-gift text-xl text-pink-300 animate-pulse"></i>
                 </div>
                 <div class="text-center lg:text-left">
-                    <div class="font-black text-sm text-white tracking-wide">${mainTitle}</div>
+                    <div class="font-black text-sm text-white tracking-wide flex items-center gap-2 flex-wrap justify-center lg:justify-start">${mainTitle} ${BONUS_PACK_PILL}</div>
                     <div class="text-[10px] text-emerald-200/80 font-bold uppercase tracking-wider">${subTitle}</div>
                 </div>
             </div>
@@ -1223,10 +1494,47 @@
         container.innerHTML = html;
     }
 
-    function updateRegionTop5Banner(containerId, staffArr, globalTop3, customTitle = "BÖLGE YILDIZLARI (İLK 5)", customSub = "Kendi Bölgenizdeki En İyi Personeller", limit = 5) {
+    function updateFocusTopBanners(containerId, staffArr, mainTitle, subTitle, limit = 3) {
         const container = document.getElementById(containerId);
         if(!container) return;
         if (!staffArr || staffArr.length === 0) {
+            container.innerHTML = '';
+            container.classList.add('hidden');
+            return;
+        }
+        container.classList.remove('hidden');
+        let html = `<div class="bg-gradient-to-r from-purple-900 to-indigo-900 rounded-2xl shadow-lg p-3 sm:p-4 mb-5 flex flex-col lg:flex-row items-center gap-4 justify-between border border-purple-500/50 relative overflow-hidden">
+            <div class="absolute right-0 top-0 text-white/5 text-6xl font-black transform translate-x-2 -translate-y-2"><i class="fa-solid fa-star"></i></div>
+            <div class="flex items-center gap-3 relative z-10 w-full lg:w-auto justify-center lg:justify-start">
+                <div class="w-10 h-10 rounded-full bg-purple-400/20 flex items-center justify-center border border-purple-400/50 shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+                    <i class="fa-solid fa-star text-xl text-amber-300 animate-pulse"></i>
+                </div>
+                <div class="text-center lg:text-left">
+                    <div class="font-black text-sm text-white tracking-wide">${mainTitle}</div>
+                    <div class="text-[10px] text-purple-200/80 font-bold uppercase tracking-wider">${subTitle}</div>
+                </div>
+            </div>
+            <div class="flex flex-wrap justify-center lg:justify-end gap-2 sm:gap-3 w-full lg:w-auto relative z-10">`;
+        const medals = ['<i class="fa-solid fa-crown text-amber-500 text-lg"></i>', '<i class="fa-solid fa-medal text-slate-400 text-lg"></i>', '<i class="fa-solid fa-medal text-orange-400 text-lg"></i>', '<span class="font-black text-purple-400 text-sm">4.</span>','<span class="font-black text-purple-400 text-sm">5.</span>'];
+        const colors = ['bg-gradient-to-br from-amber-100 to-amber-50 border-amber-300 ring-2 ring-amber-400/50', 'bg-gradient-to-br from-slate-100 to-slate-50 border-slate-300', 'bg-gradient-to-br from-orange-100 to-orange-50 border-orange-300', 'bg-white border-purple-200', 'bg-white border-purple-200'];
+        
+        staffArr.slice(0, limit).forEach((st, idx) => {
+            html += `<div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[150px] cursor-pointer hover:shadow-lg transition-shadow" onclick="openStaffProfile('${st.id}')" title="Karne için tıkla">
+                <div class="flex items-center justify-center w-6">${medals[idx]}</div>
+                <div class="flex flex-col">
+                    <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-purple-600 ml-1">${st.focusSales}</span></span>
+                    <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1 hover:text-purple-500 transition-colors" onclick="event.stopPropagation(); goToStore('${st.store}')" title="Mağazaya Git">${st.store}</span>
+                </div>
+            </div>`;
+        });
+        html += `</div></div>`;
+        container.innerHTML = html;
+    }
+
+    function updateRegionTop5Banner(containerId, staffArr, globalTop3, customTitle = "BÖLGE YILDIZLARI (İLK 5)", customSub = "Bonus Pack Satışında Kendi Bölgenizdeki En İyi Personeller", limit = 5) {
+        const container = document.getElementById(containerId);
+        if(!container) return;
+        if (!staffArr || !Array.isArray(staffArr) || staffArr.length === 0) {
             container.innerHTML = '';
             container.classList.add('hidden');
             return;
@@ -1239,7 +1547,7 @@
                     <i class="fa-solid fa-star text-xl text-indigo-400 animate-pulse"></i>
                 </div>
                 <div class="text-center lg:text-left">
-                    <div class="font-black text-sm text-white tracking-wide">${customTitle}</div>
+                    <div class="font-black text-sm text-white tracking-wide flex items-center gap-2 flex-wrap justify-center lg:justify-start">${customTitle} ${BONUS_PACK_PILL}</div>
                     <div class="text-[10px] text-indigo-200/80 font-bold uppercase tracking-wider">${customSub}</div>
                 </div>
             </div>
@@ -1248,15 +1556,15 @@
         const colors = ['bg-gradient-to-br from-amber-100 to-amber-50 border-amber-300 ring-2 ring-amber-400/50', 'bg-gradient-to-br from-slate-100 to-slate-50 border-slate-300', 'bg-gradient-to-br from-orange-100 to-orange-50 border-orange-300','bg-white border-indigo-100','bg-white border-indigo-100'];
         
         staffArr.slice(0, limit).forEach((st, idx) => {
-            let globalRank = globalTop3 ? globalTop3.findIndex(g => g.id === st.id) : -1;
+            let globalRank = (globalTop3 && Array.isArray(globalTop3)) ? globalTop3.findIndex(g => g.id === st.id) : -1;
             let globalBadge = '';
             if (globalRank === 0) globalBadge = `<span class="absolute -top-3 -right-2 bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-amber-300 animate-bounce whitespace-nowrap z-20">👑 EGE BÖLGE 1.Sİ</span>`;
             else if (globalRank === 1) globalBadge = `<span class="absolute -top-3 -right-2 bg-slate-200 text-slate-800 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-slate-400 animate-bounce whitespace-nowrap z-20">🥈 EGE BÖLGE 2.Sİ</span>`;
             else if (globalRank === 2) globalBadge = `<span class="absolute -top-3 -right-2 bg-orange-300 text-orange-900 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-orange-400 animate-bounce whitespace-nowrap z-20">🥉 EGE BÖLGE 3.SÜ</span>`;
             
-            html += `<div class="relative flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx]} shadow-md min-w-[130px] cursor-pointer hover:shadow-lg transition-shadow" onclick="openStaffProfile('${st.id}')" title="Karne için tıkla">
+            html += `<div class="relative flex items-center gap-2 px-3 py-1.5 rounded-xl border ${colors[idx] || colors[3]} shadow-md min-w-[130px] cursor-pointer hover:shadow-lg transition-shadow" onclick="openStaffProfile('${st.id}')" title="Karne için tıkla">
                 ${globalBadge}
-                <div class="flex items-center justify-center w-6">${medals[idx]}</div>
+                <div class="flex items-center justify-center w-6">${medals[idx] || (idx+1)+'.'}</div>
                 <div class="flex flex-col">
                     <span class="font-black text-xs text-slate-800 uppercase leading-none">${st.name} <span class="text-indigo-600 ml-1">${st.sales}</span></span>
                     <span class="text-[9px] font-bold text-slate-500 mt-0.5 leading-none line-clamp-1 hover:text-indigo-500 transition-colors" onclick="event.stopPropagation(); goToStore('${st.store}')" title="Mağazaya Git">${st.store}</span>
@@ -1267,7 +1575,6 @@
         container.innerHTML = html;
     }
 
-    // === GRAFİK RENDER FONKSİYONLARI ===
     function renderHeatmap(hourlyData, containerId, colorClass) {
         const container = document.getElementById(containerId);
         if(!container) return;
@@ -1334,7 +1641,6 @@
 
     function calculateGlobalTrendAndHeatmap() {
         try {
-            // Trend Grafiği (Son 7 Gün)
             let dLabels = [];
             let dData = [];
             let today = new Date();
@@ -1362,7 +1668,6 @@
             let momentum = yesterdayVal > 0 ? Math.round(((todayVal - yesterdayVal) / yesterdayVal) * 100) : (todayVal > 0 ? 100 : 0);
             renderTrendChart(dData, dLabels, momentum);
 
-            // Genel Saatlik Isı Haritası (Bugün)
             let hourlyTotals = {};
             let todayData = globalData.daily?.[ACTIVE_DATE] || {};
             Object.keys(todayData).forEach(store => {
@@ -1585,34 +1890,30 @@
         }
     }
 
-    // === TIKLAMA VE COOLDOWN MANTIĞI ===
     window.handleSaleClick = function(id, change) {
         window.saleCooldowns = window.saleCooldowns || {};
         let now = Date.now();
         
-        // 3 Saniyelik Koruma (Spam Click)
         if (window.saleCooldowns[id] && now - window.saleCooldowns[id] < 3000) {
             return;
         }
         
         window.saleCooldowns[id] = now;
         updateStoreSale(id, change);
-        renderStoreUI(); // Kilit görünümünü anında tetikle
+        renderStoreUI(); 
     }
 
     window.updateStoreSale = function(id, change) {
         let current = globalData.daily?.[ACTIVE_DATE]?.[currentId]?.staff?.[id]?.sales || 0;
         
-        // Eksiye basıldı ama satışı zaten sıfırsa işlemi iptal et (harita düşmesin)
         if (change < 0 && current === 0) return;
 
         let next = Math.max(0, current + change);
         dbRoot.child('daily').child(ACTIVE_DATE).child(currentId).child('staff').child(id).update({ sales: next });
 
-        // Heatmap Logging (Artış ve Azalış)
         if (!isStoreHistorical) {
             let h = new Date().getHours();
-            if (h >= 9 && h <= 22) { // 09:00 ile 22:00 arası kayıt
+            if (h >= 9 && h <= 22) { 
                 let hrKey = h < 10 ? '0'+h : ''+h;
                 dbRoot.child('daily').child(ACTIVE_DATE).child(currentId).child('hourly').child(hrKey).transaction(v => {
                     let newVal = (v || 0) + change;
@@ -1622,7 +1923,6 @@
         }
     }
 
-    // YENİ EKLENEN AÇILIR MENÜ (ACCORDION) FONKSİYONU
     window.toggleBMStores = function(idx) {
         const row = document.getElementById('bm-stores-' + idx);
         const icon = document.getElementById('bm-icon-' + idx);
@@ -1678,6 +1978,10 @@
         document.getElementById('catalog-modal').addEventListener('click', function(e) {
             if(e.target === this) closeCatalogModal();
         });
+        
+        document.getElementById('odak-modal').addEventListener('click', function(e) {
+            if(e.target === this) closeOdakModal();
+        });
 
         initGlobalAnnouncementListener();
         initCentralAnnouncementListener();
@@ -1685,6 +1989,20 @@
         dbRoot.on('value', snap => {
             globalData = snap.val() || {};
             
+            if(globalData.settings && globalData.settings.contestBrands) {
+                window.activeContestBrands = globalData.settings.contestBrands.split(',').map(s => s.trim()).filter(s => s);
+                let cInput1 = document.getElementById('central-contest-input');
+                let cInput2 = document.getElementById('general-contest-input');
+                if(cInput1 && document.activeElement !== cInput1) cInput1.value = globalData.settings.contestBrands;
+                if(cInput2 && document.activeElement !== cInput2) cInput2.value = globalData.settings.contestBrands;
+            } else {
+                window.activeContestBrands = [];
+            }
+            
+            if (!document.getElementById('contest-input-modal').classList.contains('hidden') && window.currentContestStaffId) {
+                renderContestInputList();
+            }
+
             if (!document.getElementById('staff-profile-modal').classList.contains('hidden') && window.currentProfileStaffId && window.currentProfileStore) {
                  let updatedApplause = globalData.daily?.[ACTIVE_DATE]?.[window.currentProfileStore]?.staff?.[window.currentProfileStaffId]?.applause || 0;
                  let applauseEl = document.getElementById('profile-applause-count');
@@ -1692,7 +2010,11 @@
             }
 
             window.top3Staff = [];
+            window.generalTop3Staff = [];
             window.top3StoresGlobal = [];
+            window.allStaffGlobal = [];
+            window.top3FocusStaffGlobal = [];
+
             let dailyData = globalData.daily?.[ACTIVE_DATE] || {};
             let allStaffMap = {};
             let allStoresSalesMap = {};
@@ -1703,17 +2025,27 @@
                     let staffObj = dailyData[store]?.staff || {};
                     Object.keys(staffObj).forEach(stfId => {
                         let sales = staffObj[stfId]?.sales || 0;
-                        if(sales > 0) {
+                        
+                        let focusS = 0;
+                        if (staffObj[stfId]?.contest) {
+                            window.activeContestBrands.forEach(b => {
+                                focusS += (staffObj[stfId].contest[b] || 0);
+                            });
+                        }
+
+                        if(sales > 0 || focusS > 0) {
                             if(!allStaffMap[stfId]) {
                                 allStaffMap[stfId] = {
                                     id: stfId,
                                     name: globalData.master_staff?.[store]?.[stfId]?.name || findStaffNameGlobal(stfId),
                                     store: findStaffCurrentStore(stfId),
                                     bm: bm,
-                                    sales: 0
+                                    sales: 0,
+                                    focusSales: 0
                                 };
                             }
                             allStaffMap[stfId].sales += sales;
+                            allStaffMap[stfId].focusSales += focusS;
                             sTotal += sales;
                         }
                     });
@@ -1729,20 +2061,33 @@
             });
 
             let allStaff = Object.values(allStaffMap);
-            allStaff.sort((a, b) => b.sales - a.sales);
-            
-            // Tüm personelleri daha sonra bölgesel sıralama yapabilmek için global'e attık
             window.allStaffGlobal = allStaff;
+
+            let sortedBySales = [...allStaff].filter(p => p.sales > 0).sort((a, b) => b.sales - a.sales);
+            window.top3Staff = sortedBySales.slice(0, 3);
             
-            window.top3Staff = allStaff.slice(0, 3);
+            let sortedByFocus = [...allStaff].filter(p => p.focusSales > 0).sort((a, b) => b.focusSales - a.focusSales);
+            window.top3FocusStaffGlobal = sortedByFocus.slice(0, 3);
 
             let allStoresTop = Object.values(allStoresSalesMap);
             allStoresTop.sort((a, b) => b.sales - a.sales);
             window.top3StoresGlobal = allStoresTop.slice(0, 3);
             
             if(!isStoreHistorical) {
-                updateTop3StoresBanner('store-top3-stores-banner', window.top3StoresGlobal, '🏆 EGE BÖLGESİ ŞAMPİYON MAĞAZALARI', 'En Çok Satış Yapan İlk 3 Mağaza');
-                updateTop3Banners('store-top3-banner', window.top3Staff, 'GÜNÜN YILDIZ PERSONELLERİ', 'Tüm Mağazalar Arası Top 3 Personel');
+                if (window.activeContestBrands.length > 0 && window.top3FocusStaffGlobal.length > 0) {
+                    updateFocusTopBanners('store-focus-top3-banner', window.top3FocusStaffGlobal, '🏆 ODAK ÜRÜN ŞAMPİYONLARI', 'Tüm Mağazalar Arası En Çok Odak Ürün Satan Personeller', 3);
+                } else {
+                    document.getElementById('store-focus-top3-banner')?.classList.add('hidden');
+                }
+
+                if (window.activeContestBrands.length > 0) {
+                    document.getElementById('store-instruction-banner')?.classList.remove('hidden');
+                } else {
+                    document.getElementById('store-instruction-banner')?.classList.add('hidden');
+                }
+
+                updateTop3StoresBanner('store-top3-stores-banner', window.top3StoresGlobal, '🏆 EGE BÖLGESİ ŞAMPİYON MAĞAZALARI', 'Bonus Pack Satışında En Çok Satan İlk 3 Mağaza');
+                updateTop3Banners('store-top3-banner', window.top3Staff, '🌟 GÜNÜN YILDIZ PERSONELLERİ', 'Bonus Pack Satışında Tüm Mağazalar Arası Top 3 Personel');
             }
 
             if (currentRole === 'store' && !isStoreHistorical) renderStoreUI();
@@ -1787,6 +2132,9 @@
         window.firedConfetti = { store: false }; 
         document.getElementById('store-top3-stores-banner').classList.remove('hidden');
         document.getElementById('store-top3-banner').classList.remove('hidden');
+        if (window.activeContestBrands.length > 0 && window.top3FocusStaffGlobal.length > 0) {
+            document.getElementById('store-focus-top3-banner').classList.remove('hidden');
+        }
         document.getElementById('store-heatmap-card').classList.remove('hidden');
         renderStoreUI();
     }
@@ -1843,15 +2191,23 @@
         let staffObj = {};
         
         for(let id in masterStaff) {
-            staffObj[id] = { id: id, name: masterStaff[id].name || "İsimsiz", sales: sData.staff?.[id]?.sales || 0, target: sData.staff?.[id]?.target || 0, applause: sData.staff?.[id]?.applause || 0, isTransfer: false };
+            let focusS = 0;
+            if(sData.staff?.[id]?.contest && window.activeContestBrands) {
+                window.activeContestBrands.forEach(b => { focusS += (sData.staff[id].contest[b] || 0); });
+            }
+            staffObj[id] = { id: id, name: masterStaff[id].name || "İsimsiz", sales: sData.staff?.[id]?.sales || 0, focusSales: focusS, target: sData.staff?.[id]?.target || 0, applause: sData.staff?.[id]?.applause || 0, isTransfer: false };
         }
         
         if (sData.staff) {
             for(let id in sData.staff) {
                 if (!staffObj[id]) {
-                    if ((sData.staff[id].sales || 0) > 0 || (sData.staff[id].target || 0) > 0 || (sData.staff[id].applause || 0) > 0) {
+                    let focusS = 0;
+                    if(sData.staff[id].contest && window.activeContestBrands) {
+                        window.activeContestBrands.forEach(b => { focusS += (sData.staff[id].contest[b] || 0); });
+                    }
+                    if ((sData.staff[id].sales || 0) > 0 || (sData.staff[id].target || 0) > 0 || focusS > 0) {
                         let name = findStaffNameGlobal(id);
-                        staffObj[id] = { id: id, name: name + " (Transfer)", sales: sData.staff[id].sales || 0, target: sData.staff[id].target || 0, applause: sData.staff[id].applause || 0, isTransfer: true };
+                        staffObj[id] = { id: id, name: name + " (Transfer)", sales: sData.staff[id].sales || 0, focusSales: focusS, target: sData.staff[id].target || 0, applause: sData.staff[id].applause || 0, isTransfer: true };
                     }
                 }
             }
@@ -1860,7 +2216,6 @@
         return { isLocked: sData.isLocked || false, storeTarget: sData.target || 0, targetBy: sData.targetBy || '', staff: staffObj, hourly: sData.hourly || {} };
     }
 
-    // === MAĞAZA EKRANI İŞLEMLERİ ===
     window.loginAsStore = function(directId) {
         const sel = directId || document.getElementById('select-store').value;
         if (!sel) return alert('Lütfen bir mağaza seçin.');
@@ -1894,6 +2249,8 @@
             storeHistoricalData = agg[currentId];
             document.getElementById('store-top3-stores-banner').classList.add('hidden');
             document.getElementById('store-top3-banner').classList.add('hidden');
+            document.getElementById('store-focus-top3-banner')?.classList.add('hidden');
+            document.getElementById('store-instruction-banner')?.classList.add('hidden');
             
             renderStoreUI();
         });
@@ -1933,7 +2290,6 @@
         let targetInput = document.getElementById('store-target-input');
         if (document.activeElement !== targetInput) targetInput.value = stats.storeTarget;
         
-        // Merkezden verilen hedefler mağazada kilitlenir
         let isStoreTargetLocked = isStoreHistorical ? true : (stats.isLocked || stats.targetBy === "MERKEZ" || (stats.targetBy === "BM" && stats.storeTarget > 0));
         targetInput.disabled = isStoreTargetLocked;
         
@@ -2033,7 +2389,6 @@
                     nameBadge = `<span class="block mt-1 w-max px-2 py-0.5 rounded text-[9px] font-black bg-orange-300 text-orange-900 shadow-sm border border-orange-400"><i class="fa-solid fa-medal text-[10px]"></i> EGE BÖLGE 3.SÜ</span>`;
                 }
 
-                // --- YENİ: Kendi Bölgesindeki İlk 5 Personel Hesaplaması ve Rozeti ---
                 let currentStoreBM = allStoresList.find(s => s.name === currentId)?.bm;
                 if (!isStoreHistorical && window.allStaffGlobal && p.sales > 0 && currentStoreBM) {
                     let regionalStaffList = window.allStaffGlobal.filter(st => st.bm === currentStoreBM && st.sales > 0);
@@ -2043,20 +2398,20 @@
                         regionalBadge = `<span class="block mt-1 w-max px-2 py-0.5 rounded text-[9px] font-black bg-cyan-100 text-cyan-800 shadow-sm border border-cyan-300" title="${currentStoreBM} Bölgesi'nde ${rRank}. Sırada"><i class="fa-solid fa-map-location-dot text-[9px] mr-1 text-cyan-600"></i> BÖLGE ${rRank}.Sİ</span>`;
                     }
                 }
-                // ----------------------------------------------------------------------
 
                 let targetEl = isStoreHistorical ? `<span class="font-bold text-slate-500">${p.target}</span>` : `<input type="number" min="0" value="${p.target}" onchange="updateStaffTarget('${p.id}', this.value)" class="w-9 sm:w-12 p-0.5 sm:p-1 text-center font-bold text-indigo-600 bg-white border border-slate-300 rounded text-xs focus:outline-none">`;
                 
                 let actions = '';
                 let safeName = (p.name || "İsimsiz").replace(/'/g, "\\'");
                 let safePName = p.name || "İsimsiz";
+                
+                let focusSalesBadge = p.focusSales > 0 ? `<span class="inline-flex items-center gap-1 font-black text-xs sm:text-sm text-purple-600 bg-purple-50 px-1.5 sm:px-2 py-0.5 rounded border border-purple-200 shadow-sm ml-1" title="Odak Ürün Satışı"><i class="fa-solid fa-star text-[10px]"></i> ${p.focusSales}</span>` : '';
 
                 if(!isStoreHistorical) {
                     if (p.isTransfer) {
                         actions = `<td class="py-2.5 px-1 sm:px-4 text-right"><span class="text-[9px] text-slate-400 font-bold bg-slate-100 px-2 py-1 rounded">TRANSFER OLDU</span></td>`;
                     } else {
                         let now = Date.now();
-                        // 3 saniye kuralı (anti-spam) kontrolü
                         let isOnCooldown = window.saleCooldowns && window.saleCooldowns[p.id] && (now - window.saleCooldowns[p.id] < 3000);
                         
                         let btnMinus = '';
@@ -2066,7 +2421,6 @@
                             btnMinus = `<button type="button" class="w-6 h-6 sm:w-7 sm:h-7 bg-slate-100 border border-slate-200 rounded-md text-slate-400 cursor-not-allowed shadow-sm flex items-center justify-center"><i class="fa-solid fa-circle-notch fa-spin text-[10px]"></i></button>`;
                             btnPlus = `<button type="button" class="w-6 h-6 sm:w-7 sm:h-7 bg-pink-300 rounded-md text-white cursor-not-allowed shadow-sm flex items-center justify-center"><i class="fa-solid fa-circle-notch fa-spin text-[10px]"></i></button>`;
                             
-                            // 3 saniye bitince normale dönmesi için zamanlayıcı
                             setTimeout(() => {
                                 renderStoreUI();
                             }, 3000 - (now - window.saleCooldowns[p.id]));
@@ -2077,7 +2431,14 @@
 
                         let btnEdit = `<button type="button" onclick="editStaffName('${p.id}', '${safeName}')" class="w-6 h-6 sm:w-7 sm:h-7 bg-indigo-100 text-indigo-600 rounded-md font-bold hover:bg-indigo-200 ml-0.5 sm:ml-1 leading-none flex items-center justify-center" title="İsmi Düzenle"><i class="fa-solid fa-pen text-[9px] sm:text-xs"></i></button>`;
                         let btnTransfer = `<button type="button" onclick="openTransferModal('${p.id}', '${safeName}')" class="w-6 h-6 sm:w-7 sm:h-7 bg-rose-100 text-rose-600 rounded-md font-bold hover:bg-rose-200 ml-0.5 sm:ml-1 leading-none flex items-center justify-center" title="Sil / Transfer Et"><i class="fa-solid fa-trash text-[9px] sm:text-xs"></i></button>`;
-                        actions = `<td class="py-2.5 px-1 sm:px-4 text-right">` + (stats.isLocked ? `<div class="inline-flex gap-0.5 sm:gap-1 justify-end">${btnMinus}${btnPlus}</div>` : `<div class="inline-flex gap-0.5 sm:gap-1 justify-end">${btnMinus}${btnPlus}${btnEdit}${btnTransfer}</div>`) + `</td>`;
+                        
+                        let btnContest = window.activeContestBrands.length > 0 ? `<button type="button" onclick="openContestInputModal('${p.id}', '${safeName}')" class="w-6 h-6 sm:w-7 sm:h-7 bg-purple-100 text-purple-600 rounded-md font-bold hover:bg-purple-200 ml-0.5 sm:ml-1 leading-none flex items-center justify-center" title="Odak Ürün Ekle"><i class="fa-solid fa-crosshairs text-[9px] sm:text-xs animate-pulse"></i></button>` : '';
+
+                        if (stats.isLocked) {
+                            actions = `<td class="py-2.5 px-1 sm:px-4 text-right"><div class="inline-flex gap-0.5 sm:gap-1 justify-end">${btnMinus}${btnPlus}${btnContest}</div></td>`;
+                        } else {
+                            actions = `<td class="py-2.5 px-1 sm:px-4 text-right"><div class="inline-flex gap-0.5 sm:gap-1 justify-end">${btnMinus}${btnPlus}${btnContest}${btnEdit}${btnTransfer}</div></td>`;
+                        }
                     }
                 }
 
@@ -2090,7 +2451,7 @@
                         ${regionalBadge}
                     </td>
                     <td class="py-2.5 px-1 sm:px-4 text-center">${targetEl}</td>
-                    <td class="py-2.5 px-1 sm:px-4 text-center"><span class="inline-block font-black text-xs sm:text-sm text-pink-600 bg-white px-1.5 sm:px-2 py-0.5 rounded border border-pink-200 shadow-sm">${p.sales}</span></td>
+                    <td class="py-2.5 px-1 sm:px-4 text-center"><span class="inline-block font-black text-xs sm:text-sm text-pink-600 bg-white px-1.5 sm:px-2 py-0.5 rounded border border-pink-200 shadow-sm">${p.sales}</span> ${focusSalesBadge}</td>
                     <td class="py-2.5 px-1 sm:px-4 text-center">
                         <div class="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2">
                             <div class="w-full bg-slate-200/80 rounded-full h-1.5 hidden sm:block"><div class="bg-indigo-500 h-1.5 rounded-full progress-bar" style="width: ${pPerc>100?100:pPerc}%"></div></div>
@@ -2211,6 +2572,7 @@
             regionHistoricalData = aggregateDataForStores(storeList, rangeData);
             isRegionHistorical = true;
             document.getElementById('region-top5-banner').classList.add('hidden');
+            document.getElementById('region-focus-top5-banner').classList.add('hidden');
             renderRegionUI();
         });
     }
@@ -2254,31 +2616,52 @@
         let regSales = 0, regTarget = 0;
         let regTotalStores = 0, regDistributedStores = 0;
         let regionStaffList = [];
+        let regionFocusStaffList = [];
 
-        let storeList = isReadOnlyBM ? hierarchy[currentId] : effectiveHierarchy[currentId];
+        let storeList = isReadOnlyBM ? (hierarchy[currentId] || []) : (effectiveHierarchy[currentId] || []);
         regTotalStores = storeList.length;
 
         let statsArr = storeList.map(storeName => {
-            const stats = isRegionHistorical ? regionHistoricalData[storeName] : getStoreDailyStats(storeName, ACTIVE_DATE);
+            const stats = isRegionHistorical ? (regionHistoricalData?.[storeName] || { staff: {}, storeTarget: 0 }) : getStoreDailyStats(storeName, ACTIVE_DATE);
             let sTotal = 0, sStaffTargetSum = 0;
             
-            Object.keys(stats.staff).forEach(stfId => {
-                let p = stats.staff[stfId];
-                sTotal += p.sales;
-                sStaffTargetSum += p.target;
-                if(p.sales > 0) {
-                    regionStaffList.push({ id: stfId, name: p.name, store: storeName, sales: p.sales });
-                }
-            });
-            return { name: storeName, sales: sTotal, target: stats.storeTarget, targetBy: stats.targetBy, staffTargetSum: sStaffTargetSum, data: stats };
+            if (stats && stats.staff) {
+                Object.keys(stats.staff).forEach(stfId => {
+                    let p = stats.staff[stfId];
+                    sTotal += (p.sales || 0);
+                    sStaffTargetSum += (p.target || 0);
+                    
+                    if(p.sales > 0) {
+                        regionStaffList.push({ id: stfId, name: p.name, store: storeName, sales: p.sales });
+                    }
+                    if(p.focusSales > 0) {
+                        regionFocusStaffList.push({ id: stfId, name: p.name, store: storeName, focusSales: p.focusSales });
+                    }
+                });
+            }
+            return { name: storeName, sales: sTotal, target: (stats.storeTarget || 0), targetBy: stats.targetBy, staffTargetSum: sStaffTargetSum, data: stats };
         }).sort((a, b) => b.sales - a.sales);
 
         if (!isRegionHistorical && !isReadOnlyBM) {
             regionStaffList.sort((a, b) => b.sales - a.sales);
             window.currentRegionTop5 = regionStaffList.slice(0, 5);
-            updateRegionTop5Banner('region-top5-banner', window.currentRegionTop5, window.top3Staff);
+            if (window.currentRegionTop5.length > 0) {
+                updateRegionTop5Banner('region-top5-banner', window.currentRegionTop5, window.top3Staff);
+            } else {
+                document.getElementById('region-top5-banner').classList.add('hidden');
+            }
+
+            regionFocusStaffList.sort((a, b) => b.focusSales - a.focusSales);
+            window.currentRegionFocusTop5 = regionFocusStaffList.slice(0, 5);
+            if (window.activeContestBrands.length > 0 && window.currentRegionFocusTop5.length > 0) {
+                updateFocusTopBanners('region-focus-top5-banner', window.currentRegionFocusTop5, 'BÖLGE ODAK ÜRÜN YILDIZLARI (İLK 5)', 'Kendi Bölgenizdeki En İyi Personeller', 5);
+            } else {
+                document.getElementById('region-focus-top5-banner')?.classList.add('hidden');
+            }
+
         } else {
             document.getElementById('region-top5-banner').classList.add('hidden');
+            document.getElementById('region-focus-top5-banner')?.classList.add('hidden');
         }
 
         statsArr.forEach(st => {
@@ -2288,7 +2671,7 @@
                 regDistributedStores++;
             }
 
-            let staffArr = Object.values(st.data.staff).sort((a, b) => b.sales - a.sales);
+            let staffArr = Object.values(st.data.staff || {}).sort((a, b) => b.sales - a.sales);
 
             let staffHTML = staffArr.length === 0 ? `<div class="text-xs text-slate-400 text-center py-2">Personel yok.</div>` 
                 : staffArr.map(p => {
@@ -2309,14 +2692,13 @@
             if (st.targetBy === 'MERKEZ') byBadge = `<span class="text-[9px] bg-purple-100 text-purple-700 px-1 rounded ml-1" title="Merkez Tarafından Kilitlendi">MRKZ</span>`;
             else if (st.targetBy === 'BM') byBadge = `<span class="text-[9px] bg-indigo-100 text-indigo-700 px-1 rounded ml-1">BM</span>`;
             else if (st.targetBy === 'MM') byBadge = `<span class="text-[9px] bg-emerald-100 text-emerald-700 px-1 rounded ml-1">MM</span>`;
-            else byBadge = `<span class="text-[9px] bg-slate-200 text-slate-500 px-1 rounded ml-1">${st.targetBy}</span>`;
+            else byBadge = `<span class="text-[9px] bg-slate-200 text-slate-500 px-1 rounded ml-1">${st.targetBy || ''}</span>`;
 
             let distBadge = '';
             if (st.target === 0) distBadge = `<span class="bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded text-[9px] font-bold ml-2 whitespace-nowrap">HEDEF GİRİLMEDİ</span>`;
             else if (st.staffTargetSum < st.target) distBadge = `<span class="bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded text-[9px] font-bold animate-pulse ml-2 whitespace-nowrap"><i class="fa-solid fa-triangle-exclamation"></i> EKİBE DAĞITILMADI</span>`;
             else distBadge = `<span class="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded text-[9px] font-bold ml-2 whitespace-nowrap"><i class="fa-solid fa-check-double"></i> EKİBE DAĞITILDI</span>`;
 
-            // Merkez hedefleri kilitlemişse input yerine text göster
             let targetInputHtml = (isRegionHistorical || isReadOnlyBM || st.targetBy === 'MERKEZ') 
                 ? `<span class="font-bold ${st.targetBy === 'MERKEZ' ? 'text-purple-600' : 'text-indigo-600'}" title="${st.targetBy === 'MERKEZ' ? 'Merkez Kilitli' : ''}">${st.target}</span>` 
                 : `<input type="number" min="0" value="${st.target}" onchange="updateBMTarget('${st.name}', this.value)" class="w-14 p-0.5 text-center text-xs font-bold text-indigo-600 border border-slate-300 rounded focus:outline-none bg-white">`;
@@ -2368,7 +2750,7 @@
     window.shareRegionTargets = function() {
         let text = `🎯 *BONUS BAG BÖLGE HEDEFLERİ - ${currentId}* 🎯\n📅 *Tarih:* ${ACTIVE_DATE}\n\nEkipler günaydın, bugünkü mağaza hedeflerimiz aşağıdaki gibidir:\n\n`;
         let total = 0;
-        let storeList = effectiveHierarchy[currentId];
+        let storeList = effectiveHierarchy[currentId] || [];
         storeList.forEach(storeName => {
             const stats = getStoreDailyStats(storeName, ACTIVE_DATE);
             text += `▫️ *${storeName}*: ${stats.storeTarget} adet\n`;
@@ -2383,12 +2765,12 @@
         let text = `📊 *BONUS BAG BÖLGE DURUMU - ${currentId}* 📊\n📅 *Tarih:* ${dateLabel}\n\n`;
         let regSales = 0, regTarget = 0;
 
-        let storeList = isRegionHistorical ? Object.keys(regionHistoricalData) : effectiveHierarchy[currentId];
+        let storeList = isRegionHistorical ? Object.keys(regionHistoricalData || {}) : (effectiveHierarchy[currentId] || []);
 
         let statsArr = storeList.map(storeName => {
-            const stats = isRegionHistorical ? regionHistoricalData[storeName] : getStoreDailyStats(storeName, ACTIVE_DATE);
-            let sTotal = Object.values(stats.staff).reduce((s, p) => s + p.sales, 0);
-            return { name: storeName, sales: sTotal, target: stats.storeTarget };
+            const stats = isRegionHistorical ? (regionHistoricalData?.[storeName] || { staff: {}, storeTarget: 0 }) : getStoreDailyStats(storeName, ACTIVE_DATE);
+            let sTotal = Object.values(stats.staff || {}).reduce((s, p) => s + (p.sales || 0), 0);
+            return { name: storeName, sales: sTotal, target: (stats.storeTarget || 0) };
         }).sort((a, b) => b.sales - a.sales);
 
         statsArr.forEach((st, i) => {
@@ -2412,7 +2794,7 @@
             return alert("Bölgenizde henüz satış yapan personel bulunmuyor!");
         }
         
-        let text = `🌟 *${currentId} - GÜNÜN YILDIZLARI* 🌟\n📅 *Tarih:* ${ACTIVE_DATE}\n\nŞu anki satış liderlerimiz:\n\n`;
+        let text = `🌟 *${currentId} - BONUS PACK GÜNÜN YILDIZLARI* 🌟\n📅 *Tarih:* ${ACTIVE_DATE}\n\nŞu anki satış liderlerimiz:\n\n`;
         
         const emojis = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"];
         window.currentRegionTop5.forEach((st, idx) => {
@@ -2429,17 +2811,20 @@
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 
-    // === GENEL YÖNETİM (GÜLİZ ATİK) EKRANI ===
+
+    // =====================================================================
+    // === GENEL YÖNETİM (GÜLİZ ATİK) - GİRİŞ VE RAPOR (geri eklendi) ===
+    // =====================================================================
     window.loginAsGeneral = function(isDirect = false) {
         openPasswordModal(
-            "Güliz Atik Bölge Yönetimi", 
-            "Giriş yapmak için lütfen şifrenizi girin.", 
-            "fa-solid fa-crown text-emerald-500", 
-            "1244", 
+            "Güliz Atik Bölge Yönetimi",
+            "Giriş yapmak için lütfen şifrenizi girin.",
+            "fa-solid fa-crown text-emerald-500",
+            "1244",
             () => {
-                navStack = []; 
+                navStack = [];
                 currentRole = 'general';
-                if(!isDirect) setURLParam('general', 'true');
+                if (!isDirect) setURLParam('general', 'true');
                 document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
                 document.getElementById('screen-general').classList.remove('hidden');
                 updateNavButtons();
@@ -2448,15 +2833,17 @@
         );
     }
 
-    // === YENİ: SİSTEM MERKEZİ (ADMIN) GİRİŞİ ===
+    // =====================================================================
+    // === SİSTEM MERKEZİ (ADMIN) - GİRİŞ VE İŞLEMLER (geri eklendi) ===
+    // =====================================================================
     window.loginAsCentral = function() {
         openPasswordModal(
-            "Sistem Merkezi", 
-            "Yönetici paneline giriş için güvenlik kodunu girin.", 
-            "fa-solid fa-server text-purple-500", 
-            "1988", 
+            "Sistem Merkezi",
+            "Yönetici paneline giriş için güvenlik kodunu girin.",
+            "fa-solid fa-server text-purple-500",
+            "1988",
             () => {
-                navStack = []; 
+                navStack = [];
                 currentRole = 'central';
                 setURLParam('central', 'true');
                 document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
@@ -2467,11 +2854,9 @@
         );
     }
 
-    // === SİSTEM MERKEZİ İŞLEMLERİ ===
     function renderCentralUI() {
         updateAnnouncementUI();
-        calculateGlobalTrendAndHeatmap();
-        
+
         let totalSales = 0;
         let totalTarget = 0;
         let listHTML = '';
@@ -2481,15 +2866,14 @@
             totalTarget += stats.storeTarget;
             let sSales = 0;
             let staffTargetSum = 0;
-            
+
             Object.values(stats.staff).forEach(p => {
                 sSales += p.sales;
                 staffTargetSum += p.target;
             });
             totalSales += sSales;
 
-            let isLocked = stats.isLocked;
-            let lockBtn = isLocked 
+            let lockBtn = stats.isLocked
                 ? `<button onclick="toggleCentralLock('${storeObj.name}', false)" class="px-2 py-1 bg-rose-100 text-rose-600 hover:bg-rose-200 rounded text-xs font-bold transition"><i class="fa-solid fa-lock mr-1"></i> Aç</button>`
                 : `<button onclick="toggleCentralLock('${storeObj.name}', true)" class="px-2 py-1 bg-emerald-100 text-emerald-600 hover:bg-emerald-200 rounded text-xs font-bold transition"><i class="fa-solid fa-lock-open mr-1"></i> Kilitle</button>`;
 
@@ -2508,8 +2892,7 @@
                 <td class="py-2.5 px-3 text-center hidden md:table-cell">${distStatus}</td>
                 <td class="py-2.5 px-3 text-center font-black text-pink-600 text-sm">${sSales}</td>
                 <td class="py-2.5 px-3 text-center">${lockBtn}</td>
-            </tr>
-            `;
+            </tr>`;
         });
 
         document.getElementById('central-stores-list').innerHTML = listHTML;
@@ -2519,8 +2902,7 @@
 
     window.updateCentralTarget = function(storeName, val) {
         let v = parseInt(val) || 0;
-        if(v < 0) v = 0;
-        // MERKEZ olarak etiketliyoruz
+        if (v < 0) v = 0;
         dbRoot.child('daily').child(ACTIVE_DATE).child(storeName).update({ target: v, targetBy: 'MERKEZ' });
     }
 
@@ -2529,21 +2911,17 @@
     }
 
     window.lockAllStoresCentral = function() {
-        if(confirm("Tüm mağazaları aynı anda kilitlemek istediğinize emin misiniz? (Personel ekleme/silme ve hedef işlemleri durur, sadece satış girebilirler.)")) {
+        if (confirm("Tüm mağazaları aynı anda kilitlemek istediğinize emin misiniz? (Personel ekleme/silme ve hedef işlemleri durur, sadece satış girebilirler.)")) {
             let updates = {};
-            allStoresList.forEach(s => {
-                updates[`${s.name}/isLocked`] = true;
-            });
+            allStoresList.forEach(s => { updates[`${s.name}/isLocked`] = true; });
             dbRoot.child('daily').child(ACTIVE_DATE).update(updates).then(() => alert("Tüm mağazalar başarıyla kilitlendi!"));
         }
     }
 
     window.unlockAllStoresCentral = function() {
-        if(confirm("Tüm mağazaların kilidini açmak istediğinize emin misiniz?")) {
+        if (confirm("Tüm mağazaların kilidini açmak istediğinize emin misiniz?")) {
             let updates = {};
-            allStoresList.forEach(s => {
-                updates[`${s.name}/isLocked`] = false;
-            });
+            allStoresList.forEach(s => { updates[`${s.name}/isLocked`] = false; });
             dbRoot.child('daily').child(ACTIVE_DATE).update(updates).then(() => alert("Tüm kilitler başarıyla açıldı!"));
         }
     }
@@ -2566,10 +2944,13 @@
         );
     }
 
+    // =====================================================================
+    // === GENEL RAPOR (tarih aralığı) ===
+    // =====================================================================
     window.loadHistoricalGeneral = function() {
         const startStr = document.getElementById('start-date-picker').value;
         const endStr = document.getElementById('end-date-picker').value;
-        if(startStr > endStr) return alert("Başlangıç tarihi bitiş tarihinden büyük olamaz.");
+        if (startStr > endStr) return alert("Başlangıç tarihi bitiş tarihinden büyük olamaz.");
 
         reportDateRangeStr = (startStr === endStr) ? startStr : `${startStr} - ${endStr}`;
 
@@ -2581,13 +2962,19 @@
 
     function processGeneralData(rangeData) {
         let aggData = {};
-        
-        // Önce mağazalardaki tüm geçmiş personelleri veritabanından başlat (Sıfır hedef hesaplaması için)
+        let focusStores = {}, focusStaff = {}, focusRegions = {}, brandTotals = {};
+        const brands = window.activeContestBrands || [];
+        const addFocus = (map, key, base, perBrand, f) => {
+            if (!map[key]) map[key] = Object.assign({ focusSales: 0, brands: {} }, base);
+            map[key].focusSales += f;
+            Object.keys(perBrand).forEach(b => { map[key].brands[b] = (map[key].brands[b] || 0) + perBrand[b]; });
+        };
+
         Object.keys(effectiveHierarchy).forEach(bm => {
             effectiveHierarchy[bm].forEach(store => {
                 aggData[store] = { staff: {}, target: 0, targetBy: 'Genel', isLocked: false };
                 let masterStaff = globalData.master_staff?.[store] || {};
-                for(let id in masterStaff) {
+                for (let id in masterStaff) {
                     aggData[store].staff[id] = { sales: 0, target: 0 };
                 }
             });
@@ -2596,71 +2983,253 @@
         Object.values(rangeData).forEach(dayData => {
             if (!dayData) return;
             Object.keys(dayData).forEach(store => {
-                if(aggData[store]) {
-                    aggData[store].target += (dayData[store].target || 0);
-                    
-                    let dailyStaff = dayData[store].staff || {};
-                    Object.keys(dailyStaff).forEach(stfId => {
-                        if(!aggData[store].staff[stfId]) aggData[store].staff[stfId] = { sales: 0, target: 0 };
-                        aggData[store].staff[stfId].sales += (dailyStaff[stfId].sales || 0);
-                        aggData[store].staff[stfId].target += (dailyStaff[stfId].target || 0);
-                    });
-                    
-                    if(dayData[store].target > 0 && dayData[store].targetBy) {
-                        aggData[store].targetBy = dayData[store].targetBy;
+                if (!aggData[store]) return;
+                let sDay = dayData[store] || {};
+                aggData[store].target += (sDay.target || 0);
+
+                let dailyStaff = sDay.staff || {};
+                Object.keys(dailyStaff).forEach(stfId => {
+                    if (!aggData[store].staff[stfId]) aggData[store].staff[stfId] = { sales: 0, target: 0 };
+                    aggData[store].staff[stfId].sales += (dailyStaff[stfId].sales || 0);
+                    aggData[store].staff[stfId].target += (dailyStaff[stfId].target || 0);
+
+                    // Odak ürün toplamları (aktif odak ürünler, marka kırılımıyla)
+                    if (brands.length > 0 && dailyStaff[stfId].contest) {
+                        let f = 0, perBrand = {};
+                        brands.forEach(b => {
+                            let n = dailyStaff[stfId].contest[b] || 0;
+                            if (n > 0) { perBrand[b] = n; f += n; }
+                        });
+                        if (f > 0) {
+                            let bmName = (allStoresList.find(s => s.name === store) || {}).bm || '';
+                            let curStore = findStaffCurrentStore(stfId);
+                            addFocus(focusStores, store, { name: store, bm: bmName }, perBrand, f);
+                            addFocus(focusRegions, bmName, { bm: bmName }, perBrand, f);
+                            addFocus(focusStaff, stfId, {
+                                id: stfId,
+                                name: globalData.master_staff?.[store]?.[stfId]?.name || findStaffNameGlobal(stfId),
+                                store: curStore === "Silinmiş Personel" ? store : curStore
+                            }, perBrand, f);
+                            Object.keys(perBrand).forEach(b => { brandTotals[b] = (brandTotals[b] || 0) + perBrand[b]; });
+                        }
                     }
+                });
+
+                if (sDay.target > 0 && sDay.targetBy) {
+                    aggData[store].targetBy = sDay.targetBy;
                 }
             });
         });
 
+        window.lastFocusStores = focusStores;
+        window.lastFocusStaff = focusStaff;
+        window.lastFocusRegions = focusRegions;
+        window.lastFocusBrandTotals = brandTotals;
         renderGeneralUI(aggData);
+    }
+
+    window.genStaffShowAll = false;
+
+    function renderGeneralStaffList() {
+        const list = document.getElementById('gen-staff-list');
+        if (!list) return;
+        const all = window.generalAllStaff || [];
+        const rows = window.genStaffShowAll ? all : all.slice(0, 20);
+        const medal = i => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `<span class="font-black text-slate-400">${i + 1}</span>`;
+        list.innerHTML = rows.length ? rows.map((p, i) => {
+            const perc = p.target > 0 ? Math.round(p.sales / p.target * 100) : 0;
+            const fire = perc >= 150 ? '<span class="ml-1 animate-pulse text-[12px]" title="%150 Üzeri Başarı!">🔥</span>' : '';
+            return `<tr class="hover:bg-pink-50/50 transition">
+                <td class="py-2 px-1 sm:px-4 text-center text-sm">${medal(i)}</td>
+                <td class="py-2 px-1 sm:px-4 font-bold text-slate-700 text-[11px] sm:text-sm"><span class="clickable-name" onclick="openStaffProfile('${p.id}')" title="Karne için tıkla">${p.name}</span>${fire}
+                    <span class="block sm:hidden text-[9px] text-slate-400 font-bold">${p.store}</span></td>
+                <td class="py-2 px-1 sm:px-4 text-[10px] sm:text-xs text-slate-500 font-bold hidden sm:table-cell"><span class="clickable-store" onclick="goToStore('${p.store}')">${p.store}</span></td>
+                <td class="py-2 px-1 sm:px-4 text-[10px] text-slate-500 font-bold hidden md:table-cell"><span class="clickable-store" onclick="goToRegion('${p.bm}')">${p.bm}</span></td>
+                <td class="py-2 px-1 sm:px-4 text-center text-xs text-slate-500 font-bold">${p.target}</td>
+                <td class="py-2 px-1 sm:px-4 text-center"><span class="font-black text-pink-600 bg-pink-50 px-2 py-0.5 rounded border border-pink-200">${p.sales}</span></td>
+                <td class="py-2 px-1 sm:px-4 text-center text-[10px] sm:text-xs font-black ${perc >= 100 ? 'text-emerald-600' : perc >= 50 ? 'text-amber-600' : 'text-slate-500'}">${p.target > 0 ? '%' + perc : '-'}</td>
+            </tr>`;
+        }).join('') : '<tr><td colspan="7" class="py-4 px-4 text-sm text-slate-400 text-center">Seçili aralıkta satış yapan personel yok.</td></tr>';
+
+        const btn = document.getElementById('gen-staff-more-btn');
+        const wrap = document.getElementById('gen-staff-more-wrap');
+        if (btn && wrap) {
+            if (all.length <= 20) wrap.classList.add('hidden');
+            else {
+                wrap.classList.remove('hidden');
+                btn.innerText = window.genStaffShowAll ? 'Sadece ilk 20\'yi göster' : `Tümünü göster (${all.length} personel)`;
+            }
+        }
+    }
+
+    window.toggleAllGeneralStaff = function() {
+        window.genStaffShowAll = !window.genStaffShowAll;
+        renderGeneralStaffList();
+    }
+
+    function focusBrandText(o) {
+        const parts = (window.activeContestBrands || []).filter(b => o.brands && o.brands[b]).map(b => `${b} ${o.brands[b]}`);
+        return parts.length ? ` (${parts.join(', ')})` : '';
+    }
+    const FOCUS_EMOJIS = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"];
+
+    window.shareFocusStaff = function() {
+        const list = Object.values(window.lastFocusStaff || {}).sort((a, b) => b.focusSales - a.focusSales).slice(0, 10);
+        if (list.length === 0) return alert("Seçili aralıkta odak ürün satan personel bulunmuyor!");
+        let text = `⭐ *ODAK ÜRÜN - EN ÇOK SATAN İLK 10 PERSONEL* ⭐\n🗓️ *Tarih:* ${reportDateRangeStr}\n🎯 *Odak Ürünler:* ${(window.activeContestBrands || []).join(', ')}\n\n`;
+        list.forEach((p, i) => { text += `${FOCUS_EMOJIS[i]} *${p.name}*: ${p.focusSales} adet${focusBrandText(p)} - _${p.store}_\n`; });
+        text += `\nHarika iş çıkarıyorsunuz, tebrikler! 🚀👏`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    window.shareFocusStores = function() {
+        const list = Object.values(window.lastFocusStores || {}).sort((a, b) => b.focusSales - a.focusSales).slice(0, 10);
+        if (list.length === 0) return alert("Seçili aralıkta odak ürün satışı yapan mağaza bulunmuyor!");
+        let text = `⭐ *ODAK ÜRÜN - EN ÇOK SATAN İLK 10 MAĞAZA* ⭐\n🗓️ *Tarih:* ${reportDateRangeStr}\n🎯 *Odak Ürünler:* ${(window.activeContestBrands || []).join(', ')}\n\n`;
+        list.forEach((s, i) => { text += `${FOCUS_EMOJIS[i]} *${s.name}*: ${s.focusSales} adet${focusBrandText(s)} - _${s.bm}_\n`; });
+        text += `\nTüm mağazalarımıza bol satışlar! 🚀`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    window.shareFocusRegions = function() {
+        const fr = window.lastFocusRegions || {};
+        const list = (window.lastRegionStats || []).map(r => ({ bm: r.bm, f: fr[r.bm] || { focusSales: 0, brands: {} } }))
+            .sort((a, b) => b.f.focusSales - a.f.focusSales);
+        if (list.length === 0 || list.every(r => r.f.focusSales === 0)) return alert("Seçili aralıkta odak ürün satışı bulunmuyor!");
+        let text = `⭐ *ODAK ÜRÜN - BÖLGE SIRALAMASI* ⭐\n🗓️ *Tarih:* ${reportDateRangeStr}\n🎯 *Odak Ürünler:* ${(window.activeContestBrands || []).join(', ')}\n\n`;
+        list.forEach((r, i) => { text += `${FOCUS_EMOJIS[i] || '▫️'} *${r.bm}*: ${r.f.focusSales} adet${focusBrandText(r.f)}\n`; });
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    window.shareTopStaff = function() {
+        const all = (window.generalAllStaff || []).slice(0, 10);
+        if (all.length === 0) return alert("Seçili aralıkta satış yapan personel bulunmuyor!");
+        let text = `🎁 *BONUS PACK - EN ÇOK SATAN İLK 10 PERSONEL* 🎁\n🗓️ *Tarih:* ${reportDateRangeStr}\n\n`;
+        const emojis = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"];
+        all.forEach((p, i) => {
+            text += `${emojis[i]} *${p.name}*: ${p.sales} adet - _${p.store}_\n`;
+        });
+        text += `\nHarika iş çıkarıyorsunuz, tebrikler! 🚀👏`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    function renderGeneralFocusReport() {
+        const card = document.getElementById('general-focus-report');
+        if (!card) return;
+        const brands = window.activeContestBrands || [];
+        const active = brands.length > 0;
+        card.classList.toggle('hidden', !active);
+        if (!active) return;
+
+        const fs = window.lastFocusStores || {}, fp = window.lastFocusStaff || {}, fr = window.lastFocusRegions || {}, bt = window.lastFocusBrandTotals || {};
+        document.getElementById('gen-focus-brands-label').innerText = brands.join(' • ');
+
+        const medal = i => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `<span class="font-black text-slate-400 inline-block w-5 text-center">${i + 1}.</span>`;
+        const th = (txt, center) => `<th class="py-2 px-3 font-bold ${center ? 'text-center' : ''}">${txt}</th>`;
+        const brandHead = brands.map(b => th(b, true)).join('');
+        const brandCells = o => brands.map(b => {
+            const n = (o && o.brands && o.brands[b]) || 0;
+            return `<td class="py-2 px-3 text-center text-xs ${n ? 'font-black text-purple-600' : 'text-slate-300'}">${n}</td>`;
+        }).join('');
+        const totalCell = n => `<td class="py-2 px-3 text-center"><span class="font-black text-purple-700 bg-purple-100 px-2 py-0.5 rounded border border-purple-200">${n}</span></td>`;
+        const pctCell = (f, s) => `<td class="py-2 px-3 text-center text-xs font-bold text-slate-500">%${s > 0 ? Math.round(f / s * 100) : 0}</td>`;
+        const headRow = cols => `<tr class="text-[10px] uppercase tracking-wider text-slate-500 border-b border-slate-200">${cols}</tr>`;
+
+        // Marka kartları
+        let totalAll = 0;
+        let cards = brands.map(b => {
+            const n = bt[b] || 0; totalAll += n;
+            return `<div class="bg-purple-50 border border-purple-200 p-3 rounded-xl text-center flex-1 min-w-[110px] shadow-sm"><div class="text-[10px] font-bold text-purple-600 uppercase">${b}</div><div class="text-2xl font-black text-purple-700">${n}</div></div>`;
+        }).join('');
+        cards += `<div class="bg-gradient-to-br from-purple-600 to-indigo-600 p-3 rounded-xl text-center flex-1 min-w-[110px] shadow-md"><div class="text-[10px] font-bold text-purple-100 uppercase">Toplam Odak</div><div class="text-2xl font-black text-white">${totalAll}</div></div>`;
+        document.getElementById('gen-focus-brand-cards').innerHTML = cards;
+
+        // Bölge müdürü bazlı
+        const regRows = (window.lastRegionStats || []).map(r => ({ bm: r.bm, sales: r.sales, f: fr[r.bm] || { focusSales: 0, brands: {} } }))
+            .sort((a, b) => b.f.focusSales - a.f.focusSales || b.sales - a.sales);
+        document.getElementById('gen-focus-regions-head').innerHTML = headRow(th('#', true) + th('Bölge Müdürü') + brandHead + th('Odak Toplam', true) + th('Bonus Pack Satış', true) + th('Odak Payı', true));
+        document.getElementById('gen-focus-regions-list').innerHTML = regRows.map((r, i) => `
+            <tr class="hover:bg-purple-50/50 transition">
+                <td class="py-2 px-3 text-center">${medal(i)}</td>
+                <td class="py-2 px-3 font-bold text-slate-700 text-xs sm:text-sm"><span class="clickable-store" onclick="goToRegion('${r.bm}')">${r.bm}</span></td>
+                ${brandCells(r.f)}${totalCell(r.f.focusSales)}
+                <td class="py-2 px-3 text-center font-black text-pink-600 text-xs">${r.sales}</td>
+                ${pctCell(r.f.focusSales, r.sales)}
+            </tr>`).join('');
+
+        // Tüm mağazalar
+        const storeRows = (window.lastAllStoresList || []).map(s => ({ name: s.name, bm: s.bm, sales: s.sales, f: fs[s.name] || { focusSales: 0, brands: {} } }))
+            .sort((a, b) => b.f.focusSales - a.f.focusSales || b.sales - a.sales);
+        document.getElementById('gen-focus-stores-head').innerHTML = headRow(th('#', true) + th('Mağaza') + th('Bölge M.') + brandHead + th('Odak Toplam', true) + th('Bonus Pack', true) + th('Odak Payı', true));
+        document.getElementById('gen-focus-stores-list').innerHTML = storeRows.map((s, i) => `
+            <tr class="hover:bg-purple-50/50 transition ${s.f.focusSales === 0 ? 'opacity-60' : ''}">
+                <td class="py-2 px-3 text-center">${medal(i)}</td>
+                <td class="py-2 px-3 font-bold text-slate-700 text-xs sm:text-sm whitespace-nowrap"><span class="clickable-store" onclick="goToStore('${s.name}')">${s.name}</span></td>
+                <td class="py-2 px-3 text-[10px] text-slate-500 font-bold whitespace-nowrap">${s.bm}</td>
+                ${brandCells(s.f)}${totalCell(s.f.focusSales)}
+                <td class="py-2 px-3 text-center font-black text-pink-600 text-xs">${s.sales}</td>
+                ${pctCell(s.f.focusSales, s.sales)}
+            </tr>`).join('');
+
+        // Lider personeller
+        const staffRows = Object.values(fp).sort((a, b) => b.focusSales - a.focusSales).slice(0, 20);
+        document.getElementById('gen-focus-staff-head').innerHTML = headRow(th('#', true) + th('Personel') + th('Mağaza') + brandHead + th('Odak Toplam', true));
+        document.getElementById('gen-focus-staff-list').innerHTML = staffRows.length ? staffRows.map((p, i) => `
+            <tr class="hover:bg-purple-50/50 transition">
+                <td class="py-2 px-3 text-center">${medal(i)}</td>
+                <td class="py-2 px-3 font-bold text-slate-700 text-xs sm:text-sm"><span class="clickable-name" onclick="openStaffProfile('${p.id}')">${p.name}</span></td>
+                <td class="py-2 px-3 text-[10px] text-slate-500 font-bold whitespace-nowrap"><span class="clickable-store" onclick="goToStore('${p.store}')">${p.store}</span></td>
+                ${brandCells(p)}${totalCell(p.focusSales)}
+            </tr>`).join('') : `<tr><td colspan="${4 + brands.length}" class="py-4 px-4 text-sm text-slate-400 text-center">Henüz odak ürün satışı girilmedi.</td></tr>`;
     }
 
     function renderGeneralUI(aggData) {
         updateAnnouncementUI();
         calculateGlobalTrendAndHeatmap();
-        
+
         let grandSales = 0, grandTarget = 0;
         let grandTotalStores = 0, grandDistributedStores = 0;
         let regionStats = [], allStores = [];
         let ai_noTargetStores = 0, ai_undistributed = 0;
-        let generalStaffMap = {}; 
+        let generalStaffMap = {};
 
         Object.keys(effectiveHierarchy).forEach(bm => {
             let bmSales = 0, bmTarget = 0;
             let bmTargetCount = 0, bmDistCount = 0;
             let totalStores = effectiveHierarchy[bm].length;
-            
+
             effectiveHierarchy[bm].forEach(storeName => {
                 let sData = aggData[storeName];
                 let sSales = 0, sStaffTargetSum = 0;
-                
+
                 grandTotalStores++;
 
-                Object.values(sData.staff).forEach(p => { 
-                    sSales += p.sales; 
-                    sStaffTargetSum += p.target; 
+                Object.values(sData.staff).forEach(p => {
+                    sSales += p.sales;
+                    sStaffTargetSum += p.target;
                 });
-                
+
                 Object.keys(sData.staff).forEach(stfId => {
                     let p = sData.staff[stfId];
                     if (p.sales > 0) {
-                        if(!generalStaffMap[stfId]) {
+                        if (!generalStaffMap[stfId]) {
                             generalStaffMap[stfId] = {
                                 id: stfId,
                                 name: globalData.master_staff?.[storeName]?.[stfId]?.name || findStaffNameGlobal(stfId),
                                 store: findStaffCurrentStore(stfId),
                                 bm: bm,
-                                sales: 0
+                                sales: 0,
+                                target: 0
                             };
                         }
                         generalStaffMap[stfId].sales += p.sales;
+                        generalStaffMap[stfId].target += (p.target || 0);
                     }
                 });
-                
+
                 bmSales += sSales; bmTarget += sData.target;
                 grandSales += sSales; grandTarget += sData.target;
-                
+
                 let distStatus = "YOK";
                 if (sData.target === 0) {
                     ai_noTargetStores++;
@@ -2687,31 +3256,36 @@
         let generalAllStaff = Object.values(generalStaffMap);
         generalAllStaff.sort((a, b) => b.sales - a.sales);
         window.generalTop3Staff = generalAllStaff.slice(0, 3);
-        
+        window.generalAllStaff = generalAllStaff;
+        renderGeneralStaffList();
+
         regionStats.sort((a, b) => b.sales - a.sales);
         allStores.sort((a, b) => b.sales - a.sales);
         window.lastAllStoresList = allStores;
+        window.lastRegionStats = regionStats;
 
         let top3StoresGen = allStores.filter(s => s.sales > 0).slice(0, 3);
-        updateTop3StoresBanner('general-top3-stores-banner', top3StoresGen, '🏆 EGE BÖLGESİ ŞAMPİYON MAĞAZALARI', 'Seçili Aralık En Çok Satan İlk 3 Mağaza');
-        updateTop3Banners('general-top3-banner', window.generalTop3Staff, 'PERFORMANS YILDIZLARI', 'Seçili Aralık Top 3 Personel');
+        updateTop3StoresBanner('general-top3-stores-banner', top3StoresGen, '🏆 EGE BÖLGESİ ŞAMPİYON MAĞAZALARI', 'Bonus Pack Satışında Seçili Aralık İlk 3 Mağaza');
+        updateTop3Banners('general-top3-banner', window.generalTop3Staff, '🌟 PERFORMANS YILDIZLARI', 'Bonus Pack Satışında Seçili Aralık Top 3 Personel');
+
+        renderGeneralFocusReport();
 
         document.getElementById('gen-total-sales').innerText = grandSales;
         document.getElementById('gen-total-target').innerText = grandTarget;
-        
+
         let genPerc = grandTarget > 0 ? Math.round((grandSales / grandTarget) * 100) : 0;
         document.getElementById('gen-progress-bar').style.width = (genPerc > 100 ? 100 : genPerc) + "%";
         document.getElementById('gen-progress-text').innerText = genPerc;
 
         let genStoreDistStats = document.getElementById('gen-store-dist-stats');
-        if(genStoreDistStats) genStoreDistStats.innerText = `${grandDistributedStores} / ${grandTotalStores}`;
+        if (genStoreDistStats) genStoreDistStats.innerText = `${grandDistributedStores} / ${grandTotalStores}`;
 
         try {
             if (typeof Chart !== 'undefined') {
                 if (pieChartInstance) pieChartInstance.destroy();
-                let labelsPie = regionStats.filter(r=>r.sales>0).map(r => r.bm);
-                let dataPie = regionStats.filter(r=>r.sales>0).map(r => r.sales);
-                
+                let labelsPie = regionStats.filter(r => r.sales > 0).map(r => r.bm);
+                let dataPie = regionStats.filter(r => r.sales > 0).map(r => r.sales);
+
                 let ctxPie = document.getElementById('pieChart').getContext('2d');
                 pieChartInstance = new Chart(ctxPie, {
                     type: 'doughnut',
@@ -2719,11 +3293,11 @@
                         labels: labelsPie,
                         datasets: [{
                             data: dataPie,
-                            backgroundColor: ['#ec4899','#8b5cf6','#3b82f6','#10b981','#f59e0b','#f43f5e'],
+                            backgroundColor: ['#ec4899', '#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#f43f5e'],
                             borderWidth: 0
                         }]
                     },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: {size: 11} } } } }
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } } } }
                 });
             } else {
                 document.getElementById('pieChart').parentElement.innerHTML = '<div class="text-sm text-slate-400 flex items-center justify-center h-full">Grafik yüklenemedi.</div>';
@@ -2745,7 +3319,7 @@
         window.lastUndistributedList = allStores.filter(s => s.target > 0 && s.distStatus === 'KIRMIZI');
         window.lastGenReport = { grandSales, grandTarget, genPerc, regionStats, topBMText, topStoreText, topTargetStoreText };
 
-        let aiText = `<p><strong>${reportDateRangeStr}</strong> tarih aralığı performans analizi:</p>
+        let aiText = `<p><strong>${reportDateRangeStr}</strong> tarih aralığı Bonus Pack performans analizi:</p>
             <ul class="mt-2 space-y-1.5 ml-2">
                 <li>🎯 <strong>Bölge Geneli:</strong> Toplam ${grandTarget} adet hedefe karşılık ${grandSales} adet satış gerçekleşti. <strong>Başarı oranı %${genPerc}.</strong></li>
                 <li>👥 <strong>Ekip Katılımı:</strong> Bölgedeki toplam ${grandTotalStores} mağazanın <strong class="text-white">${grandDistributedStores}</strong> kadarı hedefini dağıtmıştır.</li>
@@ -2761,7 +3335,7 @@
         regionStats.forEach((r, idx) => {
             let rPerc = r.target > 0 ? Math.round((r.sales / r.target) * 100) : 0;
             let distColor = r.tCount === r.totalStores ? 'text-emerald-600' : 'text-rose-500';
-            
+
             let bmStores = allStores.filter(s => s.bm === r.bm);
             let subTableHtml = `<td colspan="6" class="p-0 bg-slate-100 shadow-inner">
                 <div class="px-2 sm:px-8 py-2 sm:py-3">
@@ -2776,7 +3350,7 @@
                         </thead>
                         <tbody>`;
             bmStores.forEach(s => {
-                let sP = s.target > 0 ? Math.round((s.sales/s.target)*100) : 0;
+                let sP = s.target > 0 ? Math.round((s.sales / s.target) * 100) : 0;
                 subTableHtml += `<tr class="border-b border-slate-200 last:border-0">
                     <td class="py-1.5 font-bold text-slate-700"><span class="clickable-store" onclick="event.stopPropagation(); goToStore('${s.name}')" title="Mağazaya Git">${s.name}</span></td>
                     <td class="text-center text-slate-500">${s.target}</td>
@@ -2788,7 +3362,7 @@
 
             rList.innerHTML += `
                 <tr class="hover:bg-slate-50 transition cursor-pointer" onclick="toggleBMStores('${idx}')" title="Detayları Görmek İçin Tıkla">
-                    <td class="py-2 px-1 sm:px-4 font-bold text-slate-400 text-center text-[10px] sm:text-sm"><i id="bm-icon-${idx}" class="fa-solid fa-chevron-down text-slate-300"></i> ${idx+1}</td>
+                    <td class="py-2 px-1 sm:px-4 font-bold text-slate-400 text-center text-[10px] sm:text-sm"><i id="bm-icon-${idx}" class="fa-solid fa-chevron-down text-slate-300"></i> ${idx + 1}</td>
                     <td class="py-2 px-1 sm:px-4 font-bold text-slate-700 text-[10px] sm:text-sm"><span class="clickable-store" onclick="event.stopPropagation(); goToRegion('${r.bm}')" title="Bölge Paneline Işınlan">${r.bm}</span></td>
                     <td class="py-2 px-1 sm:px-4 text-center font-bold text-slate-600 text-[10px] sm:text-sm">${r.target}</td>
                     <td class="py-2 px-1 sm:px-4 text-center hidden sm:table-cell">
@@ -2799,7 +3373,7 @@
                     </td>
                     <td class="py-2 px-1 sm:px-4 text-center font-black text-emerald-600 text-xs sm:text-sm">${r.sales}</td>
                     <td class="py-2 px-1 sm:px-4">
-                        <div class="flex items-center gap-2"><div class="w-full bg-slate-200 rounded-full h-2 hidden sm:block"><div class="bg-emerald-500 h-2 rounded-full progress-bar" style="width: ${rPerc>100?100:rPerc}%"></div></div><span class="text-[10px] sm:text-xs font-black text-slate-500 w-8">%${rPerc}</span></div>
+                        <div class="flex items-center gap-2"><div class="w-full bg-slate-200 rounded-full h-2 hidden sm:block"><div class="bg-emerald-500 h-2 rounded-full progress-bar" style="width: ${rPerc > 100 ? 100 : rPerc}%"></div></div><span class="text-[10px] sm:text-xs font-black text-slate-500 w-8">%${rPerc}</span></div>
                     </td>
                 </tr>
                 <tr id="bm-stores-${idx}" class="hidden transition-all">${subTableHtml}</tr>`;
@@ -2809,7 +3383,7 @@
         sList.innerHTML = '';
         allStores.forEach(s => {
             let sPerc = s.target > 0 ? Math.round((s.sales / s.target) * 100) : 0;
-            
+
             let rowClass = "border-b border-slate-200 transition ";
             if (s.target > 0) {
                 if (sPerc >= 100) rowClass += "bg-emerald-50 hover:bg-emerald-100";
@@ -2818,7 +3392,7 @@
             } else {
                 rowClass += "bg-white hover:bg-slate-50";
             }
-            
+
             let distBadge = s.distStatus === 'YEŞİL' ? '<span class="text-emerald-600 font-bold"><i class="fa-solid fa-check"></i></span>' : s.distStatus === 'KIRMIZI' ? '<span class="text-rose-600 font-bold"><i class="fa-solid fa-xmark"></i></span>' : '-';
             let fireBadge = sPerc >= 150 ? `<span class="ml-1 inline-block animate-pulse text-[12px]" title="%150 Üzeri Başarı!">🔥</span>` : '';
 
@@ -2832,57 +3406,63 @@
                     </td>
                     <td class="py-2 px-1 sm:px-4 text-center hidden sm:table-cell">${distBadge}</td>
                     <td class="py-2 px-1 sm:px-4 text-center font-black text-pink-600 text-xs sm:text-sm">${s.sales}</td>
-                    <td class="py-2 px-1 sm:px-4 font-black text-[10px] sm:text-sm ${sPerc>=100?'text-emerald-600':sPerc>50?'text-amber-600':'text-rose-600'}">%${sPerc}</td>
+                    <td class="py-2 px-1 sm:px-4 font-black text-[10px] sm:text-sm ${sPerc >= 100 ? 'text-emerald-600' : sPerc > 50 ? 'text-amber-600' : 'text-rose-600'}">%${sPerc}</td>
                 </tr>`;
         });
     }
 
+    // =====================================================================
+    // === GENEL RAPOR PAYLAŞIMLARI ===
+    // =====================================================================
     window.shareGeneralReport = function() {
-        if(!window.lastGenReport) return;
+        if (!window.lastGenReport) return;
         let { grandSales, grandTarget, genPerc, regionStats, topBMText, topStoreText, topTargetStoreText } = window.lastGenReport;
-        
+
         let cleanBM = topBMText.replace(/<[^>]*>?/gm, '');
         let cleanStore = topStoreText.replace(/<[^>]*>?/gm, '');
         let cleanTarget = topTargetStoreText.replace(/<[^>]*>?/gm, '');
 
-        let text = `👑 *GÜLİZ ATİK BÖLGESİ PERFORMANS RAPORU* 👑\n🗓️ *Tarih:* ${reportDateRangeStr}\n\n`;
+        let text = `👑 *GÜLİZ ATİK BÖLGESİ BONUS PACK PERFORMANS RAPORU* 👑\n🗓️ *Tarih:* ${reportDateRangeStr}\n\n`;
         text += `🎯 Bölge Hedefi: *${grandTarget}*\n✅ Gerçekleşen: *${grandSales}*\n📈 Başarı Oranı: *%${genPerc}*\n\n`;
         text += `🌟 *LİDERLER KÜRSÜSÜ:*\n`;
         text += `👑 *En Çok Satan BM:* ${cleanBM}\n`;
         text += `🏆 *En Çok Satan Mağaza:* ${cleanStore}\n`;
         text += `🚀 *Hedefini En Çok Aşan:* ${cleanTarget}\n\n`;
         text += `📊 *BÖLGE MÜDÜRÜ SIRALAMASI:*\n`;
-        
+
         regionStats.forEach((r, i) => {
             let rPerc = r.target > 0 ? Math.round((r.sales / r.target) * 100) : 0;
-            let emoji = i===0?"🥇":i===1?"🥈":i===2?"🥉":"▫";
+            let emoji = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "▫";
             text += `${emoji} *${r.bm}* - Hedef: ${r.target} | Satış: ${r.sales} (%${rPerc}) | Hedefli Mgz: ${r.tCount}/${r.totalStores}\n`;
         });
-        
+
+        // Aktif odak ürün varsa özetini ekle
+        let fStaff = Object.values(window.lastFocusStaff || {}).sort((a, b) => b.focusSales - a.focusSales).slice(0, 3);
+        if ((window.activeContestBrands || []).length > 0 && fStaff.length > 0) {
+            text += `\n⭐ *ODAK ÜRÜN LİDERLERİ (${window.activeContestBrands.join(', ')}):*\n`;
+            fStaff.forEach((p, i) => {
+                text += `${["🥇", "🥈", "🥉"][i]} *${p.name}* - ${p.focusSales} adet (${p.store})\n`;
+            });
+        }
+
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 
     window.exportAllStoresToExcel = function() {
-        if(!window.lastAllStoresList || window.lastAllStoresList.length === 0) {
+        if (!window.lastAllStoresList || window.lastAllStoresList.length === 0) {
             return alert("Bu tarih aralığında raporlanacak mağaza bulunamadı!");
         }
-        
-        let csvContent = "\uFEFF"; 
-        csvContent += "Sıra;Bölge Müdürü;Mağaza Adı;Hedef;Satış;Başarı Oranı (%)\n";
-        
+
+        let csvContent = "\uFEFF";
+        csvContent += "Sıra;Bölge Müdürü;Mağaza Adı;Hedef;Satış;Başarı Oranı (%);Odak Ürün Satış\n";
+
         window.lastAllStoresList.forEach((s, idx) => {
             let perc = s.target > 0 ? Math.round((s.sales / s.target) * 100) : 0;
-            let row = [
-                idx + 1,
-                `"${s.bm}"`,
-                `"${s.name}"`,
-                s.target,
-                s.sales,
-                perc
-            ];
+            let focus = (window.lastFocusStores && window.lastFocusStores[s.name]) ? window.lastFocusStores[s.name].focusSales : 0;
+            let row = [idx + 1, `"${s.bm}"`, `"${s.name}"`, s.target, s.sales, perc, focus];
             csvContent += row.join(";") + "\n";
         });
-        
+
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         const url = URL.createObjectURL(blob);
@@ -2894,79 +3474,58 @@
         document.body.removeChild(link);
     }
 
-    window.shareZeroSalesStores = function() {
-        if(!window.lastZeroSalesList || window.lastZeroSalesList.length === 0) {
-            return alert("Bu tarih aralığında satışı 0 olan mağaza bulunmuyor!");
-        }
-        
-        let text = `🚨 *BONUS BAG - SIFIR SATIŞ YAPAN MAĞAZALAR* 🚨\n🗓️ *Tarih:* ${reportDateRangeStr}\n\nToplam *${window.lastZeroSalesList.length}* mağazada henüz satış kaydedilmemiştir:\n\n`;
-
+    function shareStoreGroupByBM(list, title, footer, showTarget) {
+        let text = title;
         let byBM = {};
-        window.lastZeroSalesList.forEach(s => {
-            if(!byBM[s.bm]) byBM[s.bm] = [];
+        list.forEach(s => {
+            if (!byBM[s.bm]) byBM[s.bm] = [];
             byBM[s.bm].push(s);
         });
-
         Object.keys(byBM).forEach(bm => {
             text += `👤 *${bm}* (${byBM[bm].length} Mağaza):\n`;
             byBM[bm].forEach(s => {
-                text += `  ▫️ ${s.name} (Hedef: ${s.target})\n`;
+                text += showTarget ? `  ▫️ ${s.name} (${showTarget}: ${s.target})\n` : `  ▫️ ${s.name}\n`;
             });
             text += `\n`;
         });
-
-        text += `⚠️ İlgili mağaza yöneticilerimizin acil aksiyon alması rica olunur.`;
+        text += footer;
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    window.shareZeroSalesStores = function() {
+        if (!window.lastZeroSalesList || window.lastZeroSalesList.length === 0) {
+            return alert("Bu tarih aralığında satışı 0 olan mağaza bulunmuyor!");
+        }
+        shareStoreGroupByBM(
+            window.lastZeroSalesList,
+            `🚨 *BONUS BAG - SIFIR SATIŞ YAPAN MAĞAZALAR* 🚨\n🗓️ *Tarih:* ${reportDateRangeStr}\n\nToplam *${window.lastZeroSalesList.length}* mağazada henüz satış kaydedilmemiştir:\n\n`,
+            `⚠️ İlgili mağaza yöneticilerimizin acil aksiyon alması rica olunur.`,
+            'Hedef'
+        );
     }
 
     window.shareNoTargetStores = function() {
-        if(!window.lastNoTargetList || window.lastNoTargetList.length === 0) {
+        if (!window.lastNoTargetList || window.lastNoTargetList.length === 0) {
             return alert("Bu tarih aralığında hedefsiz mağaza bulunmuyor!");
         }
-        
-        let text = `⚠️ *BONUS BAG - HEDEF GİRİLMEYEN MAĞAZALAR* ⚠️\n🗓️ *Tarih:* ${reportDateRangeStr}\n\nToplam *${window.lastNoTargetList.length}* mağazaya henüz hedef tanımlanmamıştır:\n\n`;
-
-        let byBM = {};
-        window.lastNoTargetList.forEach(s => {
-            if(!byBM[s.bm]) byBM[s.bm] = [];
-            byBM[s.bm].push(s);
-        });
-
-        Object.keys(byBM).forEach(bm => {
-            text += `👤 *${bm}* (${byBM[bm].length} Mağaza):\n`;
-            byBM[bm].forEach(s => {
-                text += `  ▫️ ${s.name}\n`;
-            });
-            text += `\n`;
-        });
-
-        text += `⚠️ İlgili mağaza ve bölge yöneticilerimizin acil aksiyon alması rica olunur.`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+        shareStoreGroupByBM(
+            window.lastNoTargetList,
+            `⚠️ *BONUS BAG - HEDEF GİRİLMEYEN MAĞAZALAR* ⚠️\n🗓️ *Tarih:* ${reportDateRangeStr}\n\nToplam *${window.lastNoTargetList.length}* mağazaya henüz hedef tanımlanmamıştır:\n\n`,
+            `⚠️ İlgili mağaza ve bölge yöneticilerimizin acil aksiyon alması rica olunur.`,
+            null
+        );
     }
 
     window.shareUndistributedStores = function() {
-        if(!window.lastUndistributedList || window.lastUndistributedList.length === 0) {
+        if (!window.lastUndistributedList || window.lastUndistributedList.length === 0) {
             return alert("Bu tarih aralığında hedefini dağıtmayan mağaza bulunmuyor!");
         }
-        
-        let text = `⚠️ *BONUS BAG - HEDEFİ EKİBE DAĞITMAYAN MAĞAZALAR* ⚠️\n🗓️ *Tarih:* ${reportDateRangeStr}\n\nToplam *${window.lastUndistributedList.length}* mağaza, verilen hedefi personeline eksiksiz dağıtmamıştır:\n\n`;
-
-        let byBM = {};
-        window.lastUndistributedList.forEach(s => {
-            if(!byBM[s.bm]) byBM[s.bm] = [];
-            byBM[s.bm].push(s);
-        });
-
-        Object.keys(byBM).forEach(bm => {
-            text += `👤 *${bm}* (${byBM[bm].length} Mağaza):\n`;
-            byBM[bm].forEach(s => {
-                text += `  ▫️ ${s.name} (Verilen Hedef: ${s.target})\n`;
-            });
-            text += `\n`;
-        });
-
-        text += `⚠️ İlgili mağaza yöneticilerimizin hedefleri personellere tanımlaması rica olunur.`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+        shareStoreGroupByBM(
+            window.lastUndistributedList,
+            `⚠️ *BONUS BAG - HEDEFİ EKİBE DAĞITMAYAN MAĞAZALAR* ⚠️\n🗓️ *Tarih:* ${reportDateRangeStr}\n\nToplam *${window.lastUndistributedList.length}* mağaza, verilen hedefi personeline eksiksiz dağıtmamıştır:\n\n`,
+            `⚠️ İlgili mağaza yöneticilerimizin hedefleri personellere tanımlaması rica olunur.`,
+            'Verilen Hedef'
+        );
     }
 
 </script>
