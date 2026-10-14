@@ -46,6 +46,7 @@
         .light-date-input::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 
         /* Duyuru Bandı Animasyonu */
+        html, body { overflow-x: clip; max-width: 100%; }
         @keyframes alert-ticker { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
         .alert-track, .alert-track.w-full { display: flex; width: max-content; max-width: none; white-space: nowrap; will-change: transform; animation: alert-ticker 35s linear infinite; }
 
@@ -404,34 +405,34 @@
 
     <!-- ÜST BİLGİ BARI -->
     <div class="app-topbar bg-slate-900 text-white p-3 shadow-md sticky top-[0px] z-50 transition-colors">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-3">
+        <div class="max-w-6xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2 sm:gap-3 min-w-0">
                 <i id="topbar-icon" class="fa-solid fa-bullseye text-pink-500 text-xl"></i>
-                <h1 class="font-black tracking-wide text-lg"><span id="topbar-name">Satış Platformu</span> <span id="topbar-sub" class="text-slate-400 font-normal text-sm ml-1 hidden sm:inline">Güliz Atik Bölgesi · Bonus Bag &amp; Odak</span></h1>
+                <h1 class="font-black tracking-wide text-lg truncate min-w-0"><span id="topbar-name">Satış Platformu</span> <span id="topbar-sub" class="text-slate-400 font-normal text-sm ml-1 hidden sm:inline">Güliz Atik Bölgesi · Bonus Bag &amp; Odak</span></h1>
             </div>
-            <div class="flex items-center gap-2 sm:gap-3">
+            <div class="flex items-center gap-1.5 sm:gap-3 flex-none">
                 <span id="active-date-badge" class="hidden sm:inline-block px-3 py-1 bg-slate-800 rounded-lg text-xs font-bold text-slate-300 border border-slate-700"></span>
 
                 <!-- 🌟 ODAK ÜRÜN BUTONU -->
-                <button type="button" onclick="openContestLeaderboard()" class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow border border-purple-400 text-white" title="Odak Ürün / Marka Ligi">
+                <button type="button" onclick="openContestLeaderboard()" class="px-2.5 sm:px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow border border-purple-400 text-white" title="Odak Ürün / Marka Ligi">
                     <i class="fa-solid fa-star animate-pulse text-amber-300"></i> <span class="hidden sm:inline">Odak Ligi</span>
                 </button>
 
-                <button type="button" id="topbar-mode-btn" onclick="switchMode()" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm border text-white bg-gradient-to-r from-violet-600 to-cyan-600 border-violet-400"><i class="fa-solid fa-trophy"></i> <span class="hidden sm:inline">KPI Yarışması</span></button>
+                <button type="button" id="topbar-mode-btn" onclick="switchMode()" class="px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm border text-white bg-gradient-to-r from-violet-600 to-cyan-600 border-violet-400"><i class="fa-solid fa-trophy"></i> <span class="hidden sm:inline">KPI Yarışması</span></button>
 
-                <button type="button" id="sound-btn" onclick="toggleSound()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-bold transition flex items-center gap-1.5 border border-slate-700 shadow-sm" title="Sesler"><i id="sound-icon" class="fa-solid fa-volume-high"></i></button>
+                <button type="button" id="sound-btn" onclick="toggleSound()" class="px-2.5 sm:px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-bold transition flex items-center gap-1.5 border border-slate-700 shadow-sm" title="Sesler"><i id="sound-icon" class="fa-solid fa-volume-high"></i></button>
 
-                <button type="button" id="notif-btn" onclick="toggleNotifPanel()" class="relative px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-bold transition flex items-center gap-1.5 border border-slate-700 shadow-sm" title="Bildirimler"><i id="notif-icon" class="fa-solid fa-bell"></i><span id="notif-badge" class="hidden absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-pink-500 text-white text-[10px] font-black leading-[18px] text-center shadow">0</span></button>
+                <button type="button" id="notif-btn" onclick="toggleNotifPanel()" class="relative px-2.5 sm:px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-bold transition flex items-center gap-1.5 border border-slate-700 shadow-sm" title="Bildirimler"><i id="notif-icon" class="fa-solid fa-bell"></i><span id="notif-badge" class="hidden absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-pink-500 text-white text-[10px] font-black leading-[18px] text-center shadow">0</span></button>
 
-                <button type="button" onclick="toggleDarkMode()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-bold transition flex items-center gap-1.5 border border-slate-700 shadow-sm" title="Gece/Gündüz Modu">
+                <button type="button" onclick="toggleDarkMode()" class="px-2.5 sm:px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-bold transition flex items-center gap-1.5 border border-slate-700 shadow-sm" title="Gece/Gündüz Modu">
                     <i id="dark-mode-icon" class="fa-solid"></i>
                 </button>
 
-                <button type="button" id="back-btn" onclick="goBack()" class="hidden px-3 py-1.5 bg-pink-600 hover:bg-pink-500 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm border border-pink-500">
+                <button type="button" id="back-btn" onclick="goBack()" class="hidden px-2.5 sm:px-3 py-1.5 bg-pink-600 hover:bg-pink-500 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm border border-pink-500">
                     <i class="fa-solid fa-arrow-left"></i> <span class="hidden sm:inline">Geri</span>
                 </button>
                 
-                <button type="button" onclick="goHome()" class="px-3 sm:px-4 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 border border-slate-700">
+                <button type="button" onclick="goHome()" class="px-2.5 sm:px-4 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 border border-slate-700">
                     <i class="fa-solid fa-house"></i> <span class="hidden sm:inline">Ana Menü</span>
                 </button>
             </div>
