@@ -5008,10 +5008,10 @@
         };
         // ------------------------------------------------------------------
         // KPI KİLİDİ: yarışma açılana kadar "çok yakında" ekranı gösterilir
-        // Açmak için: window.KPI_KILITLI = false  (aşağıdaki satırı false yapın)
+        // Kilitlemek için aşağıdaki satırda false yerine true yazın.
         // Önizleme modunda (dosya olarak açılınca ya da ?demo=1) kilit uygulanmaz.
         // ------------------------------------------------------------------
-        if (window.KPI_KILITLI === undefined) window.KPI_KILITLI = true;
+        if (window.KPI_KILITLI === undefined) window.KPI_KILITLI = false;   // true yaparsanız KPI tekrar "çok yakında" ekranına döner
         function kpiLocked() { return !window.__DEMO && window.KPI_KILITLI !== false; }
 
         let teaserEl = null, teaserTimer = null;
