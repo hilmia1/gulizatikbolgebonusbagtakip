@@ -419,6 +419,8 @@
 
                 <button type="button" id="topbar-mode-btn" onclick="switchMode()" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm border text-white bg-gradient-to-r from-violet-600 to-cyan-600 border-violet-400"><i class="fa-solid fa-trophy"></i> <span class="hidden sm:inline">KPI Yarışması</span></button>
 
+                <button type="button" id="sound-btn" onclick="toggleSound()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-bold transition flex items-center gap-1.5 border border-slate-700 shadow-sm" title="Sesler"><i id="sound-icon" class="fa-solid fa-volume-high"></i></button>
+
                 <button type="button" id="notif-btn" onclick="toggleNotifPanel()" class="relative px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-bold transition flex items-center gap-1.5 border border-slate-700 shadow-sm" title="Bildirimler"><i id="notif-icon" class="fa-solid fa-bell"></i><span id="notif-badge" class="hidden absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-pink-500 text-white text-[10px] font-black leading-[18px] text-center shadow">0</span></button>
 
                 <button type="button" onclick="toggleDarkMode()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-bold transition flex items-center gap-1.5 border border-slate-700 shadow-sm" title="Gece/Gündüz Modu">
@@ -1555,6 +1557,89 @@
     let pieChartInstance = null;
     let trendChartInstance = null;
 
+    // ================= SESLER (hazır ses dosyası yok, tarayıcıda üretilir) =================
+    const Snd = (function () {
+        let ac = null, master = null;
+        const enabled = () => { try { return localStorage.getItem('bb_sound') !== '0'; } catch (e) { return true; } };
+        function ctx() {
+            if (ac) return ac;
+            const C = window.AudioContext || window.webkitAudioContext;
+            if (!C) return null;
+            ac = new C();
+            master = ac.createGain(); master.gain.value = 0.9; master.connect(ac.destination);
+            return ac;
+        }
+        function tone(a, t, freq, dur, type, vol, freqEnd) {
+            const o = a.createOscillator(), g = a.createGain();
+            o.type = type || 'sine';
+            o.frequency.setValueAtTime(freq, t);
+            if (freqEnd) o.frequency.exponentialRampToValueAtTime(freqEnd, t + dur);
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(vol, t + 0.012);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+            o.connect(g); g.connect(master);
+            o.start(t); o.stop(t + dur + 0.03);
+        }
+        function clap(a, t, vol) {
+            const len = Math.floor(a.sampleRate * 0.06), buf = a.createBuffer(1, len, a.sampleRate), d = buf.getChannelData(0);
+            for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2);
+            const src = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+            src.buffer = buf; f.type = 'bandpass'; f.frequency.value = 1800; f.Q.value = 0.8; g.gain.value = vol;
+            src.connect(f); f.connect(g); g.connect(master); src.start(t);
+        }
+        const sounds = {
+            sale: (a, t) => { tone(a, t, 988, 0.09, 'sine', 0.09); tone(a, t + 0.07, 1319, 0.14, 'sine', 0.08); },
+            saleUndo: (a, t) => tone(a, t, 392, 0.14, 'sine', 0.07, 262),
+            goal: (a, t) => {
+                [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(a, t + i * 0.11, f, 0.22, 'triangle', 0.12));
+                [523.25, 659.25, 783.99, 1046.5].forEach(f => tone(a, t + 0.52, f, 0.8, 'triangle', 0.07));
+            },
+            goal150: (a, t) => {
+                [523.25, 659.25, 783.99, 1046.5, 1318.5, 1568].forEach((f, i) => tone(a, t + i * 0.08, f, 0.22, 'triangle', 0.12));
+                [783.99, 1046.5, 1318.5, 1568].forEach(f => tone(a, t + 0.55, f, 0.9, 'triangle', 0.07));
+            },
+            clap: (a, t) => { [0, 0.05, 0.11, 0.16, 0.23].forEach((d, i) => clap(a, t + d, 0.5 - i * 0.05)); },
+            announce: (a, t) => { tone(a, t, 1318.5, 0.35, 'sine', 0.12); tone(a, t, 2637, 0.2, 'sine', 0.03); tone(a, t + 0.18, 1046.5, 0.55, 'sine', 0.12); },
+            alert: (a, t) => { tone(a, t, 330, 0.12, 'square', 0.05); tone(a, t + 0.14, 262, 0.2, 'square', 0.05); },
+            ok: (a, t) => { tone(a, t, 523.25, 0.1, 'sine', 0.08); tone(a, t + 0.09, 784, 0.18, 'sine', 0.08); }
+        };
+        const api = {
+            enabled,
+            last: '',
+            play(name) {
+                if (!enabled() || !sounds[name]) return;
+                try {
+                    const a = ctx();
+                    if (!a) return;
+                    if (a.state === 'suspended' && a.resume) a.resume();
+                    api.last = name;
+                    sounds[name](a, a.currentTime + 0.02);
+                } catch (e) {}
+            },
+            unlock() { try { const a = ctx(); if (a && a.state === 'suspended' && a.resume) a.resume(); } catch (e) {} }
+        };
+        // Tarayıcılar ilk dokunuştan önce ses çalmaya izin vermez: ilk dokunuşta sesi uyandır
+        if (typeof document.addEventListener === 'function') {
+            const once = () => { api.unlock(); document.removeEventListener('pointerdown', once); document.removeEventListener('keydown', once); };
+            document.addEventListener('pointerdown', once); document.addEventListener('keydown', once);
+        }
+        return api;
+    })();
+    window.Snd = Snd;
+    function paintSound() {
+        const i = document.getElementById('sound-icon'), b = document.getElementById('sound-btn');
+        const on = Snd.enabled();
+        if (i) i.className = 'fa-solid ' + (on ? 'fa-volume-high' : 'fa-volume-xmark');
+        if (b) { b.title = on ? 'Sesler açık (kapatmak için dokunun)' : 'Sesler kapalı (açmak için dokunun)'; b.classList.toggle('text-amber-300', on); }
+    }
+    window.toggleSound = function () {
+        const on = Snd.enabled();
+        try { localStorage.setItem('bb_sound', on ? '0' : '1'); } catch (e) {}
+        paintSound();
+        if (!on) Snd.play('announce');
+    };
+    paintSound();
+
     window.firedConfetti = { store: false };
     window.fireConfetti = function() {
         if(typeof confetti !== 'undefined') {
@@ -1741,6 +1826,20 @@
         window.currentProfileStore = null;
     }
 
+    // Alkış butonunda yukarı uçan emoji (stil .floating-emoji / floatUp zaten vardı, fonksiyon eksikti)
+    function createFloatingEmoji(emoji, x, y) {
+        try {
+            const el = document.createElement('div');
+            el.className = 'floating-emoji';
+            el.textContent = emoji;
+            el.style.left = Math.round(x) + 'px';
+            el.style.top = Math.round(y) + 'px';
+            el.style.fontSize = '28px';
+            document.body.appendChild(el);
+            setTimeout(() => { try { el.remove(); } catch (e) {} }, 1100);
+        } catch (e) {}
+    }
+
     window.sendApplauseFromModal = function(event) {
         if (!window.currentProfileStaffId || !window.currentProfileStore || window.currentProfileStore === "Silinmiş Personel") return;
         
@@ -1756,6 +1855,7 @@
             y = event.clientY;
         }
 
+        Snd.play('clap');
         createFloatingEmoji('👏', x, y);
         setTimeout(() => createFloatingEmoji('❤️', x + (Math.random()*20-10), y + (Math.random()*20-10)), 100);
         setTimeout(() => createFloatingEmoji('🔥', x + (Math.random()*20-10), y + (Math.random()*20-10)), 200);
@@ -2454,6 +2554,7 @@
         let current = globalData.daily?.[ACTIVE_DATE]?.[currentId]?.staff?.[id]?.sales || 0;
         
         if (change < 0 && current === 0) return;
+        Snd.play(change > 0 ? 'sale' : 'saleUndo');
 
         let next = Math.max(0, current + change);
         dbRoot.child('daily').child(ACTIVE_DATE).child(currentId).child('staff').child(id).update({ sales: next });
@@ -2908,7 +3009,7 @@
                     else if (currentRole === 'region' && currentId === a.bm) ok = true;
                     else { const st = allStoresList.find(x => x.name === myStore()); if (st && st.bm === a.bm) ok = true; }
                 }
-                if (ok) show('📢 ' + cleanText(sender), cleanText(a.message), 'ann-' + key);
+                if (ok) { Snd.play('announce'); show('📢 ' + cleanText(sender), cleanText(a.message), 'ann-' + key); }
             });
             annBase = true;
         };
@@ -2925,7 +3026,7 @@
                 const k = i.id + '|' + i.time;
                 if (cenSeen.has(k)) return;
                 cenSeen.add(k);
-                if (annInWindow(i)) show('🛰️ Merkez duyurusu', cleanText(i.message), 'central-' + k);
+                if (annInWindow(i)) { Snd.play('announce'); show('🛰️ Merkez duyurusu', cleanText(i.message), 'central-' + k); }
             });
         };
 
@@ -2946,6 +3047,7 @@
                     const k = 'bb_ms_' + ACTIVE_DATE + '_' + currentId + '_' + m[0];
                     if (lsGet(k) === '1') return;
                     lsSet(k, '1');
+                    Snd.play(m[0] === 150 ? 'goal150' : 'goal');
                     show(m[1], currentId + ': ' + m[2], 'ms-' + m[0]);
                 }
             });
@@ -3088,8 +3190,8 @@
         if (currentRole !== 'store' || !currentId) return alert('Bu işlem mağaza ekranından yapılır.');
         if (!/^[A-Za-z0-9_-]{1,30}$/.test(pid)) return;
         const ref = dbRoot.child('stockout').child('reports').child(currentId).child(pid);
-        if (stockoutMine()[pid]) ref.remove();
-        else ref.set({ ts: Date.now() });
+        if (stockoutMine()[pid]) { ref.remove(); Snd.play('ok'); }
+        else { ref.set({ ts: Date.now() }); Snd.play('alert'); }
     };
     window.addStockoutProducts = function () {
         if (!window.__DEMO && !hasAdminSession()) return alert('Ürün eklemek için yönetici girişi gerekir.');
@@ -5173,6 +5275,7 @@
             if (kBusy[bk] && Date.now() - kBusy[bk] < 400) return;
             kBusy[bk] = Date.now();
             const delta = sign * n;
+            Snd.play(sign > 0 ? 'sale' : 'saleUndo');
             dbRoot.child('kpi').child('comps').child(c.cid).child('daily').child(ACTIVE_DATE).child(currentId).child(bk)
                 .transaction(v => { const x = (Number(v) || 0) + delta; return x < 0 ? 0 : x; });
             if (b.unit === 'TL' && $('kpi-amt-' + bk)) $('kpi-amt-' + bk).value = '';
