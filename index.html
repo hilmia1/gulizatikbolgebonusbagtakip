@@ -2219,7 +2219,8 @@
             }
         });
 
-        if (activeMessages.length > 0 && currentRole !== '') {
+        // Giriş yapılmamış ana menüde sadece GENEL mesajlar görünür (bölge mesajları için mağaza/bölge bilinmiyor)
+        if (activeMessages.length > 0) {
             textEl.innerHTML = activeMessages.join('<span class="mx-6 text-white/40">|</span>');
             bar.classList.remove('hidden');
         } else {
