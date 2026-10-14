@@ -637,7 +637,10 @@
                             <i class="fa-brands fa-whatsapp text-sm"></i> Durum Raporu
                         </button>
                         <button type="button" onclick="shareRegionTop5()" class="px-3 py-1.5 bg-pink-500 hover:bg-pink-400 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow">
-                            <i class="fa-brands fa-whatsapp text-sm"></i> Yıldızları Paylaş
+                            <i class="fa-brands fa-whatsapp text-sm"></i> Bonus Pack Yıldızları
+                        </button>
+                        <button type="button" onclick="shareRegionFocusTop5()" class="px-3 py-1.5 bg-purple-500 hover:bg-purple-400 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow">
+                            <i class="fa-brands fa-whatsapp text-sm"></i> Odak Yıldızları
                         </button>
                     </div>
                 </div>
@@ -2783,6 +2786,23 @@
 
         let rPerc = regTarget > 0 ? Math.round((regSales/regTarget)*100) : 0;
         text += `\n━━━━━━━━━━━━━━━\n🎯 *BÖLGE HEDEFİ:* ${regTarget}\n✅ *GERÇEKLEŞEN:* ${regSales} (%${rPerc})\n🔗 *Panel Linki:*\n${window.location.href.split('?')[0]}?region=${encodeURIComponent(currentId)}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    window.shareRegionFocusTop5 = function() {
+        if (isRegionHistorical) return alert("Odak yıldız listesi sadece Canlı Modda (bugünün) paylaşılabilir.");
+        if (!window.activeContestBrands || window.activeContestBrands.length === 0) return alert("Şu an aktif bir odak ürün yok!");
+        const list = window.currentRegionFocusTop5 || [];
+        if (list.length === 0) return alert("Bölgenizde henüz odak ürün satan personel bulunmuyor!");
+
+        let text = `⭐ *${currentId} - ODAK ÜRÜN YILDIZLARI* ⭐\n📅 *Tarih:* ${ACTIVE_DATE}\n🎯 *Odak Ürünler:* ${window.activeContestBrands.join(', ')}\n\nŞu anki odak ürün liderlerimiz:\n\n`;
+        const emojis = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"];
+        list.forEach((st, idx) => {
+            let gr = (window.top3FocusStaffGlobal || []).findIndex(g => g.id === st.id);
+            let gs = gr === 0 ? " 👑 *(EGE BÖLGE ODAK 1.Sİ)*" : gr === 1 ? " 🥈 *(EGE BÖLGE ODAK 2.Sİ)*" : gr === 2 ? " 🥉 *(EGE BÖLGE ODAK 3.SÜ)*" : "";
+            text += `${emojis[idx]} *${st.name}*: ${st.focusSales} Adet - _${st.store}_${gs}\n`;
+        });
+        text += `\nHarika gidiyorsunuz, tebrikler! 🚀👏\n🔗 *Canlı Takip:*\n${window.location.href.split('?')[0]}?region=${encodeURIComponent(currentId)}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 
