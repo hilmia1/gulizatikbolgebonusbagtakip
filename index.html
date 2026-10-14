@@ -1505,7 +1505,8 @@
                 let msg = MODAL_ERR_DEFAULT;
                 if (code === 'auth/too-many-requests') msg = '<i class="fa-solid fa-hourglass-half mr-1"></i> Çok fazla hatalı deneme. Lütfen birkaç dakika bekleyin.';
                 else if (code === 'auth/network-request-failed') msg = '<i class="fa-solid fa-wifi mr-1"></i> Bağlantı hatası. İnternetinizi kontrol edin.';
-                else if (code === 'auth/user-not-found' || code === 'auth/operation-not-allowed') msg = '<i class="fa-solid fa-triangle-exclamation mr-1"></i> Hesap tanımlı değil. Sistem yöneticisine başvurun.';
+                else if (code === 'auth/user-not-found' || code === 'auth/operation-not-allowed') msg = '<i class="fa-solid fa-triangle-exclamation mr-1"></i> Hesap tanımlı değil. Sistem yöneticisine başvurun. (kod: ' + escHtml(code) + ')';
+                else if (code && !/^auth\/(wrong-password|invalid-credential|invalid-login-credentials|invalid-email)$/.test(code)) msg = '<i class="fa-solid fa-triangle-exclamation mr-1"></i> Giriş yapılamadı. Lütfen bu kodu yöneticiye iletin: ' + escHtml(code);
                 errEl.innerHTML = msg;
                 errEl.classList.remove('hidden');
             });
