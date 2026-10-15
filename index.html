@@ -27,6 +27,19 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
+    /* ===== Rekor sayacı ve kutlama şeridi ===== */
+    body.kpi-mode #record-bar, body.kpi-mode .rec-host, .rec-host:empty { display: none !important; }
+    .rec-track { display: flex; width: max-content; max-width: none; white-space: nowrap; will-change: transform; animation: alert-ticker 30s linear infinite; }
+    .rec-card { position: relative; overflow: hidden; border-radius: 1rem; padding: .7rem .9rem; color: #fff; background: radial-gradient(120% 140% at 0% 0%, rgba(255,255,255,.12), transparent 55%), linear-gradient(135deg, #1e1b4b, #3b0764); border: 1px solid rgba(232,121,249,.35); box-shadow: 0 8px 20px -8px rgba(0,0,0,.45); }
+    .rec-card.hot { background: radial-gradient(120% 140% at 0% 0%, rgba(255,255,255,.18), transparent 55%), linear-gradient(135deg, #a21caf, #6d28d9 60%, #b45309); border-color: rgba(253,224,71,.6); }
+    .rec-num { font-weight: 900; font-size: 1.9rem; line-height: 1; color: #fde047; text-shadow: 0 0 14px rgba(253,224,71,.45); transition: transform .25s; }
+    .rec-num.tick { transform: scale(1.25); }
+    .rec-bar { height: .5rem; border-radius: 9999px; background: rgba(255,255,255,.18); overflow: hidden; }
+    .rec-bar > i { display: block; height: 100%; border-radius: 9999px; background: linear-gradient(90deg, #e879f9, #fde047); transition: width .6s ease; }
+    @keyframes recPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+    .rec-last { animation: recPulse 1s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { .rec-track, .rec-last { animation: none; } }
+
     /* ===== Podyum banner ===== */
     .pd-wrap{--pd-a:#0f172a;--pd-b:#1e293b;--pd-acc:#fbbf24;--pd-txt:#fde68a;position:relative;overflow:hidden;margin-bottom:1.25rem;border-radius:1rem;padding:.9rem .75rem .75rem;background:radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.10),transparent 60%),linear-gradient(135deg,var(--pd-a),var(--pd-b));border:1px solid color-mix(in srgb,var(--pd-acc) 35%,transparent);box-shadow:0 10px 25px -8px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.08)}
     .pd-navy{--pd-a:#0f172a;--pd-b:#1e293b;--pd-acc:#fbbf24;--pd-txt:#fde68a}
@@ -227,6 +240,15 @@
             <i class="fa-solid fa-bullhorn animate-pulse"></i>
             <span id="global-announcement-text"></span>
             <i class="fa-solid fa-bullhorn animate-pulse"></i>
+        </div>
+    </div>
+
+    <!-- 🏆 BÖLGE REKORU KUTLAMA ŞERİDİ -->
+    <div id="record-bar" class="hidden bg-gradient-to-r from-fuchsia-600 via-violet-600 to-indigo-600 text-white py-1.5 text-sm font-black tracking-wide overflow-hidden shadow-lg sticky z-[58] border-b border-yellow-300/60" style="top:0">
+        <div class="rec-track w-full flex items-center gap-4">
+            <i class="fa-solid fa-trophy text-yellow-300 animate-pulse"></i>
+            <span id="record-bar-text"></span>
+            <i class="fa-solid fa-trophy text-yellow-300 animate-pulse"></i>
         </div>
     </div>
 
@@ -489,6 +511,7 @@
         
         <!-- ================= 1. GİRİŞ VE SEÇİM EKRANI ================= -->
         <div id="screen-home" class="screen space-y-6 hidden">
+            <div class="rec-host"></div>
             <div id="install-banner" class="hidden items-center justify-between gap-3 bg-gradient-to-r from-slate-900 to-indigo-900 text-white rounded-2xl p-3 sm:p-4 shadow-lg border border-indigo-500/40">
                 <div class="flex items-center gap-3 min-w-0">
                     <img src="icon-192.png" alt="" class="w-11 h-11 rounded-xl shadow flex-none">
@@ -689,6 +712,7 @@
 
         <!-- ================= 2. MAĞAZA EKRANI ================= -->
         <div id="screen-store" class="screen hidden space-y-5">
+            <div class="rec-host"></div>
             <div id="store-top3-stores-banner" class="hidden"></div>
             <!-- Sadece Personeller (Tüm Mağazalar Arası) -->
             <div id="store-focus-top3-banner" class="hidden"></div>
@@ -808,6 +832,7 @@
 
         <!-- ================= 3. BÖLGE MÜDÜRÜ EKRANI ================= -->
         <div id="screen-region" class="screen hidden space-y-5">
+            <div class="rec-host"></div>
             <div id="region-focus-top5-banner" class="hidden"></div>
             <div id="region-top5-banner" class="hidden"></div>
             
@@ -902,6 +927,7 @@
 
         <!-- ================= 4. GENEL YÖNETİM (GÜLİZ ATİK) EKRANI ================= -->
         <div id="screen-general" class="screen hidden space-y-6">
+            <div class="rec-host"></div>
             <div id="general-top3-stores-banner" class="hidden"></div>
             <div id="general-top3-banner" class="hidden"></div>
 
@@ -1511,6 +1537,132 @@
         t += `\nTeşekkürler 🙏`;
         window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank');
     };
+
+
+    // ===== BÖLGE REKORU: geri sayım sayacı + kutlama şeridi =====
+    (function () {
+        const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+        const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+        const CELEB_MS = 3 * 3600 * 1000;      // kutlama şeridi bu süre boyunca görünür
+        const dayTotal = dk => {
+            let sum = 0;
+            const day = globalData.daily && globalData.daily[dk];
+            if (!day) return 0;
+            Object.keys(day).forEach(st => {
+                const staff = day[st] && day[st].staff;
+                if (!staff || typeof staff !== 'object') return;
+                Object.keys(staff).forEach(id => { sum += Number(staff[id] && staff[id].sales) || 0; });
+            });
+            return sum;
+        };
+        function priorBest() {
+            let best = 0, bestDate = '';
+            Object.keys(globalData.daily || {}).forEach(dk => {
+                if (dk >= ACTIVE_DATE) return;
+                const t = dayTotal(dk);
+                if (t > best) { best = t; bestDate = dk; }
+            });
+            return { best, date: bestDate };
+        }
+        window.recState = function () {
+            const p = priorBest(), today = dayTotal(ACTIVE_DATE);
+            return { prior: p.best, priorDate: p.date, today };
+        };
+        // Satış girilince çağrılır (girişten ÖNCE bugünkü toplam verilir)
+        window.recOnSale = function (staffId, before, change) {
+            try {
+                if (!(change > 0) || (typeof isStoreHistorical !== 'undefined' && isStoreHistorical)) return;
+                const p = priorBest();
+                const total = before + change;
+                if (!(p.best > 0) || !(total > p.best)) return;
+                const cur = globalData.records && globalData.records.region;
+                const first = !(cur && cur.date === ACTIVE_DATE && Number(cur.value) > p.best);
+                let nm = '';
+                try { nm = (globalData.master_staff && globalData.master_staff[currentId] && globalData.master_staff[currentId][staffId] && globalData.master_staff[currentId][staffId].name) || findStaffNameGlobal(staffId) || ''; } catch (e) {}
+                dbRoot.child('records').child('region').set({
+                    value: total, date: ACTIVE_DATE, staffId: String(staffId), staffName: cleanText(nm).slice(0, 60) || 'Bir arkadaşımız',
+                    store: currentId, time: Date.now(), first: first, prev: p.best
+                });
+            } catch (e) { console.error(e); }
+        };
+        const MSGS = [
+            (n, s, v) => `🎉 YENİ BÖLGE REKORU! Günlük ${v} satışa ulaştık! Rekoru kıran satışı giren: ${n} (${s}). Tüm Güliz Atik bölgemizi kutluyoruz, hepinizle gurur duyuyoruz! 👏🏆`,
+            (n, s, v) => `🏆 REKOR KIRILDI! ${v} satışla bölge tarihinin en iyi günü yaşanıyor. Rekor satışı ${n} (${s}) girdi. Tüm ekibimize teşekkürler, bu başarı hepimizin! 🚀🎊`,
+            (n, s, v) => `🥳 BÖLGE REKORU YENİLENDİ: ${v}! Rekoru getiren satış ${n} (${s}) tarafından girildi. Güliz Atik bölgesinin her mağazasına, her arkadaşımıza sonsuz teşekkürler! 💜👏`
+        ];
+        let lastTick = null, lastCeleb = 0;
+        function activeEvent(st) {
+            const ev = globalData.records && globalData.records.region;
+            if (!ev || ev.date !== ACTIVE_DATE) return null;
+            if (!(Number(ev.value) > 0) || st.today < Number(ev.value)) return null;   // satış geri alındıysa kutlama kalkar
+            if (Date.now() - (Number(ev.time) || 0) > CELEB_MS) return null;
+            return ev;
+        }
+        function paintBar(ev) {
+            const bar = document.getElementById('record-bar'), tx = document.getElementById('record-bar-text');
+            if (!bar || !tx) return;
+            if (!ev) { bar.classList.add('hidden'); return; }
+            const v = Number(ev.value) || 0;
+            tx.textContent = MSGS[v % MSGS.length](cleanText(ev.staffName || ''), String(ev.store || '').replace(/^\d+-/, ''), v);
+            bar.classList.remove('hidden');
+            // diğer sabit çubukların altına yerleş
+            let top = 0;
+            ['central-announcement-bar', 'global-announcement-bar'].forEach(id => { const e = document.getElementById(id); if (e && !e.classList.contains('hidden')) top += e.offsetHeight || 0; });
+            bar.style.top = top + 'px';
+            try {
+                const tr = bar.querySelector('.rec-track'), w = tr.scrollWidth || 0, vw = window.innerWidth || 360;
+                const d = Math.max(14, Math.round((w + vw) / 80)) + 's';
+                if (tr.style.animationDuration !== d) tr.style.animationDuration = d;
+            } catch (e) {}
+            // yeni kırılan rekor için bir kez kutla
+            const t = Number(ev.time) || 0;
+            if (t > lastCeleb && Date.now() - t < 90000 && Number(lsGet('bb_rec_seen')) !== t) {
+                lsSet('bb_rec_seen', String(t));
+                if (!document.hidden) {
+                    try { Snd.play(ev.first ? 'goal150' : 'goal'); } catch (e) {}
+                    if (ev.first) { try { window.fireConfetti(); } catch (e) {} }
+                }
+            }
+            lastCeleb = Math.max(lastCeleb, t);
+        }
+        window.recPaint = function () {
+            try {
+                const st = recState();
+                const hosts = document.querySelectorAll('.rec-host');
+                const ev = activeEvent(st);
+                paintBar(ev);
+                if (!(st.prior > 0)) { hosts.forEach(h => { h.innerHTML = ''; }); return; }
+                const broken = st.today > st.prior;
+                const remaining = Math.max(0, st.prior - st.today + 1);
+                const pct = Math.min(100, Math.round(st.today / st.prior * 100));
+                if (!broken && st.today < st.prior * 0.8) { hosts.forEach(h => { h.innerHTML = ''; }); return; }   // rekora %20 kalınca belirir
+                const d = st.priorDate ? st.priorDate.split('-').reverse().join('.') : '';
+                const key = broken ? 'b' + st.today : 'r' + remaining;
+                const tick = lastTick !== null && lastTick !== key;
+                lastTick = key;
+                const html = broken
+                    ? `<div class="rec-card hot flex items-center gap-3">
+                        <div class="text-3xl">🔥</div>
+                        <div class="min-w-0 flex-1">
+                            <div class="text-[10px] font-black uppercase tracking-widest text-yellow-200">Rekor günü!</div>
+                            <div class="font-black text-sm leading-tight">Bugün <span class="text-yellow-300 text-lg">${st.today}</span> satış • önceki rekor ${st.prior} (${d}) aşıldı, <span class="text-yellow-300">+${st.today - st.prior}</span></div>
+                        </div></div>`
+                    : `<div class="rec-card flex items-center gap-3">
+                        <div class="text-center shrink-0 w-20">
+                            <div class="text-[9px] font-black uppercase tracking-widest text-fuchsia-200">Rekora kalan</div>
+                            <div class="rec-num ${tick ? 'tick' : ''} ${remaining <= 3 ? 'rec-last' : ''}">${remaining}</div>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center justify-between gap-2 text-[11px] font-black"><span class="truncate"><i class="fa-solid fa-trophy text-yellow-300 mr-1"></i>Bölge günlük rekoru: <span class="text-yellow-300">${st.prior}</span> <span class="text-fuchsia-200 font-bold">(${d})</span></span><span class="text-fuchsia-100">Bugün ${st.today}</span></div>
+                            <div class="rec-bar mt-1.5"><i style="width:${pct}%"></i></div>
+                            <div class="text-[10px] font-bold text-fuchsia-200 mt-1">${remaining <= 1 ? 'Son 1 satış, rekor kapıda! 🚀' : (remaining <= 10 ? 'Çok az kaldı, hadi bölge! 💪' : 'Her satış rekora bir adım daha yaklaştırıyor.')}</div>
+                        </div></div>`;
+                hosts.forEach(h => { h.innerHTML = html; });
+                if (tick) setTimeout(() => { document.querySelectorAll('.rec-num.tick').forEach(e => e.classList.remove('tick')); }, 300);
+            } catch (e) { console.error(e); }
+        };
+        setInterval(() => { try { window.recPaint(); } catch (e) {} }, 60000);   // 3 saatlik kutlama süresi dolunca şerit kapansın
+    })();
 
     window.saveContestBrands = function(inputId) {
         let val = String(document.getElementById(inputId).value).split(',').map(s => cleanText(s).replace(/[.$#\[\]\/]/g, '').trim()).filter(s => s).join(', ');
@@ -2809,7 +2961,9 @@
         Snd.play(change > 0 ? 'sale' : 'saleUndo');
 
         let next = Math.max(0, current + change);
+        const recBefore = window.recState ? recState().today : 0;
         dbRoot.child('daily').child(ACTIVE_DATE).child(currentId).child('staff').child(id).update({ sales: next });
+        if (change > 0 && window.recOnSale) recOnSale(id, recBefore, next - current);
 
         if (!isStoreHistorical) {
             let h = new Date().getHours();
@@ -2896,6 +3050,7 @@
             sanitizeGlobalData();
             try { if (window.kpiOnData) kpiOnData(); } catch (e) { console.error(e); }
             try { if (window.rcPaintSaved) rcPaintSaved(); } catch (e) { console.error(e); }
+            try { if (window.recPaint) recPaint(); } catch (e) { console.error(e); }
             try { if (window.stockoutOnData) stockoutOnData(); } catch (e) { console.error(e); }
             try { if (window.socialOnData) socialOnData(); } catch (e) { console.error(e); }
             
