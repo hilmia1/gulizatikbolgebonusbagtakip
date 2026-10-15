@@ -725,6 +725,23 @@
                 </div>
             </div>
 
+            <div class="flex flex-wrap items-center gap-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-3">
+                <span class="text-xs font-black text-slate-600 mr-1"><i class="fa-solid fa-sliders text-indigo-500 mr-1"></i> TOPLU HEDEF:</span>
+                <button onclick="bulkTargetReset()" class="px-3 py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold rounded-lg text-xs transition"><i class="fa-solid fa-eraser mr-1"></i> Tümünü Sıfırla</button>
+                <button onclick="bulkTargetYesterday()" class="px-3 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold rounded-lg text-xs transition"><i class="fa-solid fa-clock-rotate-left mr-1"></i> Dünün Hedeflerini Dağıt</button>
+                <span class="hidden sm:inline-block w-px h-6 bg-slate-200 mx-1"></span>
+                <span class="text-[11px] font-bold text-slate-500">Azalt</span>
+                <button onclick="bulkTargetStep(-20)" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black rounded-lg text-xs">−20</button>
+                <button onclick="bulkTargetStep(-15)" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black rounded-lg text-xs">−15</button>
+                <button onclick="bulkTargetStep(-10)" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black rounded-lg text-xs">−10</button>
+                <button onclick="bulkTargetStep(-5)" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black rounded-lg text-xs">−5</button>
+                <span class="text-[11px] font-bold text-slate-500 ml-1">Arttır</span>
+                <button onclick="bulkTargetStep(5)" class="px-2.5 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-black rounded-lg text-xs">+5</button>
+                <button onclick="bulkTargetStep(10)" class="px-2.5 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-black rounded-lg text-xs">+10</button>
+                <button onclick="bulkTargetStep(15)" class="px-2.5 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-black rounded-lg text-xs">+15</button>
+                <button onclick="bulkTargetStep(20)" class="px-2.5 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-black rounded-lg text-xs">+20</button>
+            </div>
+
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="w-full">
                     <table class="w-full text-left text-sm relative">
@@ -4918,6 +4935,41 @@
         if (v < 0) v = 0;
         dbRoot.child('daily').child(ACTIVE_DATE).child(storeName).update({ target: v, targetBy: 'MERKEZ' });
     }
+
+    // ===== TOPLU HEDEF (Sistem Merkezi) =====
+    function bulkApply(map, okMsg) {
+        const upd = {};
+        Object.keys(map).forEach(st => { upd[st + '/target'] = map[st]; upd[st + '/targetBy'] = 'MERKEZ'; });
+        if (!Object.keys(upd).length) return;
+        dbRoot.child('daily').child(ACTIVE_DATE).update(upd)
+            .then(() => { if (okMsg) alert(okMsg); })
+            .catch(() => alert('İşlem yapılamadı (yetki ya da bağlantı hatası).'));
+    }
+    window.bulkTargetStep = function (delta) {
+        const day = (globalData.daily && globalData.daily[ACTIVE_DATE]) || {};
+        const map = {};
+        allStoresList.forEach(s => {
+            const cur = Number((day[s.name] && day[s.name].target) || 0);
+            map[s.name] = Math.max(0, Math.min(200, cur + delta));
+        });
+        if (!confirm('Tüm mağazaların merkezi hedefi ' + (delta > 0 ? '+' : '') + delta + ' değiştirilecek (0 ile 200 arasında kalır). Emin misiniz?')) return;
+        bulkApply(map);
+    };
+    window.bulkTargetReset = function () {
+        if (!confirm('Tüm mağazaların bugünkü merkezi hedefi sıfırlanacak. Emin misiniz?')) return;
+        const map = {}; allStoresList.forEach(s => { map[s.name] = 0; });
+        bulkApply(map, 'Tüm hedefler sıfırlandı.');
+    };
+    window.bulkTargetYesterday = function () {
+        const d = new Date(ACTIVE_DATE + 'T12:00:00'); d.setDate(d.getDate() - 1);
+        const y = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        const prev = (globalData.daily && globalData.daily[y]) || {};
+        const map = {}; let n = 0;
+        allStoresList.forEach(s => { const t = Number((prev[s.name] && prev[s.name].target) || 0); if (t > 0) { map[s.name] = t; n++; } });
+        if (!n) return alert(y.split('-').reverse().join('.') + ' tarihinde hedef girilmiş mağaza bulunamadı.');
+        if (!confirm(y.split('-').reverse().join('.') + ' tarihindeki ' + n + ' mağazanın hedefi bugüne aynen kopyalanacak (bugünkü hedefler üzerine yazılır). Emin misiniz?')) return;
+        bulkApply(map, n + ' mağazanın hedefi dünden bugüne aktarıldı.');
+    };
 
     window.toggleCentralLock = function(storeName, lockState) {
         dbRoot.child('daily').child(ACTIVE_DATE).child(storeName).update({ isLocked: lockState });
