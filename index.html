@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Güliz Atik Bölgesi Satış Platformu</title>
-    <link rel="manifest" href="manifest.webmanifest">
+    <title>W•EGE · Güliz Atik Bölgesi</title>
+    <link rel="manifest" href="manifest.webmanifest?v=2">
     <meta name="theme-color" content="#0f172a">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Satış">
+    <meta name="apple-mobile-web-app-title" content="W•EGE">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
-    <link rel="icon" type="image/png" href="icon-192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
+    <link rel="icon" type="image/png" href="icon-192.png?v=2">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -477,7 +477,7 @@
         <div class="max-w-6xl mx-auto flex justify-between items-center gap-2">
             <div class="flex items-center gap-2 sm:gap-3 min-w-0">
                 <i id="topbar-icon" class="fa-solid fa-bullseye text-pink-500 text-xl"></i>
-                <h1 class="font-black tracking-wide text-lg truncate min-w-0"><span id="topbar-name">Satış Platformu</span> <span id="topbar-sub" class="text-slate-400 font-normal text-sm ml-1 hidden sm:inline">Güliz Atik Bölgesi · Bonus Bag &amp; Odak</span></h1>
+                <h1 class="font-black tracking-wide text-lg truncate min-w-0"><span id="topbar-name">W•EGE</span> <span id="topbar-sub" class="text-slate-400 font-normal text-sm ml-1 hidden sm:inline">Güliz Atik Bölgesi · Bonus Bag &amp; Odak</span></h1>
             </div>
             <div class="flex items-center gap-1.5 sm:gap-3 flex-none">
                 <span id="active-date-badge" class="hidden sm:inline-block px-3 py-1 bg-slate-800 rounded-lg text-xs font-bold text-slate-300 border border-slate-700"></span>
@@ -538,7 +538,8 @@
                 <button type="button" onclick="setMode('kpi')" class="mode-btn-kpi"><i class="fa-solid fa-trophy"></i> KPI Yarışması</button>
             </div></div>
             <div class="text-center py-6">
-                <h2 class="text-3xl font-black text-slate-800 mb-2 transition-colors">Satış Platformuna Hoş Geldiniz 🚀</h2>
+                <img src="icon-192.png?v=2" alt="W•EGE" width="96" height="96" class="mx-auto mb-4 rounded-3xl shadow-xl" style="width:96px;height:96px">
+                <h2 class="text-3xl font-black text-slate-800 mb-2 transition-colors">W•EGE'ye Hoş Geldiniz</h2>
                 <p class="text-slate-500 transition-colors">Görüntülemek istediğiniz paneli yetkinize göre seçiniz.</p>
             </div>
 
@@ -6197,7 +6198,7 @@
                 document.body.classList.toggle('kpi-mode', !!window.kpiMode);
                 const ic = $('topbar-icon'), nm = $('topbar-name'), sb = $('topbar-sub');
                 if (ic) ic.className = (window.kpiMode ? 'fa-solid fa-trophy' : 'fa-solid fa-bullseye text-pink-500') + ' text-xl';
-                if (nm) nm.textContent = 'Satış Platformu';
+                if (nm) nm.textContent = 'W•EGE';
                 if (sb) sb.textContent = window.kpiMode ? 'Güliz Atik Bölgesi · KPI Yarışması' : 'Güliz Atik Bölgesi · Bonus Bag & Odak';
             } catch (e) {}
             const btn = $('topbar-mode-btn');

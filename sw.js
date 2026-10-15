@@ -1,6 +1,6 @@
-// Satış Platformu - basit servis çalışanı
+// W•EGE - basit servis çalışanı
 // Önce ağdan dener (her zaman güncel sayfa), internet yoksa son kaydedilen sayfayı gösterir.
-const CACHE = 'satis-platformu-v1';
+const CACHE = 'wege-v2';
 const SHELL = ['./', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
