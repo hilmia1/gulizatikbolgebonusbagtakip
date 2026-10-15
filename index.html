@@ -963,7 +963,7 @@
 
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
                     <h3 class="font-bold text-slate-700 text-sm mb-2"><i class="fa-solid fa-fire-flame-curved text-rose-500 mr-2"></i> Saatlik Yoğunluk Haritası</h3>
-                    <p class="text-[10px] text-slate-500 mb-4">Günün hangi saatlerinde satış girildiğini gösterir.</p>
+                    <p id="gen-heatmap-sub" class="text-[10px] text-slate-500 mb-4">Seçili tarih aralığında hangi saatlerde satış girildiğini gösterir.</p>
                     <div id="gen-heatmap-container" class="flex-1 w-full flex items-end justify-between gap-1 min-h-[120px]"></div>
                 </div>
             </div>
@@ -2281,15 +2281,28 @@
             renderTrendChart(dData, dLabels, momentum);
 
             let hourlyTotals = {};
-            let todayData = globalData.daily?.[ACTIVE_DATE] || {};
-            Object.keys(todayData).forEach(store => {
-                if (todayData[store] && todayData[store].hourly) {
-                    let hObj = todayData[store].hourly;
-                    Object.keys(hObj).forEach(h => {
-                        hourlyTotals[h] = (hourlyTotals[h] || 0) + hObj[h];
-                    });
-                }
+            // Seçili tarih aralığı (Başlangıç / Bitiş); boşsa aktif gün
+            const pS = document.getElementById('start-date-picker'), pE = document.getElementById('end-date-picker');
+            let hs = (pS && pS.value) || ACTIVE_DATE, he = (pE && pE.value) || ACTIVE_DATE;
+            if (hs > he) { const t = hs; hs = he; he = t; }
+            let dayCount = 0;
+            Object.keys(globalData.daily || {}).forEach(dk => {
+                if (dk < hs || dk > he) return;
+                dayCount++;
+                const dayData = globalData.daily[dk] || {};
+                Object.keys(dayData).forEach(store => {
+                    const hObj = dayData[store] && dayData[store].hourly;
+                    if (!hObj || typeof hObj !== 'object') return;
+                    Object.keys(hObj).forEach(h => { hourlyTotals[h] = (hourlyTotals[h] || 0) + (Number(hObj[h]) || 0); });
+                });
             });
+            const hmSub = document.getElementById('gen-heatmap-sub');
+            if (hmSub) {
+                const total = Object.values(hourlyTotals).reduce((a, b) => a + b, 0);
+                const fmtD = d => d.split('-').reverse().join('.');
+                const rangeTxt = hs === he ? fmtD(hs) : fmtD(hs) + ' - ' + fmtD(he) + ' (' + dayCount + ' gün)';
+                hmSub.textContent = rangeTxt + ' • toplam ' + total + ' satış girişi. Hangi saatlerde satış girildiğini gösterir.';
+            }
             renderHeatmap(hourlyTotals, 'gen-heatmap-container', 'bg-rose-500');
         } catch(e) {
             console.error("Grafik oluşturulurken hata:", e);
