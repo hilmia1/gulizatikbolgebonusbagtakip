@@ -2808,9 +2808,9 @@
             '66': 'Aydın', '366': 'Aydın', '300': 'Milas', '416': 'Aydın', '326': 'Nazilli', '507': 'Söke',
             '101': 'Kuşadası', '184': 'Kuşadası', '378': 'Kuşadası', '501': 'Kuşadası', '191': 'Didim', '412': 'Didim', '599': 'Selçuk',
             '148': 'Fethiye', '477': 'Fethiye', '146': 'Göcek', '617': 'Muğla', '481': 'Muğla', '440': 'Milas', '512': 'Muğla',
-            '593': 'Ortaca', '228': 'Marmaris', '234': 'Marmaris', '238': 'Çeşme', '584': 'Urla', '492': 'Urla', '529': 'Torbalı',
-            '113': 'Bodrum', '156': 'Bodrum', '417': 'Bodrum', '472': 'Bodrum', '517': 'Bodrum', '36': 'Bodrum', '73': 'Bodrum', '90': 'Bodrum',
-            '243': 'Bodrum', '406': 'Bodrum', '418': 'Bodrum', '503': 'Bodrum', '200': 'Muğla'
+            '593': 'Ortaca', '228': 'Marmaris', '234': 'Denizli', '238': 'Çeşme', '584': 'Urla', '492': 'Urla', '529': 'Torbalı',
+            '113': 'Bodrum', '156': 'Bodrum', '417': 'Bodrum', '472': 'Bodrum', '517': 'Bodrum', '36': 'Denizli', '73': 'Bodrum', '90': 'Bodrum',
+            '243': 'Marmaris', '406': 'Bodrum', '418': 'Denizli', '503': 'Bodrum', '200': 'Muğla'
         };
         const cityOf = store => BY_STORE[String(store).split('-')[0]] || 'İzmir';
         window.wxCityOf = cityOf;
@@ -2828,51 +2828,67 @@
         let data = null;   // {city: {t, code, pmax, tmax}}
         const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
         const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
-        function advice(w) {
+        // Sadece yağış: şu an yağıyor (yağmur/çisenti/sağanak/fırtına) ya da bugün yağış ihtimali %60+
+        function rainKind(w) {
             if (!w) return '';
-            const rainy = (w.code >= 51 && w.code <= 67) || (w.code >= 80 && w.code <= 99) || w.pmax >= 60;
-            if (w.code >= 95) return 'Fırtınalı bir gün; kendinize iyi bakın, müşterilere sıcak bir karşılama yeter 💜';
-            if (rainy) return 'Bugün yağışlı; sıcak bir gülümseme ve kapıda küçük bir karşılama harika olur ☔';
-            if (w.tmax >= 35) return 'Bugün çok sıcak; müşterilere serin bir karşılama, size bol su 💧';
-            if (w.tmax <= 3) return 'Bugün soğuk; mağazaya girenler için sıcacık bir ortam yaratın ☕';
+            if (w.code >= 95) return 'fırtınalı';
+            if ((w.code >= 51 && w.code <= 67) || (w.code >= 80 && w.code <= 82)) return 'yağmur var';
+            if (w.pmax >= 60) return 'yağış bekleniyor';
             return '';
         }
-        function kindOf(w) {
-            const rainy = (w.code >= 51 && w.code <= 67) || (w.code >= 80 && w.code <= 99) || w.pmax >= 60;
-            if (w.code >= 95) return 'fırtınalı';
-            if (rainy) return 'yağışlı';
-            if (w.tmax >= 35) return 'çok sıcak';
-            return 'soğuk';
-        }
-        function chip(city, big) {
+        function chip(city) {
             const w = data && data[city];
             if (!w) return '';
-            const ic = WMO(w.code);
-            return '<span class="inline-flex items-center gap-1 bg-white/90 border border-slate-200 text-slate-700 rounded-full px-2.5 py-1 text-[11px] font-bold whitespace-nowrap shadow-sm" title="' + escHtml(city + ' · ' + ic[1] + ' · en yüksek ' + Math.round(w.tmax) + '°, yağış ihtimali %' + Math.round(w.pmax || 0)) + '">' +
-                '<span>' + ic[0] + '</span>' + (big ? '<span class="font-black">' + escHtml(city) + '</span>' : '<span>' + escHtml(city) + '</span>') + '<span class="font-black text-slate-900">' + Math.round(w.t) + '°</span></span>';
+            return '<span class="inline-flex items-center gap-1 bg-sky-50 border border-sky-200 text-sky-800 rounded-full px-2.5 py-1 text-[11px] font-bold whitespace-nowrap shadow-sm" title="' + escHtml(city + ' · ' + rainKind(w) + ' · yağış ihtimali %' + Math.round(w.pmax || 0)) + '">' +
+                '<span>🌧️</span><span class="font-black">' + escHtml(city) + '</span><span>' + escHtml(rainKind(w)) + '</span><span class="font-black text-sky-950">' + Math.round(w.t) + '°</span></span>';
         }
-        function citiesFor(scope) {
-            let list = [];
-            if (scope === 'store') list = [cityOf(currentId)];
-            else if (scope === 'region') list = (effectiveHierarchy[currentId] || []).map(cityOf);
-            else list = allStoresList.map(x => cityOf(x.name));
-            return list.filter((c, i) => list.indexOf(c) === i);
+        function storesOf(scope) {
+            if (scope === 'store') return [currentId];
+            if (scope === 'region') return effectiveHierarchy[currentId] || [];
+            return allStoresList.map(x => x.name);
         }
+        // Yağmurlu şehirler: [{city, kind, stores:[...]}]
+        window.wxRainReport = function (scope) {
+            const out = {};
+            if (!data) return [];
+            storesOf(scope || 'general').forEach(st => {
+                const c = cityOf(st), k = rainKind(data[c]);
+                if (!k) return;
+                (out[c] = out[c] || { city: c, kind: k, w: data[c], stores: [] }).stores.push(st);
+            });
+            return Object.keys(out).map(k => out[k]).sort((a, b) => b.stores.length - a.stores.length);
+        };
+        window.wxRainText = function () {
+            const r = wxRainReport('general');
+            if (!r.length) return '';
+            const n = r.reduce((a, x) => a + x.stores.length, 0);
+            const L = ['🌧️ *Yağış Bildirimi*', 'Şu an yağışlı ya da yağış beklenen lokasyonlarda ' + n + ' mağazamız var:', ''];
+            r.forEach(x => L.push('*' + x.city + '* (' + x.kind + ', ' + Math.round(x.w.t) + '°): ' + x.stores.map(s => s.replace(/^\d+-/, '')).join(', ')));
+            L.push('', 'Sıcak bir gülümseme ve kapıda küçük bir karşılama bugün çok iyi gelir ☔💜');
+            return L.join('\n');
+        };
+        window.wxRainShare = function () {
+            const t = wxRainText();
+            if (!t) return alert('Şu an yağışlı lokasyon yok.');
+            window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank');
+        };
         window.wxPaint = function () {
             const hosts = document.querySelectorAll ? document.querySelectorAll('.wx-host') : [];
             Array.prototype.forEach.call(hosts, h => {
                 const scope = h.getAttribute('data-scope');
-                if (!data) { h.innerHTML = ''; return; }
-                const cs = citiesFor(scope).filter(c => data[c]);
-                if (!cs.length) { h.innerHTML = ''; return; }
+                const r = wxRainReport(scope);
+                if (!data || !r.length) { h.innerHTML = ''; return; }
                 let html = '';
                 if (scope === 'store') {
-                    const w = data[cs[0]], ad = advice(w);
-                    html = '<div class="flex flex-wrap items-center gap-2">' + chip(cs[0], true) + (ad ? '<span class="text-xs font-bold text-slate-600">' + escHtml(ad) + '</span>' : '') + '</div>';
+                    html = '<div class="flex flex-wrap items-center gap-2">' + chip(r[0].city) + '<span class="text-xs font-bold text-slate-600">Bugün yağışlı; sıcak bir gülümseme ve kapıda küçük bir karşılama harika olur ☔</span></div>';
+                } else if (scope === 'region') {
+                    html = '<div class="flex flex-wrap items-center gap-1.5">' + r.map(x => chip(x.city)).join('') + '</div><div class="text-[11px] font-bold text-slate-500 mt-1">Yağışlı mağazalar: ' +
+                        r.map(x => x.stores.map(s => escHtml(s.replace(/^\d+-/, ''))).join(', ')).join(', ') + '</div>';
                 } else {
-                    const bad = cs.filter(c => advice(data[c]));
-                    html = '<div class="flex gap-1.5 overflow-x-auto pb-1">' + cs.map(c => chip(c)).join('') + '</div>' +
-                        (bad.length ? '<div class="text-[11px] font-bold text-slate-500 mt-1">Dikkat: ' + bad.map(c => escHtml(c) + ' (' + escHtml(kindOf(data[c])) + ')').join(', ') + '</div>' : '');
+                    const n = r.reduce((a, x) => a + x.stores.length, 0);
+                    html = '<div class="bg-sky-50 border border-sky-200 rounded-2xl p-3"><div class="flex flex-wrap items-center justify-between gap-2 mb-1"><div class="font-black text-sky-900 text-sm">🌧️ YAĞIŞ RAPORU: ' + r.length + ' lokasyon, ' + n + ' mağaza</div>' +
+                        '<button type="button" onclick="wxRainShare()" class="px-3 py-1 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-lg text-xs"><i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp</button></div>' +
+                        r.map(x => '<div class="text-xs text-slate-700 mt-1"><span class="font-black text-sky-900">' + escHtml(x.city) + '</span> <span class="text-sky-700 font-bold">(' + escHtml(x.kind) + ', ' + Math.round(x.w.t) + '°)</span>: ' + x.stores.map(s => escHtml(s)).join(', ') + '</div>').join('') + '</div>';
                 }
                 h.innerHTML = html;
             });
