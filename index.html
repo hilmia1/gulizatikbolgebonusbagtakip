@@ -617,6 +617,18 @@
                 <button onclick="saveContestBrands('central-contest-input')" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition shadow-md text-sm whitespace-nowrap"><i class="fa-solid fa-floppy-disk mr-1"></i> Kaydet</button>
             </div>
 
+            <!-- KPI YARIŞMASI AÇ / KAPAT -->
+            <div class="bg-violet-950/80 p-4 rounded-2xl border border-violet-700/50 shadow-lg mt-2">
+                <div class="flex items-center gap-2 text-violet-300 font-black mb-1"><i class="fa-solid fa-trophy text-xl"></i> KPI YARIŞMASI EKRANI</div>
+                <div class="text-[11px] text-violet-200/70 font-bold mb-3">Mağaza, bölge ve Güliz Atik kullanıcılarının KPI tarafında ne göreceğini buradan belirlersiniz. Sistem Merkezi hesabıyla girdiğiniz sürece KPI'yı her durumda görebilirsiniz.</div>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <button type="button" id="kpi-st-soon" onclick="setKpiState('soon')" class="flex-1 px-3 py-2.5 rounded-xl border font-black text-xs sm:text-sm">⏳ Çok Yakında</button>
+                    <button type="button" id="kpi-st-open" onclick="setKpiState('open')" class="flex-1 px-3 py-2.5 rounded-xl border font-black text-xs sm:text-sm">🟢 Açık</button>
+                    <button type="button" id="kpi-st-maint" onclick="setKpiState('maint')" class="flex-1 px-3 py-2.5 rounded-xl border font-black text-xs sm:text-sm">🛠️ Çalışma Var</button>
+                </div>
+                <div id="kpi-st-text" class="text-[11px] text-violet-200 font-bold mt-2"></div>
+            </div>
+
             <!-- ÜRÜN BİTTİ YÖNETİMİ -->
             <div class="bg-red-950/80 p-4 rounded-2xl border border-red-700/50 shadow-lg mt-2">
                 <div class="flex flex-col sm:flex-row gap-3 items-center">
@@ -5240,7 +5252,9 @@
             } catch (e) { console.error('KPI çizim hatası:', e); }
         }
         window.kpiOnData = function () {
+            try { if (window.paintKpiState) paintKpiState(); } catch (e) {}
             if (!/^k/.test(currentRole)) return;
+            if (kpiLocked()) { try { window.kpiMode = false; window.goHome(); updateModeButton(); } catch (e) { console.error(e); } try { showKpiTeaser(); } catch (e) {} return; }
             if (currentRole === 'kcentral') {
                 const a = document.activeElement;
                 if (a && a.closest && a.closest('#kcentral-grid')) return;   // yazarken ekranı yenileme
@@ -5925,7 +5939,34 @@
         // Önizleme modunda (dosya olarak açılınca ya da ?demo=1) kilit uygulanmaz.
         // ------------------------------------------------------------------
         if (window.KPI_KILITLI === undefined) window.KPI_KILITLI = true;   // false yaparsanız KPI açılır, true iken "çok yakında" ekranı görünür
-        function kpiLocked() { return !window.__DEMO && window.KPI_KILITLI !== false; }
+        // Durum Firebase'den gelir (Sistem Merkezi'ndeki KPI düğmeleri): 'soon' = çok yakında, 'open' = açık, 'maint' = çalışma var
+        function kpiState() {
+            const v = globalData && globalData.settings && globalData.settings.kpiState;
+            if (v === 'soon' || v === 'open' || v === 'maint') return v;
+            return window.KPI_KILITLI === false ? 'open' : 'soon';
+        }
+        function merkezSession() {
+            try { const u = auth.currentUser; return !!(u && u.email && u.email.toLowerCase() === ADMIN_EMAILS.central); } catch (e) { return false; }
+        }
+        // Kapalıyken yalnızca Sistem Merkezi hesabıyla giriş yapmış kişi KPI'yı görebilir (hazırlık için)
+        function kpiLocked() { return !window.__DEMO && kpiState() !== 'open' && !merkezSession(); }
+        window.setKpiState = function (st) {
+            if (!(st === 'soon' || st === 'open' || st === 'maint')) return;
+            if (!window.__DEMO && !merkezSession()) return alert('Bu ayar için Sistem Merkezi girişi gerekir.');
+            const names = { soon: 'ÇOK YAKINDA', open: 'AÇIK', maint: 'ÇALIŞMA VAR' };
+            if (!confirm('KPI Yarışması "' + names[st] + '" durumuna alınsın mı? Tüm kullanıcılar bunu hemen görür.')) return;
+            dbRoot.child('settings').update({ kpiState: st });
+        };
+        window.paintKpiState = function () {
+            const cur = kpiState();
+            const on = { soon: 'bg-amber-500 text-white border-amber-300', open: 'bg-emerald-500 text-white border-emerald-300', maint: 'bg-sky-500 text-white border-sky-300' };
+            ['soon', 'open', 'maint'].forEach(k => {
+                const b = $('kpi-st-' + k); if (!b) return;
+                b.className = 'flex-1 px-3 py-2.5 rounded-xl border font-black text-xs sm:text-sm transition ' + (k === cur ? on[k] + ' shadow-lg ring-2 ring-white/40' : 'bg-slate-800 text-slate-300 border-slate-600 hover:bg-slate-700');
+            });
+            const t = $('kpi-st-text');
+            if (t) t.textContent = { soon: 'Şu an: ÇOK YAKINDA ekranı gösteriliyor', open: 'Şu an: KPI AÇIK, herkes girebilir', maint: 'Şu an: ÇALIŞMA VAR ekranı gösteriliyor' }[cur];
+        };
 
         let teaserEl = null, teaserTimer = null;
         function burst(x) {
@@ -5949,6 +5990,7 @@
         function showKpiTeaser() {
             if (teaserEl || !document.body || !document.body.appendChild) return;
             if (currentRole === '' && !document.querySelector('.screen:not(.hidden)')) { try { $('screen-home').classList.remove('hidden'); } catch (e) {} }
+            const maint = kpiState() === 'maint';
             const el = document.createElement('div');
             el.className = 'kt';
             let stars = '';
@@ -5957,23 +5999,22 @@
                 stars += '<span class="kt-star" style="left:' + (Math.random() * 100).toFixed(1) + '%;top:' + (Math.random() * 100).toFixed(1) + '%;width:' + sz + 'px;height:' + sz + 'px;animation-delay:' + (Math.random() * 3).toFixed(2) + 's"></span>';
             }
             el.innerHTML = stars + '<div class="kt-ring"></div><div class="kt-ring r2"></div>' +
-                '<div class="kt-ico"><i class="fa-solid fa-trophy"></i></div>' +
-                '<div class="kt-badge">Yeni geliyor</div>' +
-                '<div class="kt-title">ÇOK YAKINDA!</div>' +
-                '<div class="kt-sub">Aylık <b>KPI Yarışması</b> hazırlanıyor. Marka hedeflerin, canlı gidişatın ve mağazanın sıralaması çok yakında burada olacak.</div>' +
-                '<div class="kt-chips"><span class="kt-chip">🎯 Marka hedefleri</span><span class="kt-chip">📈 Canlı gidişat</span><span class="kt-chip">🏆 Mağaza ve bölge yarışı</span></div>' +
-                '<button type="button" class="kt-btn">Hazırım! 🚀</button>' +
-                '<div class="kt-hint">Ekrana dokun, kutlama başlasın</div>';
+                '<div class="kt-ico"><i class="fa-solid ' + (maint ? 'fa-screwdriver-wrench' : 'fa-trophy') + '"></i></div>' +
+                '<div class="kt-badge">' + (maint ? 'Kısa bir ara' : 'Yeni geliyor') + '</div>' +
+                '<div class="kt-title">' + (maint ? 'ÇALIŞMA VAR!' : 'ÇOK YAKINDA!') + '</div>' +
+                '<div class="kt-sub">' + (maint ? '<b>KPI Yarışması</b> ekranında çalışma yapıyoruz. Çok kısa süre sonra tekrar burada olacak, lütfen birazdan tekrar deneyin.' : 'Aylık <b>KPI Yarışması</b> hazırlanıyor. Marka hedeflerin, canlı gidişatın ve mağazanın sıralaması çok yakında burada olacak.') + '</div>' +
+                (maint ? '' : '<div class="kt-chips"><span class="kt-chip">🎯 Marka hedefleri</span><span class="kt-chip">📈 Canlı gidişat</span><span class="kt-chip">🏆 Mağaza ve bölge yarışı</span></div>') +
+                '<button type="button" class="kt-btn">' + (maint ? 'Tamam' : 'Hazırım! 🚀') + '</button>' +
+                (maint ? '' : '<div class="kt-hint">Ekrana dokun, kutlama başlasın</div>');
             el.addEventListener('click', e => {
-                if (e.target && e.target.closest && e.target.closest('.kt-btn')) { burst(); closeTeaser(); return; }
-                burst(e && typeof e.clientX === 'number' && window.innerWidth ? e.clientX / window.innerWidth : 0.5);
+                if (e.target && e.target.closest && e.target.closest('.kt-btn')) { if (!maint) burst(); closeTeaser(); return; }
+                if (!maint) burst(e && typeof e.clientX === 'number' && window.innerWidth ? e.clientX / window.innerWidth : 0.5);
             });
             document.body.appendChild(el);
             teaserEl = el;
             document.addEventListener('keydown', teaserKey);
             if (typeof window.requestAnimationFrame === 'function') window.requestAnimationFrame(() => window.requestAnimationFrame(() => el.classList.add('in'))); else el.classList.add('in');
-            setTimeout(burst, 500);
-            teaserTimer = setInterval(burst, 3200);
+            if (!maint) { setTimeout(burst, 500); teaserTimer = setInterval(burst, 3200); }
         }
         window.showKpiTeaser = showKpiTeaser;
 
