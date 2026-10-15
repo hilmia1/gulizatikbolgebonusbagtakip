@@ -617,6 +617,24 @@
                 <button onclick="saveContestBrands('central-contest-input')" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition shadow-md text-sm whitespace-nowrap"><i class="fa-solid fa-floppy-disk mr-1"></i> Kaydet</button>
             </div>
 
+            <!-- MERKEZ MUTABAKATI: mağaza girişleri merkez rakamlarıyla uyuşuyor mu? -->
+            <div class="bg-teal-950/80 p-4 rounded-2xl border border-teal-700/50 shadow-lg mt-2">
+                <div class="flex items-center gap-2 text-teal-300 font-black mb-1"><i class="fa-solid fa-scale-balanced text-xl"></i> MERKEZ MUTABAKATI (DOĞRULAMA)</div>
+                <div class="text-[11px] text-teal-200/70 font-bold mb-3">Merkezden gelen mağaza adetlerini yapıştırın. Sistemdeki Bonus Pack girişleriyle karşılaştırılır, uyuşmayan mağazalar işaretlenir. Satır biçimi: <span class="text-teal-100">mağaza kodu veya adı ⇥ adet</span> (Excel'den kopyalayıp yapıştırabilirsiniz).</div>
+                <div class="flex flex-col sm:flex-row gap-2 mb-2">
+                    <div class="flex items-center gap-2 bg-teal-900/70 border border-teal-700/60 rounded-xl px-2 py-1.5"><label class="text-[10px] text-teal-200 font-bold uppercase">Başlangıç</label><input type="date" id="rc-start" class="bg-transparent text-white font-bold text-xs focus:outline-none [color-scheme:dark]"></div>
+                    <div class="flex items-center gap-2 bg-teal-900/70 border border-teal-700/60 rounded-xl px-2 py-1.5"><label class="text-[10px] text-teal-200 font-bold uppercase">Bitiş</label><input type="date" id="rc-end" class="bg-transparent text-white font-bold text-xs focus:outline-none [color-scheme:dark]"></div>
+                    <select id="rc-saved" onchange="rcLoadSaved(this.value)" class="flex-1 min-w-0 bg-teal-900/70 border border-teal-700/60 text-teal-100 rounded-xl px-2 py-2 text-xs font-bold focus:outline-none"><option value="">Kayıtlı mutabakatlar...</option></select>
+                </div>
+                <textarea id="rc-input" rows="5" placeholder="18-KARŞIYAKA ÇARŞI&#9;200&#10;143-KİPA ÇİĞLİ&#9;185" class="w-full bg-teal-950 text-white border border-teal-700 rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:border-teal-400"></textarea>
+                <div class="flex flex-wrap gap-2 mt-2">
+                    <button type="button" onclick="rcRun(true)" class="px-5 py-2.5 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-xl transition shadow-md text-sm"><i class="fa-solid fa-magnifying-glass-chart mr-1.5"></i>Karşılaştır ve Kaydet</button>
+                    <button type="button" onclick="rcShare()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition shadow-md text-sm"><i class="fa-brands fa-whatsapp mr-1.5"></i>Farklıları WhatsApp'a</button>
+                    <button type="button" onclick="rcToggleOnlyDiff()" id="rc-only-btn" class="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition text-sm">Sadece farklılar</button>
+                </div>
+                <div id="rc-result" class="mt-3"></div>
+            </div>
+
             <!-- KPI YARIŞMASI AÇ / KAPAT -->
             <div class="bg-violet-950/80 p-4 rounded-2xl border border-violet-700/50 shadow-lg mt-2">
                 <div class="flex items-center gap-2 text-violet-300 font-black mb-1"><i class="fa-solid fa-trophy text-xl"></i> KPI YARIŞMASI EKRANI</div>
@@ -1329,6 +1347,169 @@
             icon.classList.toggle('fa-chevron-down', nowHidden);
             icon.classList.toggle('fa-chevron-up', !nowHidden);
         }
+    };
+
+
+    // ===== MERKEZ MUTABAKATI =====
+    window.rcLast = null; window.rcOnlyDiff = false;
+    function rcNum(v) {
+        v = String(v == null ? '' : v).replace(/[\s₺]/g, '');
+        if (v === '' || v === '-') return null;
+        if (v.indexOf(',') !== -1 && v.indexOf('.') !== -1) v = v.replace(/\./g, '').replace(',', '.');
+        else if (/^\d{1,3}(\.\d{3})+$/.test(v)) v = v.replace(/\./g, '');
+        else v = v.replace(',', '.');
+        const n = Number(v);
+        return isFinite(n) ? Math.round(n) : NaN;
+    }
+    function rcMatchStore(token) {
+        const t = String(token || '').trim();
+        if (!t) return null;
+        const names = allStoresList.map(s => s.name);
+        const code = t.match(/^(\d+)(?:\s*-|$)/);
+        if (code) { const f = names.find(n => n.split('-')[0] === code[1]); if (f) return f; }
+        const up = t.toLocaleUpperCase('tr');
+        return names.find(n => n.toLocaleUpperCase('tr') === up) || null;
+    }
+    function rcParse(text) {
+        const rows = {}, bad = [];
+        String(text || '').split(/\r?\n/).map(l => l.trim()).filter(l => l).forEach(line => {
+            const parts = line.split(/\t|;/).map(p => p.trim());
+            let store = rcMatchStore(parts[0]), nTok = parts[1];
+            if (!store && parts.length === 1) {            // "KOD ADET" boşlukla ayrılmış
+                const m = line.match(/^(.*?)[\s]+(\d[\d.,]*)$/);
+                if (m) { store = rcMatchStore(m[1]); nTok = m[2]; }
+            }
+            if (!store) { bad.push(parts[0] || line); return; }
+            const n = rcNum(nTok);
+            if (n === null || isNaN(n) || n < 0) { bad.push(store + ' (adet geçersiz)'); return; }
+            rows[store] = (rows[store] || 0) + n;
+        });
+        return { rows, bad };
+    }
+    function rcAppSums(start, end) {
+        const out = {};
+        Object.keys(globalData.daily || {}).forEach(dk => {
+            if (dk < start || dk > end) return;
+            const day = globalData.daily[dk] || {};
+            Object.keys(day).forEach(st => {
+                const staff = day[st] && day[st].staff;
+                if (!staff || typeof staff !== 'object') return;
+                let sum = 0;
+                Object.keys(staff).forEach(id => {
+                    const v = Number(staff[id] && staff[id].sales) || 0;
+                    if (!v) return;
+                    sum += v;
+                    if (!out[st]) out[st] = { total: 0, days: {}, staff: {} };
+                    out[st].staff[id] = (out[st].staff[id] || 0) + v;
+                });
+                if (sum) { out[st].total += sum; out[st].days[dk] = sum; }
+            });
+        });
+        return out;
+    }
+    const rcFmtD = d => String(d || '').split('-').reverse().join('.');
+    function rcCompute(start, end, rows) {
+        const app = rcAppSums(start, end);
+        const names = new Set(Object.keys(rows).concat(Object.keys(app)));
+        const hasCentral = Object.keys(rows).length > 0;
+        const list = [];
+        names.forEach(st => {
+            const central = rows[st], sys = app[st] ? app[st].total : 0;
+            let kind;
+            if (central === undefined) { if (!hasCentral || sys === 0) return; kind = 'missing'; }
+            else if (sys === central) kind = 'ok';
+            else kind = sys > central ? 'over' : 'under';
+            list.push({ store: st, central: central === undefined ? null : central, sys, diff: central === undefined ? null : sys - central, kind, detail: app[st] || null });
+        });
+        const w = { over: 0, under: 0, missing: 1, ok: 2 };
+        list.sort((a, b) => (w[a.kind] === 2) - (w[b.kind] === 2) || Math.abs(b.diff || b.sys) - Math.abs(a.diff || a.sys));
+        return list;
+    }
+    window.rcRender = function () {
+        const box = document.getElementById('rc-result');
+        const r = window.rcLast;
+        if (!box || !r) return;
+        const list = r.list;
+        const cnt = k => list.filter(x => x.kind === k).length;
+        const totDiff = list.reduce((s, x) => s + (x.diff || 0), 0);
+        const chip = (txt, cls) => `<span class="px-2.5 py-1 rounded-lg text-[11px] font-black border ${cls}">${txt}</span>`;
+        let html = `<div class="flex flex-wrap gap-2 mb-2">
+            ${chip('✅ Uyumlu: ' + cnt('ok'), 'bg-emerald-900/60 text-emerald-200 border-emerald-600/60')}
+            ${chip('⬆️ Sistemde fazla: ' + cnt('over'), 'bg-amber-900/60 text-amber-200 border-amber-600/60')}
+            ${chip('⬇️ Sistemde eksik: ' + cnt('under'), 'bg-rose-900/60 text-rose-200 border-rose-600/60')}
+            ${cnt('missing') ? chip('❓ Merkez listesinde yok: ' + cnt('missing'), 'bg-slate-700 text-slate-200 border-slate-500') : ''}
+            ${chip('Net fark: ' + (totDiff > 0 ? '+' : '') + totDiff, 'bg-teal-900/60 text-teal-100 border-teal-600/60')}
+            ${chip(rcFmtD(r.start) + (r.start === r.end ? '' : ' - ' + rcFmtD(r.end)), 'bg-teal-900/60 text-teal-100 border-teal-600/60')}
+        </div>`;
+        if (r.bad && r.bad.length) html += `<div class="text-[11px] text-rose-300 font-bold mb-2"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Tanınmayan satırlar (atlandı): ${r.bad.slice(0, 12).map(escHtml).join(', ')}${r.bad.length > 12 ? ' ...' : ''}</div>`;
+        const shown = window.rcOnlyDiff ? list.filter(x => x.kind !== 'ok') : list;
+        if (!shown.length) { html += `<div class="text-sm text-emerald-300 font-bold text-center py-3">🎉 Fark yok, tüm mağazalar merkez rakamıyla uyumlu.</div>`; box.innerHTML = html; return; }
+        const label = { ok: ['Uyumlu', 'text-emerald-300'], over: ['Sistemde fazla', 'text-amber-300'], under: ['Sistemde eksik', 'text-rose-300'], missing: ['Merkezde yok', 'text-slate-300'] };
+        html += `<div class="overflow-x-auto"><table class="w-full text-left text-xs"><thead><tr class="text-[10px] uppercase tracking-wider text-teal-300/80 border-b border-teal-800"><th class="py-1.5 pr-2">Mağaza</th><th class="py-1.5 px-1 text-right">Merkez</th><th class="py-1.5 px-1 text-right">Sistem</th><th class="py-1.5 px-1 text-right">Fark</th><th class="py-1.5 pl-2">Durum</th></tr></thead><tbody>`;
+        shown.forEach(x => {
+            const d = x.diff === null ? '—' : (x.diff > 0 ? '+' : '') + x.diff;
+            const days = x.detail ? Object.keys(x.detail.days).sort().map(k => `${rcFmtD(k).slice(0, 5)}: ${x.detail.days[k]}`).join(' • ') : '';
+            const staff = x.detail ? Object.keys(x.detail.staff).map(id => `${escHtml(findStaffNameGlobal(id) || 'Personel')}: ${x.detail.staff[id]}`).join(' • ') : '';
+            html += `<tr class="border-b border-teal-900/70"><td class="py-1.5 pr-2 font-bold text-white">${escHtml(x.store)}${x.detail ? `<details class="mt-0.5"><summary class="text-[10px] text-teal-300 cursor-pointer font-bold">Kırılım</summary><div class="text-[10px] text-teal-100/80 font-bold mt-1 leading-relaxed"><div><b>Günlere göre:</b> ${days || '—'}</div><div class="mt-0.5"><b>Personele göre:</b> ${staff || '—'}</div></div></details>` : ''}</td>
+                <td class="py-1.5 px-1 text-right font-black text-slate-200">${x.central === null ? '—' : x.central}</td>
+                <td class="py-1.5 px-1 text-right font-black text-white">${x.sys}</td>
+                <td class="py-1.5 px-1 text-right font-black ${label[x.kind][1]}">${d}</td>
+                <td class="py-1.5 pl-2 font-bold whitespace-nowrap ${label[x.kind][1]}">${label[x.kind][0]}</td></tr>`;
+        });
+        html += `</tbody></table></div>`;
+        box.innerHTML = html;
+    };
+    window.rcRun = function (save) {
+        const sEl = document.getElementById('rc-start'), eEl = document.getElementById('rc-end');
+        let start = (sEl && sEl.value) || ACTIVE_DATE, end = (eEl && eEl.value) || ACTIVE_DATE;
+        if (start > end) return alert('Başlangıç tarihi bitiş tarihinden büyük olamaz.');
+        if (sEl && !sEl.value) sEl.value = start; if (eEl && !eEl.value) eEl.value = end;
+        const p = rcParse((document.getElementById('rc-input') || {}).value);
+        if (!Object.keys(p.rows).length) return alert('Tanınan mağaza satırı bulunamadı. Her satır "mağaza kodu veya adı, sekme, adet" biçiminde olmalı.');
+        window.rcLast = { start, end, rows: p.rows, bad: p.bad, list: rcCompute(start, end, p.rows) };
+        rcRender();
+        if (save) {
+            if (!window.__DEMO && !hasAdminSession()) return alert('Kaydetmek için yönetici girişi gerekir. Karşılaştırma yine de ekranda gösterildi.');
+            dbRoot.child('reconcile').child(start + '_' + end).set({ start, end, time: Date.now(), rows: p.rows })
+                .catch(() => alert('Kayıt yapılamadı (yetki ya da kural hatası). Karşılaştırma ekranda duruyor.'));
+        }
+    };
+    window.rcToggleOnlyDiff = function () {
+        window.rcOnlyDiff = !window.rcOnlyDiff;
+        const b = document.getElementById('rc-only-btn');
+        if (b) b.className = 'px-4 py-2.5 font-bold rounded-xl transition text-sm text-white ' + (window.rcOnlyDiff ? 'bg-teal-600 ring-2 ring-teal-300/50' : 'bg-slate-700 hover:bg-slate-600');
+        rcRender();
+    };
+    window.rcLoadSaved = function (key) {
+        const rec = key && globalData.reconcile && globalData.reconcile[key];
+        if (!rec) return;
+        document.getElementById('rc-start').value = rec.start; document.getElementById('rc-end').value = rec.end;
+        document.getElementById('rc-input').value = Object.keys(rec.rows || {}).map(k => k + '\t' + rec.rows[k]).join('\n');
+        window.rcLast = { start: rec.start, end: rec.end, rows: rec.rows || {}, bad: [], list: rcCompute(rec.start, rec.end, rec.rows || {}) };
+        rcRender();
+    };
+    window.rcPaintSaved = function () {
+        const sel = document.getElementById('rc-saved');
+        if (!sel) return;
+        const cur = sel.value, all = globalData.reconcile || {};
+        sel.innerHTML = '<option value="">Kayıtlı mutabakatlar...</option>' + Object.keys(all).sort().reverse().map(k => {
+            const r = all[k] || {};
+            return `<option value="${escHtml(k)}">${escHtml(rcFmtD(r.start))}${r.start === r.end ? '' : ' - ' + escHtml(rcFmtD(r.end))} (${Object.keys(r.rows || {}).length} mağaza)</option>`;
+        }).join('');
+        sel.value = cur;
+        const sEl = document.getElementById('rc-start'), eEl = document.getElementById('rc-end');
+        if (sEl && !sEl.value) sEl.value = ACTIVE_DATE; if (eEl && !eEl.value) eEl.value = ACTIVE_DATE;
+        if (window.rcLast) { window.rcLast.list = rcCompute(window.rcLast.start, window.rcLast.end, window.rcLast.rows); rcRender(); }   // canlı veriyle yenile
+    };
+    window.rcShare = function () {
+        const r = window.rcLast;
+        if (!r) return alert('Önce karşılaştırma yapın.');
+        const bad = r.list.filter(x => x.kind === 'over' || x.kind === 'under');
+        if (!bad.length) return alert('Fark yok, paylaşılacak bir şey bulunmuyor. 👏');
+        let t = `🔎 *MERKEZ MUTABAKATI* 🔎\n📅 ${rcFmtD(r.start)}${r.start === r.end ? '' : ' - ' + rcFmtD(r.end)}\n\nMerkez rakamıyla uyuşmayan mağazalar, lütfen girişlerinizi kontrol edin:\n\n`;
+        bad.forEach(x => { t += `${x.kind === 'over' ? '⬆️' : '⬇️'} *${x.store}*: merkez ${x.central}, sistem ${x.sys} (${x.diff > 0 ? '+' : ''}${x.diff})\n`; });
+        t += `\nTeşekkürler 🙏`;
+        window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank');
     };
 
     window.saveContestBrands = function(inputId) {
@@ -2714,6 +2895,7 @@
             globalData = snap.val() || {};
             sanitizeGlobalData();
             try { if (window.kpiOnData) kpiOnData(); } catch (e) { console.error(e); }
+            try { if (window.rcPaintSaved) rcPaintSaved(); } catch (e) { console.error(e); }
             try { if (window.stockoutOnData) stockoutOnData(); } catch (e) { console.error(e); }
             try { if (window.socialOnData) socialOnData(); } catch (e) { console.error(e); }
             
