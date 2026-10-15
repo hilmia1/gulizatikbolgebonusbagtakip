@@ -4886,7 +4886,11 @@
                 ? `<button onclick="toggleCentralLock('${storeObj.name}', false)" class="px-2 py-1 bg-rose-100 text-rose-600 hover:bg-rose-200 rounded text-xs font-bold transition"><i class="fa-solid fa-lock mr-1"></i> Aç</button>`
                 : `<button onclick="toggleCentralLock('${storeObj.name}', true)" class="px-2 py-1 bg-emerald-100 text-emerald-600 hover:bg-emerald-200 rounded text-xs font-bold transition"><i class="fa-solid fa-lock-open mr-1"></i> Kilitle</button>`;
 
-            let targetInput = `<input type="number" min="0" value="${stats.storeTarget}" onchange="updateCentralTarget('${storeObj.name}', this.value)" class="w-16 p-1 text-center font-bold border border-slate-300 rounded focus:border-purple-500 focus:outline-none text-indigo-600">`;
+            let tgtOpts = [];
+            for (let n = 0; n <= 200; n += 5) tgtOpts.push(n);
+            if (stats.storeTarget > 0 && tgtOpts.indexOf(stats.storeTarget) < 0) { tgtOpts.push(stats.storeTarget); tgtOpts.sort((a, b) => a - b); }
+            let targetInput = `<select onchange="updateCentralTarget('${storeObj.name}', this.value)" class="w-20 p-1 text-center font-bold border border-slate-300 rounded bg-white focus:border-purple-500 focus:outline-none text-indigo-600">` +
+                tgtOpts.map(n => `<option value="${n}"${n === stats.storeTarget ? ' selected' : ''}>${n === 0 ? '—' : n}</option>`).join('') + `</select>`;
 
             let distStatus = "";
             if (stats.storeTarget === 0) distStatus = `<span class="text-[9px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded font-bold uppercase whitespace-nowrap">Hedef Yok</span>`;
