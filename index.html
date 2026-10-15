@@ -595,6 +595,7 @@
 
         <!-- ================= SİSTEM MERKEZİ EKRANI ================= -->
         <div id="screen-central" class="screen hidden space-y-6">
+            <div class="wx-host" data-scope="central"></div>
             <div class="bg-slate-900 rounded-2xl shadow-xl p-6 text-white flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative overflow-hidden border border-cyan-500/50">
                 <div class="absolute right-4 bottom-[-20px] text-white/5 text-9xl font-black pointer-events-none"><i class="fa-solid fa-server"></i></div>
                 <div class="relative z-10 w-full lg:w-1/2">
@@ -763,6 +764,7 @@
 
         <!-- ================= 2. MAĞAZA EKRANI ================= -->
         <div id="screen-store" class="screen hidden space-y-5">
+            <div class="wx-host" data-scope="store"></div>
             <div class="rec-host"></div>
             <div id="store-top3-stores-banner" class="hidden"></div>
             <!-- Sadece Personeller (Tüm Mağazalar Arası) -->
@@ -883,6 +885,7 @@
 
         <!-- ================= 3. BÖLGE MÜDÜRÜ EKRANI ================= -->
         <div id="screen-region" class="screen hidden space-y-5">
+            <div class="wx-host" data-scope="region"></div>
             <div class="rec-host"></div>
             <div id="region-focus-top5-banner" class="hidden"></div>
             <div id="region-top5-banner" class="hidden"></div>
@@ -978,6 +981,7 @@
 
         <!-- ================= 4. GENEL YÖNETİM (GÜLİZ ATİK) EKRANI ================= -->
         <div id="screen-general" class="screen hidden space-y-6">
+            <div class="wx-host" data-scope="general"></div>
             <div class="rec-host"></div>
             <div id="general-top3-stores-banner" class="hidden"></div>
             <div id="general-top3-banner" class="hidden"></div>
@@ -2783,7 +2787,119 @@
             if (!t.value) monSummary(pf);
             window.open('https://wa.me/?text=' + encodeURIComponent(t.value), '_blank');
         };
-        window.monInit = function () { monRender('mc'); };
+        window.monInit = function () { monRender('mc'); try { if (window.wxPaint) wxPaint(); } catch (e) {} };
+    })();
+
+    // ===== HAVA DURUMU (Open-Meteo, ücretsiz, anahtarsız) =====
+    ;(function () {
+        const CITIES = {
+            'İzmir': [38.42, 27.14], 'Balıkesir': [39.65, 27.89], 'Edremit': [39.59, 27.02], 'Ayvalık': [39.32, 26.69],
+            'Manisa': [38.61, 27.43], 'Akhisar': [38.92, 27.84], 'Soma': [39.19, 27.61], 'Turgutlu': [38.50, 27.70],
+            'Salihli': [38.49, 28.14], 'Aydın': [37.85, 27.84], 'Nazilli': [37.91, 28.32], 'Söke': [37.75, 27.41],
+            'Kuşadası': [37.86, 27.26], 'Didim': [37.38, 27.27], 'Selçuk': [37.95, 27.37], 'Fethiye': [36.62, 29.11],
+            'Göcek': [36.76, 28.94], 'Muğla': [37.22, 28.36], 'Milas': [37.32, 27.78], 'Bodrum': [37.04, 27.43],
+            'Marmaris': [36.85, 28.27], 'Ortaca': [36.84, 28.77], 'Çeşme': [38.28, 26.37], 'Urla': [38.32, 26.77],
+            'Menemen': [38.61, 27.07], 'Torbalı': [38.16, 27.36], 'Denizli': [37.78, 29.09]
+        };
+        // Mağaza adı -> şehir (anahtar kelime sırasıyla aranır; bulunamazsa bölge varsayılanı). Yanlışsa buradan düzeltin.
+        const BY_STORE = {
+            '20': 'Denizli', '327': 'Balıkesir', '435': 'Balıkesir', '251': 'Edremit', '488': 'Edremit', '433': 'Ayvalık',
+            '297': 'Menemen', '350': 'Akhisar', '557': 'Soma', '603': 'Turgutlu', '154': 'Salihli', '537': 'Manisa', '89': 'Manisa',
+            '66': 'Aydın', '366': 'Aydın', '300': 'Milas', '416': 'Aydın', '326': 'Nazilli', '507': 'Söke',
+            '101': 'Kuşadası', '184': 'Kuşadası', '378': 'Kuşadası', '501': 'Kuşadası', '191': 'Didim', '412': 'Didim', '599': 'Selçuk',
+            '148': 'Fethiye', '477': 'Fethiye', '146': 'Göcek', '617': 'Muğla', '481': 'Muğla', '440': 'Milas', '512': 'Muğla',
+            '593': 'Ortaca', '228': 'Marmaris', '234': 'Marmaris', '238': 'Çeşme', '584': 'Urla', '492': 'Urla', '529': 'Torbalı',
+            '113': 'Bodrum', '156': 'Bodrum', '417': 'Bodrum', '472': 'Bodrum', '517': 'Bodrum', '36': 'Bodrum', '73': 'Bodrum', '90': 'Bodrum',
+            '243': 'Bodrum', '406': 'Bodrum', '418': 'Bodrum', '503': 'Bodrum', '200': 'Muğla'
+        };
+        const cityOf = store => BY_STORE[String(store).split('-')[0]] || 'İzmir';
+        window.wxCityOf = cityOf;
+        const WMO = c => {
+            if (c === 0) return ['☀️', 'Açık'];
+            if (c <= 2) return ['🌤️', 'Parçalı bulutlu'];
+            if (c === 3) return ['☁️', 'Bulutlu'];
+            if (c === 45 || c === 48) return ['🌫️', 'Sisli'];
+            if (c >= 51 && c <= 57) return ['🌦️', 'Çisenti'];
+            if ((c >= 61 && c <= 67) || (c >= 80 && c <= 82)) return ['🌧️', 'Yağmurlu'];
+            if ((c >= 71 && c <= 77) || c === 85 || c === 86) return ['🌨️', 'Karlı'];
+            if (c >= 95) return ['⛈️', 'Fırtınalı'];
+            return ['🌡️', ''];
+        };
+        let data = null;   // {city: {t, code, pmax, tmax}}
+        const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+        const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+        function advice(w) {
+            if (!w) return '';
+            const rainy = (w.code >= 51 && w.code <= 67) || (w.code >= 80 && w.code <= 99) || w.pmax >= 60;
+            if (w.code >= 95) return 'Fırtınalı bir gün; kendinize iyi bakın, müşterilere sıcak bir karşılama yeter 💜';
+            if (rainy) return 'Bugün yağışlı; sıcak bir gülümseme ve kapıda küçük bir karşılama harika olur ☔';
+            if (w.tmax >= 35) return 'Bugün çok sıcak; müşterilere serin bir karşılama, size bol su 💧';
+            if (w.tmax <= 3) return 'Bugün soğuk; mağazaya girenler için sıcacık bir ortam yaratın ☕';
+            return '';
+        }
+        function kindOf(w) {
+            const rainy = (w.code >= 51 && w.code <= 67) || (w.code >= 80 && w.code <= 99) || w.pmax >= 60;
+            if (w.code >= 95) return 'fırtınalı';
+            if (rainy) return 'yağışlı';
+            if (w.tmax >= 35) return 'çok sıcak';
+            return 'soğuk';
+        }
+        function chip(city, big) {
+            const w = data && data[city];
+            if (!w) return '';
+            const ic = WMO(w.code);
+            return '<span class="inline-flex items-center gap-1 bg-white/90 border border-slate-200 text-slate-700 rounded-full px-2.5 py-1 text-[11px] font-bold whitespace-nowrap shadow-sm" title="' + escHtml(city + ' · ' + ic[1] + ' · en yüksek ' + Math.round(w.tmax) + '°, yağış ihtimali %' + Math.round(w.pmax || 0)) + '">' +
+                '<span>' + ic[0] + '</span>' + (big ? '<span class="font-black">' + escHtml(city) + '</span>' : '<span>' + escHtml(city) + '</span>') + '<span class="font-black text-slate-900">' + Math.round(w.t) + '°</span></span>';
+        }
+        function citiesFor(scope) {
+            let list = [];
+            if (scope === 'store') list = [cityOf(currentId)];
+            else if (scope === 'region') list = (effectiveHierarchy[currentId] || []).map(cityOf);
+            else list = allStoresList.map(x => cityOf(x.name));
+            return list.filter((c, i) => list.indexOf(c) === i);
+        }
+        window.wxPaint = function () {
+            const hosts = document.querySelectorAll ? document.querySelectorAll('.wx-host') : [];
+            Array.prototype.forEach.call(hosts, h => {
+                const scope = h.getAttribute('data-scope');
+                if (!data) { h.innerHTML = ''; return; }
+                const cs = citiesFor(scope).filter(c => data[c]);
+                if (!cs.length) { h.innerHTML = ''; return; }
+                let html = '';
+                if (scope === 'store') {
+                    const w = data[cs[0]], ad = advice(w);
+                    html = '<div class="flex flex-wrap items-center gap-2">' + chip(cs[0], true) + (ad ? '<span class="text-xs font-bold text-slate-600">' + escHtml(ad) + '</span>' : '') + '</div>';
+                } else {
+                    const bad = cs.filter(c => advice(data[c]));
+                    html = '<div class="flex gap-1.5 overflow-x-auto pb-1">' + cs.map(c => chip(c)).join('') + '</div>' +
+                        (bad.length ? '<div class="text-[11px] font-bold text-slate-500 mt-1">Dikkat: ' + bad.map(c => escHtml(c) + ' (' + escHtml(kindOf(data[c])) + ')').join(', ') + '</div>' : '');
+                }
+                h.innerHTML = html;
+            });
+        };
+        function apply(obj) { data = obj; try { wxPaint(); } catch (e) {} }
+        window.wxLoad = function () {
+            try {
+                if (window.__DEMO || typeof fetch !== 'function') return;
+                const cached = JSON.parse(lsGet('bb_wx') || 'null');
+                if (cached && cached.t && Date.now() - cached.t < 30 * 60000) { apply(cached.d); return; }
+                if (cached && cached.d) apply(cached.d);
+                const names = Object.keys(CITIES);
+                const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + names.map(n => CITIES[n][0]).join(',') + '&longitude=' + names.map(n => CITIES[n][1]).join(',') +
+                    '&current=temperature_2m,weather_code&daily=temperature_2m_max,precipitation_probability_max&forecast_days=1&timezone=auto';
+                fetch(url).then(r => r.json()).then(j => {
+                    const arr = Array.isArray(j) ? j : [j], out = {};
+                    names.forEach((n, i) => {
+                        const x = arr[i]; if (!x || !x.current) return;
+                        out[n] = { t: x.current.temperature_2m, code: x.current.weather_code, tmax: x.daily && x.daily.temperature_2m_max ? x.daily.temperature_2m_max[0] : x.current.temperature_2m, pmax: x.daily && x.daily.precipitation_probability_max ? x.daily.precipitation_probability_max[0] : 0 };
+                    });
+                    if (Object.keys(out).length) { lsSet('bb_wx', JSON.stringify({ t: Date.now(), d: out })); apply(out); }
+                }).catch(() => {});
+            } catch (e) {}
+        };
+        window.wxTest = function (d) { apply(d); };
+        setTimeout(() => { try { wxLoad(); } catch (e) {} }, 800);
+        try { setInterval(() => { try { wxLoad(); } catch (e) {} }, 30 * 60000); } catch (e) {}
     })();
 
     // ===== PODYUM BANNER (ortak) =====
@@ -4224,6 +4340,7 @@
     }
 
     function renderStoreUI() {
+        try { if (window.wxPaint) wxPaint(); } catch (e) {}
         if (currentRole !== 'store') return;
         try { renderStockoutStore(); } catch (e) {}
         try { notifyMilestones(); } catch (e) {}
@@ -4548,6 +4665,7 @@
     window.setRegionDetail = function (m) { window.regionDetailMode = m; renderRegionUI(); };
 
     function renderRegionUI() {
+        try { if (window.wxPaint) wxPaint(); } catch (e) {}
         if (currentRole !== 'region') return;
         
         let isReadOnlyBM = (currentId === "GÜLÇİN FAKILAR");
@@ -5291,6 +5409,7 @@
 
     function renderGeneralUI(aggData) {
         updateAnnouncementUI();
+        try { if (window.wxPaint) wxPaint(); } catch (e) {}
         try { if (window.monRender) monRender('mg'); } catch (e) {}
         calculateGlobalTrendAndHeatmap();
 
