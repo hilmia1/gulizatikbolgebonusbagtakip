@@ -2826,6 +2826,7 @@
             return ['🌡️', ''];
         };
         let data = null;   // {city: {t, code, pmax, tmax}}
+        let status = 'loading', stamp = 0;
         const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
         const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
         // Sadece yağış: şu an yağıyor (yağmur/çisenti/sağanak/fırtına) ya da bugün yağış ihtimali %60+
@@ -2877,6 +2878,12 @@
             Array.prototype.forEach.call(hosts, h => {
                 const scope = h.getAttribute('data-scope');
                 const r = wxRainReport(scope);
+                if (scope === 'general' || scope === 'central') {
+                    // Yönetici ekranlarında kart hep görünür: çalıştığını ve son güncellemeyi gösterir
+                    const hh = stamp ? new Date(stamp).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '';
+                    if (!data) { h.innerHTML = '<div class="bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2 text-xs font-bold text-slate-500">🌧️ Yağış raporu: ' + (status === 'demo' ? 'önizleme modunda kapalı' : status === 'error' ? 'hava verisi alınamadı, biraz sonra yeniden denenecek' : 'hava verisi yükleniyor...') + '</div>'; return; }
+                    if (!r.length) { h.innerHTML = '<div class="bg-emerald-50 border border-emerald-200 rounded-2xl px-3 py-2 text-xs font-bold text-emerald-800">☀️ Yağış raporu: şu an hiçbir lokasyonda yağış yok' + (hh ? ' <span class="font-semibold text-emerald-700/70">(son kontrol ' + hh + ')</span>' : '') + '</div>'; return; }
+                }
                 if (!data || !r.length) { h.innerHTML = ''; return; }
                 let html = '';
                 if (scope === 'store') {
@@ -2893,13 +2900,14 @@
                 h.innerHTML = html;
             });
         };
-        function apply(obj) { data = obj; try { wxPaint(); } catch (e) {} }
+        function apply(obj, t) { data = obj; status = 'ok'; stamp = t || Date.now(); try { wxPaint(); } catch (e) {} }
         window.wxLoad = function () {
             try {
-                if (window.__DEMO || typeof fetch !== 'function') return;
+                if (window.__DEMO) { status = 'demo'; try { wxPaint(); } catch (e) {} return; }
+                if (typeof fetch !== 'function') { status = 'error'; try { wxPaint(); } catch (e) {} return; }
                 const cached = JSON.parse(lsGet('bb_wx') || 'null');
-                if (cached && cached.t && Date.now() - cached.t < 30 * 60000) { apply(cached.d); return; }
-                if (cached && cached.d) apply(cached.d);
+                if (cached && cached.t && Date.now() - cached.t < 30 * 60000) { apply(cached.d, cached.t); return; }
+                if (cached && cached.d) apply(cached.d, cached.t);
                 const names = Object.keys(CITIES);
                 const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + names.map(n => CITIES[n][0]).join(',') + '&longitude=' + names.map(n => CITIES[n][1]).join(',') +
                     '&current=temperature_2m,weather_code&daily=temperature_2m_max,precipitation_probability_max&forecast_days=1&timezone=auto';
@@ -2910,7 +2918,8 @@
                         out[n] = { t: x.current.temperature_2m, code: x.current.weather_code, tmax: x.daily && x.daily.temperature_2m_max ? x.daily.temperature_2m_max[0] : x.current.temperature_2m, pmax: x.daily && x.daily.precipitation_probability_max ? x.daily.precipitation_probability_max[0] : 0 };
                     });
                     if (Object.keys(out).length) { lsSet('bb_wx', JSON.stringify({ t: Date.now(), d: out })); apply(out); }
-                }).catch(() => {});
+                    else if (!data) { status = 'error'; wxPaint(); }
+                }).catch(() => { if (!data) { status = 'error'; try { wxPaint(); } catch (e) {} } });
             } catch (e) {}
         };
         window.wxTest = function (d) { apply(d); };
