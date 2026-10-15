@@ -1279,6 +1279,18 @@
         comp.daily[dk][s.name] = { b1: Math.round(t.b1 / totalDays * f()), b2: Math.round(t.b2 / totalDays * f() / 50) * 50, b3: Math.round(t.b3 / totalDays * f()) };
       });
     }
+    comp.staff = {};
+    for (let day = 1; day <= now.getDate(); day++) {
+      const dk = fmt(new Date(y, m, day)); comp.staff[dk] = {};
+      stores.forEach(s => {
+        const rec = {};
+        Object.keys(master[s.name]).forEach(id => {
+          const b1 = Math.floor(r() * 3), b3 = Math.floor(r() * 2);
+          if (b1 || b3) { rec[id] = {}; if (b1) rec[id].b1 = b1; if (b3) rec[id].b3 = b3; }
+        });
+        comp.staff[dk][s.name] = rec;
+      });
+    }
     const nowT = Date.now();
     const announcement_log = {
       a1: { message: 'Bu hafta Opalescence odak ürün, her mağaza vitrine ürünleri çıkarsın!', time: nowT - 2 * 3600e3, by: 'Sistem Merkezi', kind: 'central' },
@@ -1314,7 +1326,8 @@
     }
 
     window.openContestInputModal = function(stfId, stfName) {
-        if(!window.activeContestBrands || window.activeContestBrands.length === 0) {
+        const kb = window.kpiStaffBrands ? window.kpiStaffBrands() : [];
+        if((!window.activeContestBrands || window.activeContestBrands.length === 0) && kb.length === 0) {
             return alert("Şu an aktif bir odak ürün bulunmuyor.");
         }
         window.currentContestStaffId = stfId;
@@ -1349,6 +1362,23 @@
                 </div>
             `;
         });
+
+        const kb = window.kpiStaffBrands ? window.kpiStaffBrands() : [];
+        if (kb.length) {
+            container.innerHTML += `<div class="pt-2 mt-1 border-t border-dashed border-slate-300 dark:border-slate-600"><div class="text-[10px] font-black text-violet-600 uppercase tracking-wider mb-2"><i class="fa-solid fa-trophy mr-1"></i>KPI Yarışması (ayrı rapor)</div></div>`;
+            kb.forEach(b => {
+                const n = window.kpiStaffGet(stfId, b.key);
+                container.innerHTML += `
+                <div class="flex justify-between items-center bg-violet-50 dark:bg-slate-700 p-3 rounded-xl border border-violet-200 dark:border-slate-600">
+                    <span class="font-bold text-slate-700 dark:text-slate-200">${escHtml(b.name)}</span>
+                    <div class="flex items-center gap-3">
+                        <button onclick="kpiStaffAdd('${stfId}', '${b.key}', -1)" class="w-8 h-8 bg-white dark:bg-slate-600 border border-slate-300 dark:border-slate-500 rounded-lg font-bold text-slate-600 dark:text-slate-300 shadow-sm">-</button>
+                        <span class="font-black text-lg text-violet-600 dark:text-violet-300 w-6 text-center">${n}</span>
+                        <button onclick="kpiStaffAdd('${stfId}', '${b.key}', 1)" class="w-8 h-8 bg-violet-600 hover:bg-violet-700 rounded-lg font-bold text-white shadow-sm">+</button>
+                    </div>
+                </div>`;
+            });
+        }
     }
 
     window.updateContestCount = function(stfId, brand, change) {
@@ -3620,7 +3650,7 @@
                         let btnEdit = `<button type="button" onclick="editStaffName('${p.id}', '${safeName}')" class="w-6 h-6 sm:w-7 sm:h-7 bg-indigo-100 text-indigo-600 rounded-md font-bold hover:bg-indigo-200 ml-0.5 sm:ml-1 leading-none flex items-center justify-center" title="İsmi Düzenle"><i class="fa-solid fa-pen text-[9px] sm:text-xs"></i></button>`;
                         let btnTransfer = `<button type="button" onclick="openTransferModal('${p.id}', '${safeName}')" class="w-6 h-6 sm:w-7 sm:h-7 bg-rose-100 text-rose-600 rounded-md font-bold hover:bg-rose-200 ml-0.5 sm:ml-1 leading-none flex items-center justify-center" title="Sil / Transfer Et"><i class="fa-solid fa-trash text-[9px] sm:text-xs"></i></button>`;
                         
-                        let btnContest = window.activeContestBrands.length > 0 ? `<button type="button" onclick="openContestInputModal('${p.id}', '${safeName}')" class="w-6 h-6 sm:w-7 sm:h-7 bg-purple-100 text-purple-600 rounded-md font-bold hover:bg-purple-200 ml-0.5 sm:ml-1 leading-none flex items-center justify-center" title="Odak Ürün Ekle"><i class="fa-solid fa-crosshairs text-[9px] sm:text-xs animate-pulse"></i></button>` : '';
+                        let btnContest = (window.activeContestBrands.length > 0 || (window.kpiStaffBrands && window.kpiStaffBrands().length > 0)) ? `<button type="button" onclick="openContestInputModal('${p.id}', '${safeName}')" class="w-6 h-6 sm:w-7 sm:h-7 bg-purple-100 text-purple-600 rounded-md font-bold hover:bg-purple-200 ml-0.5 sm:ml-1 leading-none flex items-center justify-center" title="Odak Ürün Ekle"><i class="fa-solid fa-crosshairs text-[9px] sm:text-xs animate-pulse"></i></button>` : '';
 
                         if (stats.isLocked) {
                             actions = `<td class="py-2.5 px-1 sm:px-4 text-right"><div class="inline-flex gap-0.5 sm:gap-1 justify-end">${btnMinus}${btnPlus}${btnContest}</div></td>`;
@@ -4823,7 +4853,7 @@
         const COLORS = ['#8b5cf6', '#06b6d4', '#f59e0b', '#ec4899', '#10b981', '#3b82f6'];
         const MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
         const charts = {};
-        const kState = { tab: 'comp', gBrand: 'overall' };
+        const kState = { tab: 'comp', gBrand: 'overall', sBrand: 'all', lastSend: {} };
         const kBusy = {};
         window.kpiMode = false;
 
@@ -4831,6 +4861,9 @@
         const esc = escHtml;
         const nf = n => Math.round(Number(n) || 0).toLocaleString('tr-TR');
         const fmtVal = (n, unit) => unit === 'TL' ? '₺' + nf(n) : nf(n);
+        // Ciro (TL) tutarlarını sadece Güliz Atik ve Merkez görür; mağaza ve bölge ekranlarında sadece bar + yüzde
+        const seesMoney = () => currentRole === 'kgeneral' || currentRole === 'kcentral';
+        const hideAmt = b => b.unit === 'TL' && !seesMoney();
         const toUTC = s => { const p = String(s).split('-').map(Number); return Date.UTC(p[0], p[1] - 1, p[2]); };
         const dayDiff = (a, b) => Math.round((toUTC(b) - toUTC(a)) / 86400000);
         const addDays = (s, n) => new Date(toUTC(s) + n * 86400000).toISOString().slice(0, 10);
@@ -4883,6 +4916,31 @@
             });
             const adj = comp.adj || {};
             const T = comp.targets || {};
+            const sd = comp.staff || {}, srows = {};
+            Object.keys(sd).sort().forEach(date => {
+                if (date < start || date > end) return;
+                const stores = sd[date] || {};
+                Object.keys(stores).forEach(st => {
+                    const ids = stores[st] || {};
+                    Object.keys(ids).forEach(id => {
+                        const rec = ids[id] || {};
+                        if (!srows[id]) srows[id] = { id, store: st, counts: {}, total: 0 };
+                        srows[id].store = st;
+                        Object.keys(rec).forEach(bk => {
+                            const br = brands.find(x => x.key === bk);
+                            if (!br || br.unit !== 'adet') return;
+                            const v = Number(rec[bk]) || 0;
+                            srows[id].counts[bk] = (srows[id].counts[bk] || 0) + v;
+                            srows[id].total += v;
+                        });
+                    });
+                });
+            });
+            c.staff = Object.keys(srows).map(id => {
+                const r = srows[id];
+                let nm = ''; try { nm = findStaffNameGlobal(id) || ''; } catch (e) {}
+                return { id, name: nm || 'Personel', store: r.store, bm: bmOf(r.store), counts: r.counts, total: r.total };
+            }).filter(r => r.total > 0);
             c.dsum = dsum; c.todayVal = todayVal; c.daily = daily; c.adj = adj;
             c.aStore = (st, bk) => Math.max(0, ((dsum[st] && dsum[st][bk]) || 0) + ((adj[st] && Number(adj[st][bk])) || 0));
             c.tStore = (st, bk) => Number(T.stores && T.stores[st] && T.stores[st][bk]) || 0;
@@ -4950,6 +5008,25 @@
             const tgtTxt = m.target > 0 ? fmtVal(m.target, b.unit) : '—';
             const derived = opts.derived ? ' <span class="text-[9px] text-slate-400 font-bold">(mağaza toplamı)</span>' : '';
             const projPct = m.target > 0 ? Math.round(m.proj / m.target * 100) : null;
+            if (hideAmt(b)) {
+                return `<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 relative overflow-hidden">
+                <div class="absolute left-0 top-0 bottom-0 w-1.5" style="background:${b.color}"></div>
+                <div class="flex justify-between items-start gap-2 pl-2">
+                    <div>
+                        <div class="text-[10px] font-black uppercase tracking-widest text-slate-400">Hedef gerçekleşme</div>
+                        <div class="font-black text-lg text-slate-800 leading-tight">${esc(b.name)}</div>
+                    </div>
+                    <span class="px-2 py-0.5 rounded-full border text-[10px] font-black whitespace-nowrap ${m.st.cls}">${m.st.label}</span>
+                </div>
+                <div class="pl-2 mt-3 flex items-end justify-between gap-2">
+                    <div class="text-[11px] text-slate-400 font-bold"><i class="fa-solid fa-eye-slash mr-1"></i>Tutarlar yönetim tarafında tutulur</div>
+                    <div class="text-4xl font-black ${m.st.txt}">${m.pct === null ? '—' : '%' + Math.round(m.pct)}</div>
+                </div>
+                <div class="pl-2 mt-3">${bar(m.pct, c, m.st.bar)}</div>
+                <div class="pl-2 mt-3 text-center bg-slate-50 rounded-lg p-1.5"><div class="text-[9px] text-slate-400 font-bold uppercase">Tahmini kapanış</div><div class="text-[11px] font-black text-slate-700">${c.elapsed > 0 && m.target > 0 ? '%' + projPct : '—'}</div></div>
+                ${opts.extra || ''}
+            </div>`;
+            }
             return `<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 relative overflow-hidden">
                 <div class="absolute left-0 top-0 bottom-0 w-1.5" style="background:${b.color}"></div>
                 <div class="flex justify-between items-start gap-2 pl-2">
@@ -5171,6 +5248,76 @@
             render();
         };
 
+
+        // ------------------------------------------------------------------
+        // PERSONEL İŞARETLEME (adet türü KPI markaları) + RAPORLAR
+        // ------------------------------------------------------------------
+        window.kpiStaffBrands = function () {
+            if (kpiLocked()) return [];
+            const c = ctxGet();
+            return (c && c.live) ? c.brands.filter(b => b.unit === 'adet') : [];
+        };
+        window.kpiStaffGet = function (stfId, bk) {
+            const k = (globalData && globalData.kpi) || {};
+            const cmp = k.comps && k.comps[k.active];
+            const v = cmp && cmp.staff && cmp.staff[ACTIVE_DATE] && cmp.staff[ACTIVE_DATE][currentId] && cmp.staff[ACTIVE_DATE][currentId][stfId];
+            return Number(v && v[bk]) || 0;
+        };
+        window.kpiStaffAdd = function (stfId, bk, d) {
+            const k = (globalData && globalData.kpi) || {};
+            if (!k.active || !/^b[1-6]$/.test(bk) || !currentId || !stfId) return;
+            if (!kpiStaffBrands().some(b => b.key === bk)) return;
+            if (kBusy['s' + stfId + bk] && Date.now() - kBusy['s' + stfId + bk] < 250) return;
+            kBusy['s' + stfId + bk] = Date.now();
+            Snd.play(d > 0 ? 'sale' : 'saleUndo');
+            dbRoot.child('kpi').child('comps').child(k.active).child('staff').child(ACTIVE_DATE).child(currentId).child(stfId).child(bk)
+                .transaction(v => { const x = (Number(v) || 0) + d; return x < 0 ? 0 : x; });
+        };
+        window.kpiSetStaffBrand = function (k) { kState.sBrand = k; render(); };
+
+        function staffCount(r, sel) { return sel === 'all' ? r.total : (r.counts[sel] || 0); }
+        function staffReport(c, list, title) {
+            const adetBrands = c.brands.filter(b => b.unit === 'adet');
+            if (!adetBrands.length) return '';
+            const sel = (kState.sBrand === 'all' || adetBrands.some(b => b.key === kState.sBrand)) ? kState.sBrand : 'all';
+            const rows = list.filter(r => staffCount(r, sel) > 0).sort((a, b) => staffCount(b, sel) - staffCount(a, sel));
+            const chips = [`<button type="button" onclick="kpiSetStaffBrand('all')" class="px-3 py-1.5 rounded-lg text-xs font-black border ${sel === 'all' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-600 border-slate-200'}">Tümü</button>`]
+                .concat(adetBrands.map(b => `<button type="button" onclick="kpiSetStaffBrand('${b.key}')" class="px-3 py-1.5 rounded-lg text-xs font-black border" style="${sel === b.key ? `background:${b.color};color:#fff;border-color:${b.color}` : `color:${b.color};border-color:${b.color}66;background:#fff`}">${esc(b.name)}</button>`)).join('');
+            const head = adetBrands.map(b => `<th class="py-2 px-2 font-bold text-center" style="color:${b.color}">${esc(b.name)}</th>`).join('');
+            const body = rows.slice(0, 25).map((r, i) => `<tr class="border-b border-slate-100 hover:bg-violet-50/50">
+                <td class="py-2 px-2 text-center text-xs font-black text-slate-400">${['🥇', '🥈', '🥉'][i] || i + 1}</td>
+                <td class="py-2 px-2 text-xs font-bold text-slate-800 whitespace-nowrap"><span class="clickable-name" onclick="openStaffProfile('${esc(r.id)}')">${esc(r.name)}</span><div class="text-[9px] text-slate-400 font-bold">${esc(r.store)}</div></td>
+                ${adetBrands.map(b => `<td class="py-2 px-2 text-center text-xs font-black text-slate-700">${r.counts[b.key] || '—'}</td>`).join('')}
+                <td class="py-2 px-2 text-center text-xs font-black text-violet-700">${r.total}</td></tr>`).join('');
+            return `<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-3"><h3 class="font-bold text-slate-800"><i class="fa-solid fa-user-check text-violet-500 mr-2"></i>${title}</h3><div class="flex flex-wrap gap-2">${chips}</div></div>
+                ${rows.length ? `<div class="overflow-x-auto"><table class="w-full text-left"><thead><tr class="text-[10px] uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-200"><th class="py-2 px-2 text-center w-8">#</th><th class="py-2 px-2">Personel</th>${head}<th class="py-2 px-2 text-center">Toplam</th></tr></thead><tbody>${body}</tbody></table></div>`
+                : '<div class="text-xs text-slate-400 text-center py-4">Henüz personel işareti yok. Personel, Bonus Pack ekranında odak ürün düğmesinden işaretler.</div>'}
+            </div>`;
+        }
+        const podiumHost = () => '<div id="kpi-pd-staff" class="hidden"></div><div id="kpi-pd-store" class="hidden"></div>';
+        function drawPodiums(c, staffList, storeRows, scopeTxt) {
+            const adetBrands = c.brands.filter(b => b.unit === 'adet');
+            const sel = (kState.sBrand === 'all' || adetBrands.some(b => b.key === kState.sBrand)) ? kState.sBrand : 'all';
+            const selName = sel === 'all' ? 'Tüm Adet Markaları' : (adetBrands.find(b => b.key === sel) || {}).name;
+            const stf = staffList.filter(r => staffCount(r, sel) > 0).sort((a, b) => staffCount(b, sel) - staffCount(a, sel))
+                .map(r => ({ id: r.id, name: r.name, store: r.store, sales: staffCount(r, sel) }));
+            renderPodium('kpi-pd-staff', stf, {
+                theme: 'pd-purple', icon: 'fa-user-check', bgIcon: 'fa-star', title: '⭐ KPI PERSONEL ŞAMPİYONLARI', sub: scopeTxt + ' • ' + selName, pill: false, limit: 3,
+                nameOf: r => r.name, subOf: r => r.store, valOf: r => r.sales,
+                onMain: r => `openStaffProfile('${pdJs(r.id)}')`, onSub: r => `kpiOpen('kstore','${pdJs(r.store)}')`,
+                mainTitle: 'Karne için tıkla', subTitle: 'Mağazanın KPI paneline git'
+            });
+            const sts = storeRows.filter(r => r.overall !== null).sort((a, b) => b.overall - a.overall)
+                .map(r => ({ name: r.name, bm: r.bm, sales: '%' + Math.round(r.overall) }));
+            renderPodium('kpi-pd-store', sts, {
+                theme: 'pd-green', icon: 'fa-store', bgIcon: 'fa-store', title: '🏆 KPI ŞAMPİYON MAĞAZALAR', sub: scopeTxt + ' • Genel başarıya göre', pill: false, limit: 3, isStore: true,
+                nameOf: r => r.name, subOf: r => r.bm, valOf: r => r.sales,
+                onMain: r => `kpiOpen('kstore','${pdJs(r.name)}')`, onSub: r => `kpiOpen('kregion','${pdJs(r.bm)}')`,
+                mainTitle: 'Mağazanın KPI paneline git', subTitle: 'Bölge paneline git'
+            });
+        }
+
         // ------------------------------------------------------------------
         // MAĞAZA PANELİ
         // ------------------------------------------------------------------
@@ -5187,16 +5334,20 @@
             const cards = ms.map(({ b, m }) => {
                 const tv = (c.todayVal[st] && c.todayVal[st][b.key]) || 0;
                 const adj = Number(c.adj[st] && c.adj[st][b.key]) || 0;
-                const adjNote = adj !== 0 ? `<div class="pl-2 mt-2 text-[10px] text-indigo-600 font-bold"><i class="fa-solid fa-circle-info mr-1"></i>Merkez düzeltmesi dahil: ${adj > 0 ? '+' : ''}${fmtVal(adj, b.unit)}</div>` : '';
+                const adjNote = adj !== 0 && !hideAmt(b) ? `<div class="pl-2 mt-2 text-[10px] text-indigo-600 font-bold"><i class="fa-solid fa-circle-info mr-1"></i>Merkez düzeltmesi dahil: ${adj > 0 ? '+' : ''}${fmtVal(adj, b.unit)}</div>` : '';
                 let entry;
                 if (!c.live) {
                     entry = `<div class="pl-2 mt-3 text-[11px] text-slate-400 font-bold text-center bg-slate-50 rounded-xl p-2">${c.upcoming ? 'Yarışma henüz başlamadı' : 'Yarışma bitti, giriş kapalı'}</div>`;
                 } else if (b.unit === 'TL') {
+                    const ls = kState.lastSend[b.key];
                     entry = `<div class="pl-2 mt-3 bg-violet-50 border border-violet-100 rounded-xl p-2.5">
-                        <div class="flex justify-between items-center mb-2"><span class="text-[10px] font-bold text-violet-700 uppercase">Bugün girilen</span><span class="text-base font-black text-violet-800">${fmtVal(tv, 'TL')}</span></div>
+                        <div class="text-[10px] font-bold text-violet-700 uppercase mb-2"><i class="fa-solid fa-paper-plane mr-1"></i>Hedefe satış gönder</div>
                         <div class="flex gap-2"><input type="number" min="0" inputmode="numeric" id="kpi-amt-${b.key}" placeholder="Tutar (TL)" class="flex-1 min-w-0 p-2 border border-violet-200 rounded-lg text-sm font-bold focus:outline-none focus:border-violet-500">
-                        <button type="button" onclick="kpiAdd('${b.key}', -1)" class="px-3 h-10 bg-white border border-violet-200 rounded-lg font-black text-violet-700 hover:bg-violet-100">Çıkar</button>
-                        <button type="button" onclick="kpiAdd('${b.key}', 1)" class="px-4 h-10 bg-violet-600 hover:bg-violet-700 rounded-lg font-black text-white shadow">Ekle</button></div></div>`;
+                        <button type="button" onclick="kpiAdd('${b.key}', 1)" class="px-4 h-10 bg-violet-600 hover:bg-violet-700 rounded-lg font-black text-white shadow whitespace-nowrap">Gönder</button></div>
+                        <div class="mt-1.5 flex items-center justify-between gap-2 text-[10px] font-bold">
+                            <span class="text-emerald-600">${ls ? '✓ Son gönderim iletildi' : ''}</span>
+                            ${ls ? `<button type="button" onclick="kpiAdd('${b.key}', -1)" class="text-rose-600 underline">Son gönderimi geri al</button>` : ''}
+                        </div></div>`;
                 } else {
                     entry = `<div class="pl-2 mt-3 bg-violet-50 border border-violet-100 rounded-xl p-2.5 flex items-center justify-between gap-2">
                         <div><div class="text-[10px] font-bold text-violet-700 uppercase">Bugün girilen</div><div class="text-2xl font-black text-violet-800 leading-none">${nf(tv)}</div></div>
@@ -5220,7 +5371,9 @@
                 statBox('Genel Başarı', ov === null ? '—' : '%' + Math.round(ov)) +
                 statBox('Genel Sıra', ovRank.rank > 0 ? '#' + ovRank.rank + ' <span class="text-sm text-cyan-100">/ ' + ovRank.total + '</span>' : '—')) +
                 (hasTarget ? '' : `<div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 text-sm font-bold"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Mağazanız için bu yarışmada henüz hedef girilmemiş. Hedef Sistem Merkezi tarafından girilir.</div>`) +
+                podiumHost() +
                 `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">${cards}</div>
+                ${staffReport(c, c.staff.filter(r => r.store === st), 'Mağazamın Personel Raporu (KPI adet markaları)')}
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4"><h3 class="font-bold text-slate-700 text-sm mb-2"><i class="fa-solid fa-ranking-star text-amber-500 mr-2"></i>Sıralamam (tüm mağazalar arasında)</h3><div class="flex flex-wrap gap-2">${rankChips}</div></div>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div class="lg:col-span-2">${chartCard('kchart-store', 'Mağazamın Gidişatı')}</div>
@@ -5230,6 +5383,7 @@
 
             const tgt = {}; c.brands.forEach(b => { tgt[b.key] = c.tStore(st, b.key); });
             drawTrend('kchart-store', c, [st], tgt);
+            drawPodiums(c, c.staff, c.rows, 'Tüm mağazalar arası');
         }
 
         window.kpiAdd = function (bk, sign) {
@@ -5238,9 +5392,15 @@
             const b = c.brands.find(x => x.key === bk); if (!b) return;
             let n = 1;
             if (b.unit === 'TL') {
-                n = Math.round(Number(($('kpi-amt-' + bk) || {}).value));
-                if (!(n > 0)) return alert('Lütfen geçerli bir tutar girin.');
-                if (n > 5000000) return alert('Tek seferde en fazla 5.000.000 TL girilebilir.');
+                if (hideAmt(b) && sign < 0) {
+                    n = kState.lastSend[bk];
+                    if (!(n > 0)) return alert('Geri alınacak bir gönderim yok.');
+                    if (!confirm('Son gönderdiğiniz satış geri alınsın mı?')) return;
+                } else {
+                    n = Math.round(Number(($('kpi-amt-' + bk) || {}).value));
+                    if (!(n > 0)) return alert('Lütfen geçerli bir tutar girin.');
+                    if (n > 5000000) return alert('Tek seferde en fazla 5.000.000 TL girilebilir.');
+                }
             }
             if (kBusy[bk] && Date.now() - kBusy[bk] < 400) return;
             kBusy[bk] = Date.now();
@@ -5248,6 +5408,7 @@
             Snd.play(sign > 0 ? 'sale' : 'saleUndo');
             dbRoot.child('kpi').child('comps').child(c.cid).child('daily').child(ACTIVE_DATE).child(currentId).child(bk)
                 .transaction(v => { const x = (Number(v) || 0) + delta; return x < 0 ? 0 : x; });
+            if (b.unit === 'TL' && hideAmt(b)) { if (sign > 0) kState.lastSend[bk] = n; else delete kState.lastSend[bk]; }
             if (b.unit === 'TL' && $('kpi-amt-' + bk)) $('kpi-amt-' + bk).value = '';
         };
 
@@ -5258,7 +5419,8 @@
             let t = `🏆 *${c.name} - ${st}* 🏆\n📅 ${dmy(c.start)} - ${dmy(c.end)} | Gün ${c.elapsed}/${c.totalDays}\n\n`;
             c.brands.forEach(b => {
                 const m = metrics(c.aStore(st, b.key), c.tStore(st, b.key), c);
-                t += `▫️ *${b.name}*: ${fmtVal(m.actual, b.unit)} / ${m.target > 0 ? fmtVal(m.target, b.unit) : '—'} (${m.pct === null ? '—' : '%' + Math.round(m.pct)})${m.pct !== null && m.pct >= 100 ? ' ✅' : ''}\n`;
+                t += hideAmt(b) ? `▫️ *${b.name}*: ${m.pct === null ? '—' : '%' + Math.round(m.pct)}${m.pct !== null && m.pct >= 100 ? ' ✅' : ''}\n`
+                    : `▫️ *${b.name}*: ${fmtVal(m.actual, b.unit)} / ${m.target > 0 ? fmtVal(m.target, b.unit) : '—'} (${m.pct === null ? '—' : '%' + Math.round(m.pct)})${m.pct !== null && m.pct >= 100 ? ' ✅' : ''}\n`;
             });
             if (ov !== null) t += `\n📊 *Genel Başarı:* %${Math.round(ov)}`;
             t += `\n🔗 ${baseUrl()}?kstore=${encodeURIComponent(st)}`;
@@ -5273,7 +5435,7 @@
             const trs = rows.map((r, i) => {
                 const cells = c.brands.map(b => {
                     const m = metrics(c.aStore(r.name, b.key), c.tStore(r.name, b.key), c);
-                    return `<td class="py-2 px-2 text-center"><div class="text-[11px] font-black text-slate-700">${fmtVal(m.actual, b.unit)}<span class="text-slate-400 font-bold"> / ${m.target > 0 ? fmtVal(m.target, b.unit) : '—'}</span></div><div class="mt-1 w-full bg-slate-200 rounded-full h-1.5"><div class="h-1.5 rounded-full" style="width:${Math.min(100, m.pct || 0)}%;background:${m.st.bar}"></div></div><div class="mt-0.5">${pillPct(m.pct)}</div></td>`;
+                    return `<td class="py-2 px-2 text-center">${hideAmt(b) ? '' : `<div class="text-[11px] font-black text-slate-700">${fmtVal(m.actual, b.unit)}<span class="text-slate-400 font-bold"> / ${m.target > 0 ? fmtVal(m.target, b.unit) : '—'}</span></div>`}<div class="mt-1 w-full bg-slate-200 rounded-full h-1.5"><div class="h-1.5 rounded-full" style="width:${Math.min(100, m.pct || 0)}%;background:${m.st.bar}"></div></div><div class="mt-0.5">${pillPct(m.pct)}</div></td>`;
                 }).join('');
                 return `<tr class="hover:bg-violet-50/50 transition border-b border-slate-100">
                     <td class="py-2 px-2 text-center text-xs font-black text-slate-400">${r.overall === null ? '-' : (['🥇', '🥈', '🥉'][i] || i + 1)}</td>
@@ -5303,7 +5465,9 @@
 
             body.innerHTML = header(c, 'KPI Bölge Paneli', esc(bm), list.length + ' mağaza',
                 statBox('Bölge Genel Başarı', ov === null ? '—' : '%' + Math.round(ov)) + statBox('Hedefsiz Mağaza', noTarget)) +
+                podiumHost() +
                 `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">${regionMs.map(x => brandCard(x.b, x.m, c, { derived: x.derived })).join('')}</div>
+                ${staffReport(c, c.staff.filter(r => list.includes(r.store)), 'Bölge Personel Raporu (KPI adet markaları)')}
                 ${weakHtml}
                 ${chartCard('kchart-region', 'Bölgenin Gidişatı')}
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"><div class="p-4 bg-slate-50 border-b border-slate-200"><h3 class="font-bold text-slate-800"><i class="fa-solid fa-list-ol text-violet-500 mr-2"></i>Mağaza Sıralaması (Genel Başarıya Göre)</h3><p class="text-[10px] text-slate-400 mt-0.5">Genel başarı, marka başarı yüzdelerinin ortalamasıdır (her marka en fazla %150 sayılır). Mağaza adına tıklayınca detay açılır.</p></div>${storeTable(c, rowsAll)}</div>
@@ -5314,6 +5478,7 @@
 
             const tgt = {}; regionMs.forEach(x => { tgt[x.b.key] = x.m.target; });
             drawTrend('kchart-region', c, list, tgt);
+            drawPodiums(c, c.staff.filter(r => list.includes(r.store)), c.rows.filter(r => list.includes(r.name)), bm + ' bölgesi');
         }
 
         window.kpiShareRegion = function () {
@@ -5323,7 +5488,8 @@
             c.brands.forEach(b => {
                 const tg = c.tRegion(bm, b.key);
                 const m = metrics(c.sumA(list, b.key), tg.val, c);
-                t += `▫️ *${b.name}*: ${fmtVal(m.actual, b.unit)} / ${m.target > 0 ? fmtVal(m.target, b.unit) : '—'} (${m.pct === null ? '—' : '%' + Math.round(m.pct)})\n`;
+                t += hideAmt(b) ? `▫️ *${b.name}*: ${m.pct === null ? '—' : '%' + Math.round(m.pct)}\n`
+                    : `▫️ *${b.name}*: ${fmtVal(m.actual, b.unit)} / ${m.target > 0 ? fmtVal(m.target, b.unit) : '—'} (${m.pct === null ? '—' : '%' + Math.round(m.pct)})\n`;
             });
             t += `\n📊 *MAĞAZA SIRALAMASI (Genel Başarı):*\n`;
             sortRows(c.rows.filter(r => list.includes(r.name))).forEach((r, i) => {
@@ -5352,6 +5518,59 @@
         // GÜLİZ ATİK PANELİ
         // ------------------------------------------------------------------
         window.kpiSetBrand = function (k) { kState.gBrand = k; renderGeneral(); };
+
+        // Güliz Atik: toplam hedef + gidişat özeti
+        function trajectoryPanel(c, ms) {
+            const withT = ms.filter(x => x.m.target > 0);
+            if (!withT.length) return `<div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 text-sm font-bold"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Bu yarışmada henüz hedef girilmemiş, gidişat hesaplanamıyor.</div>`;
+            const cur = overall(ms.map(x => x.m.pct));
+            const projP = overall(ms.map(x => x.m.target > 0 ? x.m.proj / x.m.target * 100 : null));
+            const exp = c.pace * 100;
+            const started = !c.upcoming;
+            const diff = cur === null ? 0 : cur - exp;
+            let tone, verdict;
+            if (!started) { tone = 'slate'; verdict = 'Yarışma henüz başlamadı.'; }
+            else if (c.finished) { tone = (cur >= 100 ? 'emerald' : 'amber'); verdict = 'Yarışma tamamlandı. Genel başarı %' + Math.round(cur) + '.'; }
+            else if (projP !== null && projP >= 100) { tone = 'emerald'; verdict = 'Bu tempoyla hedef aşılıyor: yarışma sonunda yaklaşık %' + Math.round(projP) + '.'; }
+            else if (projP !== null && projP >= 90) { tone = 'amber'; verdict = 'Hedefe çok yakın: bu tempoyla yaklaşık %' + Math.round(projP) + '. Küçük bir hızlanma yeter.'; }
+            else { tone = 'rose'; verdict = 'Bu tempoyla yaklaşık %' + Math.round(projP || 0) + '\'e varılır. Hedef için hızlanmak gerekiyor.'; }
+            const col = { emerald: '#10b981', amber: '#f59e0b', rose: '#f43f5e', slate: '#94a3b8' }[tone];
+            const w = v => Math.max(0, Math.min(100, v || 0));
+            const sign = diff >= 0 ? '+' : '−';
+            const rows = ms.map(x => {
+                const b = x.b, m = x.m;
+                if (!(m.target > 0)) return `<tr class="border-b border-slate-100"><td class="py-2 pr-2 font-black text-xs" style="color:${b.color}">${esc(b.name)}</td><td colspan="4" class="py-2 text-[11px] text-slate-400 font-bold">Hedef girilmedi</td></tr>`;
+                const pp = Math.round(m.proj / m.target * 100);
+                const pc = pp >= 100 ? 'text-emerald-600' : pp >= 90 ? 'text-amber-600' : 'text-rose-600';
+                const need = c.live && m.remaining > 0 ? fmtVal(m.need, b.unit) + ' / gün' : (m.remaining <= 0 ? '✅' : '—');
+                return `<tr class="border-b border-slate-100 last:border-0">
+                    <td class="py-2 pr-2 font-black text-xs whitespace-nowrap" style="color:${b.color}">${esc(b.name)}</td>
+                    <td class="py-2 px-1 text-right text-[11px] font-black text-slate-700 whitespace-nowrap">${fmtVal(m.actual, b.unit)}<span class="text-slate-400 font-bold"> / ${fmtVal(m.target, b.unit)}</span></td>
+                    <td class="py-2 px-1 text-center">${pillPct(m.pct)}</td>
+                    <td class="py-2 px-1 text-right text-[11px] font-bold text-slate-600 whitespace-nowrap">${need}</td>
+                    <td class="py-2 pl-1 text-right text-[11px] font-black whitespace-nowrap ${started ? pc : 'text-slate-400'}">${started && c.elapsed > 0 ? '%' + pp : '—'}</td></tr>`;
+            }).join('');
+            const stat = (lab, val, sub, color) => `<div class="flex-1 min-w-[96px] bg-slate-50 border border-slate-200 rounded-xl p-3 text-center"><div class="text-[10px] font-black uppercase tracking-wider text-slate-400">${lab}</div><div class="text-2xl font-black leading-tight" style="color:${color}">${val}</div><div class="text-[10px] font-bold text-slate-400">${sub}</div></div>`;
+            return `<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <h3 class="font-black text-slate-800"><i class="fa-solid fa-gauge-high text-violet-500 mr-2"></i>Toplam Hedef ve Gidişat</h3>
+                    <span class="px-2.5 py-1 rounded-full text-[11px] font-black border" style="color:${col};border-color:${col}55;background:${col}12">${started && !c.finished && cur !== null ? (diff >= 0 ? 'Çizginin ' + Math.round(diff) + ' puan önünde' : 'Çizginin ' + Math.round(-diff) + ' puan gerisinde') : (c.finished ? 'Tamamlandı' : 'Başlamadı')}</span>
+                </div>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    ${stat('Genel başarı', cur === null ? '—' : '%' + Math.round(cur), 'tüm hedeflerin ortalaması', col)}
+                    ${stat('Olması gereken', started ? '%' + Math.round(exp) : '—', 'bugün itibarıyla', '#64748b')}
+                    ${stat('Tahmini final', started && c.elapsed > 0 && projP !== null ? '%' + Math.round(projP) : '—', 'mevcut tempoyla', col)}
+                </div>
+                <div class="relative w-full bg-slate-200 rounded-full h-4 mb-1">
+                    <div class="absolute inset-y-0 left-0 rounded-full opacity-30" style="width:${w(projP)}%;background:${col}"></div>
+                    <div class="absolute inset-y-0 left-0 rounded-full progress-bar" style="width:${w(cur)}%;background:${col}"></div>
+                    ${started ? `<div class="absolute top-[-4px] bottom-[-4px] w-[3px] bg-slate-700/80 rounded" style="left:${w(exp)}%" title="Bugün olması gereken seviye"></div>` : ''}
+                </div>
+                <div class="flex justify-between text-[10px] font-bold text-slate-400 mb-3"><span>0</span><span>koyu: şu an • soluk: tahmini final • dikey çizgi: olması gereken</span><span>%100</span></div>
+                <div class="text-sm font-bold mb-3" style="color:${col}"><i class="fa-solid fa-chart-line mr-1.5"></i>${verdict}</div>
+                <div class="overflow-x-auto"><table class="w-full text-left"><thead><tr class="text-[10px] uppercase tracking-wider text-slate-400 border-b border-slate-200"><th class="py-1.5 pr-2">Hedef</th><th class="py-1.5 px-1 text-right">Gerçekleşen</th><th class="py-1.5 px-1 text-center">Başarı</th><th class="py-1.5 px-1 text-right">Günlük gereken</th><th class="py-1.5 pl-1 text-right">Tahmini final</th></tr></thead><tbody>${rows}</tbody></table></div>
+            </div>`;
+        }
 
         function renderGeneral() {
             const body = $('kgeneral-body');
@@ -5387,7 +5606,9 @@
 
             body.innerHTML = header(c, 'KPI Yönetim Paneli', 'GÜLİZ ATİK BÖLGESİ', ALL.length + ' mağaza • ' + Object.keys(effectiveHierarchy).length + ' bölge müdürü',
                 statBox('Bölge Genel Başarı', ov === null ? '—' : '%' + Math.round(ov)) + statBox('Hedefsiz Mağaza', noTarget)) +
+                trajectoryPanel(c, genMs) + podiumHost() +
                 `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">${genMs.map(x => brandCard(x.b, x.m, c, { derived: x.derived })).join('')}</div>
+                ${staffReport(c, c.staff, 'Personel Raporu (KPI adet markaları)')}
                 ${chartCard('kchart-general', 'Bölgenin Gidişatı')}
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"><div class="p-4 bg-slate-50 border-b border-slate-200"><h3 class="font-bold text-slate-800"><i class="fa-solid fa-ranking-star text-amber-500 mr-2"></i>Bölge Müdürleri Sıralaması</h3><p class="text-[10px] text-slate-400 mt-0.5">Her bölge, kendi hedefine göre değerlendirilir. İsme tıklayınca bölge detayı açılır.</p></div>${bmTable}</div>
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
@@ -5406,6 +5627,7 @@
 
             const tgt = {}; genMs.forEach(x => { tgt[x.b.key] = x.m.target; });
             drawTrend('kchart-general', c, ALL, tgt);
+            drawPodiums(c, c.staff, c.rows, 'Güliz Atik Bölgesi');
         }
 
         window.kpiShareGeneral = function () {
