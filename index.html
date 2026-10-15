@@ -659,6 +659,24 @@
                 <div id="rc-result" class="mt-3"></div>
             </div>
 
+
+            <!-- GÜNLÜK TAKİP: hedef uyarısı + akşam kapanış özeti -->
+            <div class="bg-amber-950/80 p-4 rounded-2xl border border-amber-700/50 shadow-lg mt-2">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+                    <div class="flex items-center gap-2 text-amber-300 font-black"><i class="fa-solid fa-clipboard-check text-xl"></i> GÜNLÜK TAKİP: HEDEF UYARISI VE KAPANIŞ ÖZETİ</div>
+                    <input type="date" id="mc-date" onchange="monRender('mc')" class="bg-amber-900/70 border border-amber-700/60 text-white font-bold text-xs rounded-lg px-2 py-1.5 focus:outline-none">
+                </div>
+                <div class="text-[11px] text-amber-200/70 font-bold mb-3">Seçili günde hedefi girilmemiş veya ekibe dağıtılmamış mağazalar bölge müdürüne göre listelenir. Altında akşam kapanış özeti hazırlanır; kopyalayıp WhatsApp'a atabilirsiniz.</div>
+                <div id="mc-warn" class="text-sm text-amber-100 mb-3"></div>
+                <div class="flex flex-wrap gap-2 mb-2">
+                    <button type="button" onclick="monWarnShare('mc')" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-sm"><i class="fa-brands fa-whatsapp mr-1"></i> Hedef Hatırlatması Gönder</button>
+                    <button type="button" onclick="monSummary('mc')" class="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-sm"><i class="fa-solid fa-moon mr-1"></i> Kapanış Özeti Hazırla</button>
+                    <button type="button" onclick="monCopy('mc')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl text-sm"><i class="fa-regular fa-copy mr-1"></i> Kopyala</button>
+                    <button type="button" onclick="monSend('mc')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm"><i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp</button>
+                </div>
+                <textarea id="mc-text" rows="10" class="w-full bg-amber-900/50 border border-amber-700/60 text-white text-xs rounded-xl p-3 focus:outline-none" placeholder="Kapanış özeti burada görünür..."></textarea>
+            </div>
+
             <!-- SİTE ZİYARETLERİ RAPORU -->
             <div class="bg-sky-950/80 p-4 rounded-2xl border border-sky-700/50 shadow-lg mt-2">
                 <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
@@ -962,7 +980,23 @@
                 </div>
             </div>
 
-            
+
+            <!-- GÜNLÜK TAKİP: hedef uyarısı + akşam kapanış özeti -->
+            <div class="bg-amber-950/80 p-4 rounded-2xl border border-amber-700/50 shadow-lg mt-2">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+                    <div class="flex items-center gap-2 text-amber-300 font-black"><i class="fa-solid fa-clipboard-check text-xl"></i> GÜNLÜK TAKİP: HEDEF UYARISI VE KAPANIŞ ÖZETİ</div>
+                    <input type="date" id="mg-date" onchange="monRender('mg')" class="bg-amber-900/70 border border-amber-700/60 text-white font-bold text-xs rounded-lg px-2 py-1.5 focus:outline-none">
+                </div>
+                <div class="text-[11px] text-amber-200/70 font-bold mb-3">Seçili günde hedefi girilmemiş veya ekibe dağıtılmamış mağazalar bölge müdürüne göre listelenir. Altında akşam kapanış özeti hazırlanır; kopyalayıp WhatsApp'a atabilirsiniz.</div>
+                <div id="mg-warn" class="text-sm text-amber-100 mb-3"></div>
+                <div class="flex flex-wrap gap-2 mb-2">
+                    <button type="button" onclick="monWarnShare('mg')" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-sm"><i class="fa-brands fa-whatsapp mr-1"></i> Hedef Hatırlatması Gönder</button>
+                    <button type="button" onclick="monSummary('mg')" class="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-sm"><i class="fa-solid fa-moon mr-1"></i> Kapanış Özeti Hazırla</button>
+                    <button type="button" onclick="monCopy('mg')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl text-sm"><i class="fa-regular fa-copy mr-1"></i> Kopyala</button>
+                    <button type="button" onclick="monSend('mg')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm"><i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp</button>
+                </div>
+                <textarea id="mg-text" rows="10" class="w-full bg-amber-900/50 border border-amber-700/60 text-white text-xs rounded-xl p-3 focus:outline-none" placeholder="Kapanış özeti burada görünür..."></textarea>
+            </div>
             <div class="bg-slate-900 rounded-2xl shadow-xl p-6 text-white flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 relative overflow-hidden border border-slate-700 mt-6">
                 <div class="absolute right-4 bottom-[-20px] text-white/5 text-9xl font-black pointer-events-none"><i class="fa-solid fa-chart-pie"></i></div>
                 <div class="relative z-10 w-full xl:w-5/12">
@@ -1512,7 +1546,8 @@
         rcRender();
         if (save) {
             if (!window.__DEMO && !hasAdminSession()) return alert('Kaydetmek için yönetici girişi gerekir. Karşılaştırma yine de ekranda gösterildi.');
-            dbRoot.child('reconcile').child(start + '_' + end).set({ start, end, time: Date.now(), rows: p.rows })
+            db.ref('watsons_v7_private/reconcile').child(start + '_' + end).set({ start, end, time: Date.now(), rows: p.rows })
+                .then(() => { window.rcSaved = window.rcSaved || {}; window.rcSaved[start + '_' + end] = { start, end, time: Date.now(), rows: p.rows }; rcPaintSaved(); })
                 .catch(() => alert('Kayıt yapılamadı (yetki ya da kural hatası). Karşılaştırma ekranda duruyor.'));
         }
     };
@@ -1522,8 +1557,14 @@
         if (b) b.className = 'px-4 py-2.5 font-bold rounded-xl transition text-sm text-white ' + (window.rcOnlyDiff ? 'bg-teal-600 ring-2 ring-teal-300/50' : 'bg-slate-700 hover:bg-slate-600');
         rcRender();
     };
+    window.rcFetchSaved = function () {
+        try {
+            if (window.__DEMO || !hasAdminSession()) return;
+            db.ref('watsons_v7_private/reconcile').once('value').then(sn => { window.rcSaved = sn.val() || {}; rcPaintSaved(); }).catch(() => {});
+        } catch (e) {}
+    };
     window.rcLoadSaved = function (key) {
-        const rec = key && globalData.reconcile && globalData.reconcile[key];
+        const rec = key && window.rcSaved && window.rcSaved[key];
         if (!rec) return;
         document.getElementById('rc-start').value = rec.start; document.getElementById('rc-end').value = rec.end;
         document.getElementById('rc-input').value = Object.keys(rec.rows || {}).map(k => k + '\t' + rec.rows[k]).join('\n');
@@ -1533,7 +1574,7 @@
     window.rcPaintSaved = function () {
         const sel = document.getElementById('rc-saved');
         if (!sel) return;
-        const cur = sel.value, all = globalData.reconcile || {};
+        const cur = sel.value, all = window.rcSaved || {};
         sel.innerHTML = '<option value="">Kayıtlı mutabakatlar...</option>' + Object.keys(all).sort().reverse().map(k => {
             const r = all[k] || {};
             return `<option value="${escHtml(k)}">${escHtml(rcFmtD(r.start))}${r.start === r.end ? '' : ' - ' + escHtml(rcFmtD(r.end))} (${Object.keys(r.rows || {}).length} mağaza)</option>`;
@@ -2518,12 +2559,34 @@
         authModalEmail = null;
     }
 
+    // Yönetici girişi: 5 hatalı denemede 5 dakika kilit (bu cihazda)
+    ;(function () {
+        const K = 'bb_lock', MAX = 5, WAIT = 5 * 60000;
+        const rd = () => { try { return JSON.parse(localStorage.getItem(K) || '{}') || {}; } catch (e) { return {}; } };
+        const wr = o => { try { localStorage.setItem(K, JSON.stringify(o)); } catch (e) {} };
+        window.loginLockLeft = function () { const o = rd(); return o.until && o.until > Date.now() ? o.until - Date.now() : 0; };
+        window.loginLockFail = function () {
+            const o = rd();
+            if (o.until && o.until <= Date.now()) { o.n = 0; o.until = 0; }
+            o.n = (o.n || 0) + 1;
+            if (o.n >= MAX) { o.until = Date.now() + WAIT; o.n = 0; }
+            wr(o);
+        };
+        window.loginLockReset = function () { wr({}); };
+    })();
+
     window.verifyPassword = function() {
         const pass = document.getElementById('modal-password-input').value;
         const errEl = document.getElementById('modal-password-error');
 
         if (authModalEmail) {
             if (!pass) return;
+            const lk = window.loginLockLeft();
+            if (lk > 0) {
+                errEl.innerHTML = '<i class="fa-solid fa-lock mr-1"></i> Çok fazla hatalı deneme. ' + Math.ceil(lk / 60000) + ' dakika sonra tekrar deneyin.';
+                errEl.classList.remove('hidden');
+                return;
+            }
             const btn = document.getElementById('modal-submit-btn');
             btn.disabled = true; btn.innerText = 'Kontrol ediliyor...';
             // Telefon klavyeleri şifreyi bozabilir: sondaki boşluğu at, ilk harf büyük/küçük hatasını da dene
@@ -2559,6 +2622,7 @@
             tryLogin(0).then(() => {
                 if (loginDone) return;
                 loginDone = true; clearTimeout(loginTimer);
+                window.loginLockReset();
                 const cb = passwordSuccessCallback;
                 closePasswordModal();
                 if (cb) cb();
@@ -2567,6 +2631,7 @@
                 loginDone = true; clearTimeout(loginTimer);
                 btn.disabled = false; btn.innerText = 'Giriş Yap';
                 const code = (err && err.code) || '';
+                if (/^auth\/(wrong-password|invalid-credential|invalid-login-credentials)$/.test(code)) window.loginLockFail();
                 let msg = MODAL_ERR_DEFAULT;
                 if (code === 'auth/too-many-requests') msg = '<i class="fa-solid fa-hourglass-half mr-1"></i> Çok fazla hatalı deneme. Lütfen birkaç dakika bekleyin.';
                 else if (code === 'auth/network-request-failed') msg = '<i class="fa-solid fa-wifi mr-1"></i> Bağlantı hatası. İnternetinizi kontrol edin.';
@@ -2587,6 +2652,122 @@
     }
 
     const BONUS_PACK_PILL = '<span class="inline-flex items-center gap-1 bg-pink-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full border border-pink-300 shadow-md whitespace-nowrap tracking-wider"><i class="fa-solid fa-gift"></i> BONUS PACK</span>';
+
+    // ===== GÜNLÜK TAKİP: hedef girilmemiş uyarısı + akşam kapanış özeti =====
+    ;(function () {
+        const nf = n => Math.round(Number(n) || 0).toLocaleString('tr-TR');
+        const dTR = d => { const m = String(d || '').match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? m[3] + '.' + m[2] + '.' + m[1] : String(d || ''); };
+        const dateOf = pf => { const el = document.getElementById(pf + '-date'); return (el && el.value) || ACTIVE_DATE; };
+        function collect(date) {
+            const stores = [], bms = {};
+            Object.keys(effectiveHierarchy).forEach(bm => {
+                (effectiveHierarchy[bm] || []).forEach(st => {
+                    const x = getStoreDailyStats(st, date);
+                    const ids = Object.keys(x.staff);
+                    let sales = 0, tsum = 0, focus = 0; const fb = {};
+                    ids.forEach(i => { const o = x.staff[i]; sales += o.sales || 0; tsum += o.target || 0; focus += o.focusSales || 0; Object.keys(o.focusBrands || {}).forEach(b => fb[b] = (fb[b] || 0) + o.focusBrands[b]); });
+                    const target = x.storeTarget || 0;
+                    const rec = { store: st, bm, sales, target, tsum, focus, fb, staff: ids.map(i => x.staff[i]), missing: !(target > 0) && !(tsum > 0), undist: target > 0 && !(tsum > 0) };
+                    stores.push(rec);
+                    (bms[bm] = bms[bm] || []).push(rec);
+                });
+            });
+            return { stores, bms };
+        }
+        window.monCollect = collect;
+        function warnList(date) {
+            const c = collect(date);
+            const miss = c.stores.filter(r => r.missing), und = c.stores.filter(r => r.undist);
+            return { c, miss, und };
+        }
+        window.monWarnText = function (date, only) {
+            const w = warnList(date);
+            const lines = ['Günaydın arkadaşlar 🌞 ' + dTR(date) + ' için küçük bir hatırlatma:'];
+            const bmList = Object.keys(w.c.bms).filter(b => !only || b === only);
+            let any = false;
+            bmList.forEach(bm => {
+                const m = w.miss.filter(r => r.bm === bm), u = w.und.filter(r => r.bm === bm);
+                if (!m.length && !u.length) return;
+                any = true;
+                lines.push('', '*' + bm + '*');
+                m.forEach(r => lines.push('• ' + r.store + ': günlük hedef girilmemiş'));
+                u.forEach(r => lines.push('• ' + r.store + ': hedef ekibe dağıtılmamış'));
+            });
+            if (!any) return '';
+            lines.push('', 'Hedefleri girdikten sonra gün çok daha güzel akar 💪 Teşekkürler!');
+            return lines.join('\n');
+        };
+        window.monRender = function (pf) {
+            const box = document.getElementById(pf + '-warn');
+            const el = document.getElementById(pf + '-date');
+            if (el && !el.value) el.value = ACTIVE_DATE;
+            if (!box) return;
+            const date = dateOf(pf), w = warnList(date);
+            if (!w.c.stores.length) { box.innerHTML = '<span class="text-amber-200/70 font-bold">Veri yükleniyor...</span>'; return; }
+            if (!w.miss.length && !w.und.length) { box.innerHTML = '<span class="text-emerald-300 font-black"><i class="fa-solid fa-circle-check mr-1"></i> ' + dTR(date) + ': tüm mağazaların hedefi girilmiş ve dağıtılmış.</span>'; return; }
+            let h = '<div class="font-black text-amber-300 mb-1">' + w.miss.length + ' mağazada hedef yok, ' + w.und.length + ' mağazada ekibe dağıtılmamış</div>';
+            Object.keys(w.c.bms).forEach(bm => {
+                const m = w.miss.filter(r => r.bm === bm), u = w.und.filter(r => r.bm === bm);
+                if (!m.length && !u.length) return;
+                h += '<div class="mt-2"><span class="font-black text-white">' + escHtml(bm) + '</span> ' +
+                    m.map(r => '<span class="inline-block bg-rose-900/60 border border-rose-600/50 rounded-full px-2 py-0.5 text-[11px] font-bold mr-1 mb-1">' + escHtml(r.store) + ' · hedef yok</span>').join('') +
+                    u.map(r => '<span class="inline-block bg-amber-800/60 border border-amber-500/50 rounded-full px-2 py-0.5 text-[11px] font-bold mr-1 mb-1">' + escHtml(r.store) + ' · dağıtılmadı</span>').join('') + '</div>';
+            });
+            box.innerHTML = h;
+        };
+        window.monWarnShare = function (pf) {
+            const t = window.monWarnText(dateOf(pf));
+            if (!t) return alert('Seçili günde uyarılacak mağaza yok.');
+            window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank');
+        };
+        window.monSummaryText = function (date) {
+            const c = collect(date), S = c.stores;
+            let sales = 0, target = 0, over = 0, dist = 0;
+            S.forEach(r => { sales += r.sales; target += r.target; if (r.sales > 0) dist++; if (r.target > 0 && r.sales >= r.target) over++; });
+            const miss = S.filter(r => r.missing).length;
+            const pct = target > 0 ? Math.round(sales / target * 100) : null;
+            const L = ['🌙 *' + dTR(date) + ' GÜN SONU ÖZETİ*', ''];
+            L.push('Toplam satış: *' + nf(sales) + ' adet*' + (target > 0 ? ' (hedef ' + nf(target) + ', %' + pct + ')' : ''));
+            L.push('Satış giren mağaza: ' + dist + '/' + S.length + (over ? ' · hedefini aşan: ' + over : ''));
+            if (miss) L.push('Hedefi girilmemiş mağaza: ' + miss);
+            try {
+                if (date === ACTIVE_DATE && window.recState) {
+                    const r = recState('region');
+                    if (r && r.prior > 0) L.push(r.today > r.prior ? '🏆 Bölge günlük rekoru kırıldı: ' + nf(r.today) + ' (önceki ' + nf(r.prior) + ')' : 'Bölge rekoruna kalan: ' + nf(Math.max(0, r.prior + 1 - r.today)) + ' (rekor ' + nf(r.prior) + ')');
+                }
+            } catch (e) {}
+            const ts = S.filter(r => r.sales > 0).sort((a, b) => b.sales - a.sales).slice(0, 3);
+            if (ts.length) { L.push('', '*🏬 En çok satan mağazalar*'); ts.forEach((r, i) => L.push(['🥇', '🥈', '🥉'][i] + ' ' + r.store + ': ' + nf(r.sales))); }
+            const all = []; S.forEach(r => r.staff.forEach(o => { if ((o.sales || 0) > 0) all.push({ n: o.name, st: r.store, v: o.sales }); }));
+            all.sort((a, b) => b.v - a.v);
+            if (all.length) { L.push('', '*⭐ Günün yıldızları*'); all.slice(0, 3).forEach((o, i) => L.push(['🥇', '🥈', '🥉'][i] + ' ' + o.n + ' (' + o.st + '): ' + nf(o.v))); }
+            const bmr = Object.keys(c.bms).map(bm => { let a = 0, t = 0; c.bms[bm].forEach(r => { a += r.sales; t += r.target; }); return { bm, a, t }; }).filter(x => x.a > 0).sort((a, b) => (b.t > 0 ? b.a / b.t : 0) - (a.t > 0 ? a.a / a.t : 0) || b.a - a.a);
+            if (bmr.length) { L.push('', '*👔 Bölgelerimiz*'); bmr.forEach(x => L.push('• ' + x.bm + ': ' + nf(x.a) + (x.t > 0 ? ' (%' + Math.round(x.a / x.t * 100) + ')' : ''))); }
+            const fb = {}; S.forEach(r => Object.keys(r.fb).forEach(b => fb[b] = (fb[b] || 0) + r.fb[b]));
+            const fk = Object.keys(fb).sort((a, b) => fb[b] - fb[a]);
+            if (fk.length) { L.push('', '*🎯 Odak ürünler*'); fk.forEach(b => L.push('• ' + b + ': ' + nf(fb[b]))); }
+            L.push('', 'Bugün emeği geçen herkese teşekkürler, yarın görüşmek üzere 💜');
+            return L.join('\n');
+        };
+        window.monSummary = function (pf) {
+            const t = document.getElementById(pf + '-text');
+            if (t) t.value = window.monSummaryText(dateOf(pf));
+            monRender(pf);
+        };
+        window.monCopy = function (pf) {
+            const t = document.getElementById(pf + '-text');
+            if (!t) return;
+            if (!t.value) monSummary(pf);
+            try { navigator.clipboard.writeText(t.value).then(() => alert('Kopyalandı.')).catch(() => { t.select(); document.execCommand('copy'); }); } catch (e) { t.select(); try { document.execCommand('copy'); } catch (e2) {} }
+        };
+        window.monSend = function (pf) {
+            const t = document.getElementById(pf + '-text');
+            if (!t) return;
+            if (!t.value) monSummary(pf);
+            window.open('https://wa.me/?text=' + encodeURIComponent(t.value), '_blank');
+        };
+        window.monInit = function () { monRender('mc'); };
+    })();
 
     // ===== PODYUM BANNER (ortak) =====
     function pdInit(n){ n=String(n||'').trim(); const p=n.split(/\s+/); return ((p[0]||'?')[0]+(p.length>1?p[p.length-1][0]:'')).toLocaleUpperCase('tr-TR'); }
@@ -3208,6 +3389,7 @@
                 window.activeContestBrands = [];
             }
             try { if (window.recPaint) recPaint(); } catch (e) { console.error(e); }
+            try { if (window.monRender) { const sc = document.getElementById('screen-central'); if (sc && !sc.classList.contains('hidden')) monRender('mc'); } } catch (e) { console.error(e); }
             
             if (!document.getElementById('contest-input-modal').classList.contains('hidden') && window.currentContestStaffId) {
                 renderContestInputList();
@@ -4675,6 +4857,8 @@
                 updateNavButtons();
                 renderCentralUI();
                 try { if (window.visInit) visInit(); } catch (e) {}
+                try { if (window.rcFetchSaved) rcFetchSaved(); } catch (e) {}
+                try { if (window.monInit) monInit(); } catch (e) {}
             }
         );
     }
@@ -5051,6 +5235,7 @@
 
     function renderGeneralUI(aggData) {
         updateAnnouncementUI();
+        try { if (window.monRender) monRender('mg'); } catch (e) {}
         calculateGlobalTrendAndHeatmap();
 
         let grandSales = 0, grandTarget = 0;
