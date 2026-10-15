@@ -25,11 +25,11 @@
     <circle cx="256" cy="208" r="66" fill="none" stroke="url(#gold)" stroke-width="2" opacity=".55"/>
     <circle cx="256" cy="208" r="46" fill="url(#sun)"/>
     <!-- W monogram -->
-    <path d="M100 272 L140 360 Q166 416 196 366 L228 312 Q256 266 284 312 L316 366 Q346 416 372 360 L412 272" fill="none" stroke="#00505a" stroke-opacity=".28" stroke-width="34" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 8)"/>
-    <path d="M100 272 L140 360 Q166 416 196 366 L228 312 Q256 266 284 312 L316 366 Q346 416 372 360 L412 272" fill="none" stroke="url(#champ)" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M100 272 L140 360 Q166 416 196 366 L228 312 Q256 266 284 312 L316 366 Q346 416 372 360 L412 272" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" transform="translate(-4 -5)"/>
+    <path d="M150 272 L178 358 Q196 414 216 366 L238 314 Q256 268 274 314 L296 366 Q316 414 334 358 L362 272" fill="none" stroke="#00505a" stroke-opacity=".28" stroke-width="34" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 8)"/>
+    <path d="M150 272 L178 358 Q196 414 216 366 L238 314 Q256 268 274 314 L296 366 Q316 414 334 358 L362 272" fill="none" stroke="url(#champ)" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M150 272 L178 358 Q196 414 216 366 L238 314 Q256 268 274 314 L296 366 Q316 414 334 358 L362 272" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" transform="translate(-4 -5)"/>
     <!-- sea waves -->
-    <path d="M92 436 q41 -22 82 0 t82 0 t82 0 t82 0" fill="none" stroke="url(#sea)" stroke-width="7" stroke-linecap="round"/>
+    <path d="M144 436 q28 -18 56 0 t56 0 t56 0 t56 0" fill="none" stroke="url(#sea)" stroke-width="7" stroke-linecap="round"/>
     
   </g>
     <text x="270" y="438" text-anchor="middle" font-family="Inter, Helvetica Neue, Arial, sans-serif" font-weight="800" font-size="84" letter-spacing="26" fill="#ffffff" fill-opacity=".96">EGE</text>
