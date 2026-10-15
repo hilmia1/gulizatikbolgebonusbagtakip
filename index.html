@@ -2209,18 +2209,30 @@
         container.innerHTML = html;
     }
 
-    function renderTrendChart(trendDataArr, labelsArr, momentum) {
+    // trendDataArr: son 7 gün (son eleman = bugün, gün içinde henüz tamamlanmadı)
+    // cmp: { todayUpTo, yesterdayUpTo, hour } = bugün ile dünün AYNI SAATE KADAR satışı
+    function renderTrendChart(trendDataArr, labelsArr, cmp) {
         if(trendChartInstance) trendChartInstance.destroy();
         let canvas = document.getElementById('trendChart');
         if(!canvas) return;
         let ctx = canvas.getContext('2d');
-        
-        let color = momentum >= 0 ? '#10b981' : '#f43f5e'; 
-        
+        cmp = cmp || { todayUpTo: 0, yesterdayUpTo: 0, hour: 0 };
+
+        const t = cmp.todayUpTo, y = cmp.yesterdayUpTo;
+        const diff = y > 0 ? Math.round(((t - y) / y) * 100) : null;
+        const up = diff === null ? true : diff >= 0;
+        let color = up ? '#10b981' : '#f43f5e';
+        const hh = String(cmp.hour).padStart(2, '0') + ':00';
+
+        const n = trendDataArr.length;
+        const todayIdx = n - 1;
+        const labels = labelsArr.map((l, i) => i === todayIdx ? l + ' (bugün)' : l);
+        const ref = trendDataArr.map((v, i) => i === todayIdx ? y : null);
+
         trendChartInstance = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: labelsArr,
+                labels: labels,
                 datasets: [{
                     label: 'Satışlar',
                     data: trendDataArr,
@@ -2229,25 +2241,47 @@
                     fill: true,
                     tension: 0.4,
                     borderWidth: 3,
-                    pointRadius: 4,
-                    pointBackgroundColor: color
+                    pointRadius: trendDataArr.map((v, i) => i === todayIdx ? 6 : 4),
+                    pointBackgroundColor: trendDataArr.map((v, i) => i === todayIdx ? '#ffffff' : color),
+                    pointBorderColor: color,
+                    pointBorderWidth: trendDataArr.map((v, i) => i === todayIdx ? 3 : 1),
+                    segment: { borderDash: c => c.p1DataIndex === todayIdx ? [6, 5] : undefined }
+                }, {
+                    label: 'Dün ' + hh + "'e kadar",
+                    data: ref,
+                    showLine: false,
+                    pointStyle: 'rectRot',
+                    pointRadius: 6,
+                    pointBackgroundColor: '#94a3b8',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    fill: false
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 10 }, filter: it => it.datasetIndex === 1 } },
+                    tooltip: { callbacks: { label: x => x.datasetIndex === 1 ? 'Dün ' + hh + "'e kadar: " + x.parsed.y : (x.dataIndex === todayIdx ? 'Bugün (şu ana kadar): ' : 'Satış: ') + x.parsed.y } }
+                },
                 scales: {
                     y: { beginAtZero: true, grid: { display: false } },
                     x: { grid: { display: false }, ticks: { font: {size: 9} } }
                 }
             }
         });
-        
-        let mIcon = momentum >= 0 ? '<i class="fa-solid fa-arrow-trend-up"></i>' : '<i class="fa-solid fa-arrow-trend-down"></i>';
-        let mText = momentum >= 0 ? `+${momentum}% Yükseliş` : `${momentum}% Düşüş`;
-        let mClass = momentum >= 0 ? 'bg-emerald-100 text-emerald-700 border-emerald-300' : 'bg-rose-100 text-rose-700 border-rose-300';
-        
+
+        let mIcon, mText, mClass;
+        if (y > 0) {
+            mIcon = up ? '<i class="fa-solid fa-arrow-trend-up"></i>' : '<i class="fa-solid fa-arrow-trend-down"></i>';
+            mText = (up ? '+' : '') + diff + '% dünün aynı saatine göre';
+            mClass = up ? 'bg-emerald-100 text-emerald-700 border-emerald-300' : 'bg-amber-100 text-amber-700 border-amber-300';
+        } else if (t > 0) {
+            mIcon = '<i class="fa-solid fa-rocket"></i>'; mText = 'Güne hızlı başlandı'; mClass = 'bg-emerald-100 text-emerald-700 border-emerald-300';
+        } else {
+            mIcon = '<i class="fa-regular fa-clock"></i>'; mText = 'Gün yeni başlıyor'; mClass = 'bg-slate-100 text-slate-600 border-slate-300';
+        }
         document.getElementById('momentum-badge').innerHTML = `<span class="px-2 py-1 border rounded font-bold text-[10px] ${mClass}">${mIcon} ${mText}</span>`;
     }
 
@@ -2275,10 +2309,21 @@
                 });
                 dData.push(sum);
             }
-            let todayVal = dData[6] || 0;
-            let yesterdayVal = dData[5] || 0;
-            let momentum = yesterdayVal > 0 ? Math.round(((todayVal - yesterdayVal) / yesterdayVal) * 100) : (todayVal > 0 ? 100 : 0);
-            renderTrendChart(dData, dLabels, momentum);
+            // Adil karşılaştırma: bugün şu ana kadar ile dünün aynı saatine kadar
+            const nowHour = new Date().getHours();
+            const upTo = (dStr) => {
+                let sum = 0;
+                const dayObj = globalData.daily?.[dStr] || {};
+                Object.keys(dayObj).forEach(st => {
+                    const h = dayObj[st] && dayObj[st].hourly;
+                    if (!h || typeof h !== 'object') return;
+                    Object.keys(h).forEach(k => { if (parseInt(k, 10) <= nowHour) sum += Number(h[k]) || 0; });
+                });
+                return sum;
+            };
+            const dKey = (back) => { const d = new Date(today); d.setDate(d.getDate() - back); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+            const cmp = { todayUpTo: upTo(dKey(0)), yesterdayUpTo: upTo(dKey(1)), hour: nowHour };
+            renderTrendChart(dData, dLabels, cmp);
 
             let hourlyTotals = {};
             // Seçili tarih aralığı (Başlangıç / Bitiş); boşsa aktif gün
