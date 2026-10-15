@@ -596,6 +596,7 @@
         <!-- ================= SİSTEM MERKEZİ EKRANI ================= -->
         <div id="screen-central" class="screen hidden space-y-6">
             <div class="wx-host" data-scope="central"></div>
+            <div class="gw-host" data-scope="central"></div>
             <div class="bg-slate-900 rounded-2xl shadow-xl p-6 text-white flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative overflow-hidden border border-cyan-500/50">
                 <div class="absolute right-4 bottom-[-20px] text-white/5 text-9xl font-black pointer-events-none"><i class="fa-solid fa-server"></i></div>
                 <div class="relative z-10 w-full lg:w-1/2">
@@ -765,6 +766,7 @@
         <!-- ================= 2. MAĞAZA EKRANI ================= -->
         <div id="screen-store" class="screen hidden space-y-5">
             <div class="wx-host" data-scope="store"></div>
+            <div class="gw-host" data-scope="store"></div>
             <div class="rec-host"></div>
             <div id="store-top3-stores-banner" class="hidden"></div>
             <!-- Sadece Personeller (Tüm Mağazalar Arası) -->
@@ -886,6 +888,7 @@
         <!-- ================= 3. BÖLGE MÜDÜRÜ EKRANI ================= -->
         <div id="screen-region" class="screen hidden space-y-5">
             <div class="wx-host" data-scope="region"></div>
+            <div class="gw-host" data-scope="region"></div>
             <div class="rec-host"></div>
             <div id="region-focus-top5-banner" class="hidden"></div>
             <div id="region-top5-banner" class="hidden"></div>
@@ -982,6 +985,7 @@
         <!-- ================= 4. GENEL YÖNETİM (GÜLİZ ATİK) EKRANI ================= -->
         <div id="screen-general" class="screen hidden space-y-6">
             <div class="wx-host" data-scope="general"></div>
+            <div class="gw-host" data-scope="general"></div>
             <div class="rec-host"></div>
             <div id="general-top3-stores-banner" class="hidden"></div>
             <div id="general-top3-banner" class="hidden"></div>
@@ -1002,22 +1006,6 @@
             </div>
 
 
-            <!-- GÜNLÜK TAKİP: hedef uyarısı + akşam kapanış özeti -->
-            <div class="bg-amber-950/80 p-4 rounded-2xl border border-amber-700/50 shadow-lg mt-2">
-                <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
-                    <div class="flex items-center gap-2 text-amber-300 font-black"><i class="fa-solid fa-clipboard-check text-xl"></i> GÜNLÜK TAKİP: HEDEF UYARISI VE KAPANIŞ ÖZETİ</div>
-                    <input type="date" id="mg-date" onchange="monRender('mg')" class="bg-amber-900/70 border border-amber-700/60 text-white font-bold text-xs rounded-lg px-2 py-1.5 focus:outline-none">
-                </div>
-                <div class="text-[11px] text-amber-200/70 font-bold mb-3">Seçili günde hedefi girilmemiş veya ekibe dağıtılmamış mağazalar bölge müdürüne göre listelenir. Altında akşam kapanış özeti hazırlanır; kopyalayıp WhatsApp'a atabilirsiniz.</div>
-                <div id="mg-warn" class="text-sm text-amber-100 mb-3"></div>
-                <div class="flex flex-wrap gap-2 mb-2">
-                    <button type="button" onclick="monWarnShare('mg')" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-sm"><i class="fa-brands fa-whatsapp mr-1"></i> Hedef Hatırlatması Gönder</button>
-                    <button type="button" onclick="monSummary('mg')" class="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-sm"><i class="fa-solid fa-moon mr-1"></i> Kapanış Özeti Hazırla</button>
-                    <button type="button" onclick="monCopy('mg')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl text-sm"><i class="fa-regular fa-copy mr-1"></i> Kopyala</button>
-                    <button type="button" onclick="monSend('mg')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm"><i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp</button>
-                </div>
-                <textarea id="mg-text" rows="10" class="w-full bg-amber-900/50 border border-amber-700/60 text-white text-xs rounded-xl p-3 focus:outline-none" placeholder="Kapanış özeti burada görünür..."></textarea>
-            </div>
             <div class="bg-slate-900 rounded-2xl shadow-xl p-6 text-white flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 relative overflow-hidden border border-slate-700 mt-6">
                 <div class="absolute right-4 bottom-[-20px] text-white/5 text-9xl font-black pointer-events-none"><i class="fa-solid fa-chart-pie"></i></div>
                 <div class="relative z-10 w-full xl:w-5/12">
@@ -2787,7 +2775,8 @@
             if (!t.value) monSummary(pf);
             window.open('https://wa.me/?text=' + encodeURIComponent(t.value), '_blank');
         };
-        window.monInit = function () { monRender('mc'); try { if (window.wxPaint) wxPaint(); } catch (e) {} };
+        window.monInit = function () { monRender('mc'); try { if (window.wxPaint) wxPaint(); } catch (e) {}
+        try { if (window.growPaint) growPaint(); } catch (e) {} };
     })();
 
     // ===== HAVA DURUMU (Open-Meteo, ücretsiz, anahtarsız) =====
@@ -2925,6 +2914,98 @@
         window.wxTest = function (d) { apply(d); };
         setTimeout(() => { try { wxLoad(); } catch (e) {} }, 800);
         try { setInterval(() => { try { wxLoad(); } catch (e) {} }, 30 * 60000); } catch (e) {}
+    })();
+
+    // ===== HAFTANIN GELİŞENLERİ: kendi geçmişine göre en çok yükselen mağaza ve personel =====
+    ;(function () {
+        const nf = n => Math.round(Number(n) || 0).toLocaleString('tr-TR');
+        const addDays = (ds, k) => { const d = new Date(ds + 'T12:00:00'); d.setDate(d.getDate() + k); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+        const dTR = d => d.split('-').reverse().slice(0, 2).join('.');
+        const MIN_STORE = 20, MIN_STAFF = 6, MIN_DAYS = 3;
+        // Son 7 tamamlanmış gün (bugün hariç) ile ondan önceki 7 gün
+        function periods() {
+            const e1 = addDays(ACTIVE_DATE, -1), s1 = addDays(ACTIVE_DATE, -7), e0 = addDays(ACTIVE_DATE, -8), s0 = addDays(ACTIVE_DATE, -14);
+            return { s1, e1, s0, e0 };
+        }
+        function sumPeriod(from, to) {
+            const st = {}, pe = {};
+            const daily = (globalData && globalData.daily) || {};
+            for (let d = from; d <= to; d = addDays(d, 1)) {
+                const day = daily[d]; if (!day) continue;
+                Object.keys(day).forEach(store => {
+                    const stf = day[store] && day[store].staff; if (!stf) return;
+                    let tot = 0;
+                    Object.keys(stf).forEach(id => {
+                        const v = Number(stf[id] && stf[id].sales) || 0; if (v <= 0) return;
+                        tot += v;
+                        const k = id; (pe[k] = pe[k] || { id, store, sales: 0, days: 0 }); pe[k].sales += v; pe[k].days++; pe[k].store = store;
+                    });
+                    if (tot > 0) { (st[store] = st[store] || { sales: 0, days: 0 }); st[store].sales += tot; st[store].days++; }
+                });
+            }
+            return { st, pe };
+        }
+        window.growCompute = function () {
+            const P = periods(), a = sumPeriod(P.s1, P.e1), b = sumPeriod(P.s0, P.e0);
+            const stores = [], staff = [];
+            Object.keys(a.st).forEach(k => {
+                const n = a.st[k], o = b.st[k];
+                if (!o || o.sales < MIN_STORE || n.days < MIN_DAYS || o.days < MIN_DAYS || n.sales <= o.sales) return;
+                stores.push({ name: k, now: n.sales, prev: o.sales, pct: (n.sales - o.sales) / o.sales * 100, diff: n.sales - o.sales });
+            });
+            Object.keys(a.pe).forEach(k => {
+                const n = a.pe[k], o = b.pe[k];
+                if (!o || o.sales < MIN_STAFF || n.days < MIN_DAYS || o.days < MIN_DAYS || n.sales <= o.sales) return;
+                let nm = ''; try { nm = findStaffNameGlobal(k) || ''; } catch (e) {}
+                staff.push({ id: k, name: nm || 'Arkadaşımız', store: n.store, now: n.sales, prev: o.sales, pct: (n.sales - o.sales) / o.sales * 100, diff: n.sales - o.sales });
+            });
+            const rank = (x, y) => y.pct - x.pct || y.diff - x.diff;
+            stores.sort(rank); staff.sort(rank);
+            return { P, stores, staff };
+        };
+        function scopeFilter(scope, r) {
+            if (scope === 'region') { const set = new Set(effectiveHierarchy[currentId] || []); return { stores: r.stores.filter(x => set.has(x.name)), staff: r.staff.filter(x => set.has(x.store)) }; }
+            return { stores: r.stores, staff: r.staff };
+        }
+        window.growText = function () {
+            const r = growCompute(), P = r.P, L = ['🌱 *HAFTANIN GELİŞENLERİ*', dTR(P.s1) + ' - ' + dTR(P.e1) + ' haftası, bir önceki haftaya göre', ''];
+            if (!r.stores.length && !r.staff.length) return '';
+            if (r.stores.length) { L.push('*Mağazalar*'); r.stores.slice(0, 3).forEach((x, i) => L.push(['🥇', '🥈', '🥉'][i] + ' ' + x.name.replace(/^\d+-/, '') + ': +%' + Math.round(x.pct) + ' (' + nf(x.prev) + ' → ' + nf(x.now) + ')')); }
+            if (r.staff.length) { L.push('', '*Arkadaşlarımız*'); r.staff.slice(0, 3).forEach((x, i) => L.push(['🥇', '🥈', '🥉'][i] + ' ' + x.name + ' (' + x.store.replace(/^\d+-/, '') + '): +%' + Math.round(x.pct))); }
+            L.push('', 'Herkes kendi geçmişine göre yarışıyor; her adım değerli, hepinizi kutluyoruz 💜');
+            return L.join('\n');
+        };
+        window.growShare = function () {
+            const t = growText();
+            if (!t) return alert('Bu hafta için gelişen listesi oluşturacak yeterli veri yok.');
+            window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank');
+        };
+        function row(i, title, sub, pct) {
+            return '<div class="flex items-center gap-2 bg-white/80 rounded-xl px-2.5 py-1.5"><span class="text-base">' + ['🥇', '🥈', '🥉'][i] + '</span><div class="min-w-0 flex-1"><div class="font-black text-emerald-900 text-xs truncate">' + title + '</div><div class="text-[10px] font-bold text-emerald-700/80 truncate">' + sub + '</div></div><span class="font-black text-emerald-700 text-sm">+%' + Math.round(pct) + '</span></div>';
+        }
+        window.growPaint = function () {
+            const hosts = document.querySelectorAll ? document.querySelectorAll('.gw-host') : [];
+            if (!hosts.length) return;
+            let r; try { r = growCompute(); } catch (e) { return; }
+            Array.prototype.forEach.call(hosts, h => {
+                const scope = h.getAttribute('data-scope');
+                const f = scopeFilter(scope, r);
+                if (scope === 'store') {
+                    const me = r.stores.findIndex(x => x.name === currentId);
+                    if (me < 0 || me > 2) { h.innerHTML = ''; return; }
+                    h.innerHTML = '<div class="bg-emerald-50 border border-emerald-200 rounded-2xl px-3 py-2 text-xs font-black text-emerald-800">🌱 Haftanın gelişen mağazalarından birisiniz: geçen haftaya göre +%' + Math.round(r.stores[me].pct) + '. Tebrikler, harika gidiyorsunuz! 💜</div>';
+                    return;
+                }
+                if (!f.stores.length && !f.staff.length) { h.innerHTML = ''; return; }
+                const P = r.P;
+                let html = '<div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-3"><div class="flex flex-wrap items-center justify-between gap-2 mb-0.5"><div class="font-black text-emerald-900 text-sm">🌱 HAFTANIN GELİŞENLERİ</div>' +
+                    (scope === 'region' ? '' : '<button type="button" onclick="growShare()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs"><i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp</button>') + '</div>' +
+                    '<div class="text-[10px] font-bold text-emerald-700/80 mb-2">' + dTR(P.s1) + ' - ' + dTR(P.e1) + ' haftası, kendi bir önceki haftasına göre. Sıralama değil, gelişim vurgusu.</div><div class="grid grid-cols-1 md:grid-cols-2 gap-2">';
+                if (f.stores.length) html += '<div class="space-y-1"><div class="text-[10px] font-black text-emerald-800 uppercase tracking-wider">Mağazalar</div>' + f.stores.slice(0, 3).map((x, i) => row(i, escHtml(x.name), nf(x.prev) + ' → ' + nf(x.now) + ' adet', x.pct)).join('') + '</div>';
+                if (f.staff.length) html += '<div class="space-y-1"><div class="text-[10px] font-black text-emerald-800 uppercase tracking-wider">Arkadaşlarımız</div>' + f.staff.slice(0, 3).map((x, i) => row(i, escHtml(x.name), escHtml(x.store), x.pct)).join('') + '</div>';
+                h.innerHTML = html + '</div></div>';
+            });
+        };
     })();
 
     // ===== PODYUM BANNER (ortak) =====
@@ -4366,6 +4447,7 @@
 
     function renderStoreUI() {
         try { if (window.wxPaint) wxPaint(); } catch (e) {}
+        try { if (window.growPaint) growPaint(); } catch (e) {}
         if (currentRole !== 'store') return;
         try { renderStockoutStore(); } catch (e) {}
         try { notifyMilestones(); } catch (e) {}
@@ -4691,6 +4773,7 @@
 
     function renderRegionUI() {
         try { if (window.wxPaint) wxPaint(); } catch (e) {}
+        try { if (window.growPaint) growPaint(); } catch (e) {}
         if (currentRole !== 'region') return;
         
         let isReadOnlyBM = (currentId === "GÜLÇİN FAKILAR");
@@ -5435,6 +5518,7 @@
     function renderGeneralUI(aggData) {
         updateAnnouncementUI();
         try { if (window.wxPaint) wxPaint(); } catch (e) {}
+        try { if (window.growPaint) growPaint(); } catch (e) {}
         try { if (window.monRender) monRender('mg'); } catch (e) {}
         calculateGlobalTrendAndHeatmap();
 
