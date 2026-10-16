@@ -1840,10 +1840,12 @@
                 const role = String(currentRole || '').replace(/[^a-z]/g, '').slice(0, 10);
                 const store = (currentRole === 'store' || currentRole === 'kstore') && currentId ? String(currentId) : '';
                 const upd = { last: now.getTime(), role: role || 'home', store: store, dev: isMobile() ? 'm' : 'd', app: !!(window.__isStandalone && window.__isStandalone()) };
-                r.update(upd).catch(() => {});
-                r.child('first').transaction(v => v || now.getTime());
-                r.child('h').child(pad(now.getHours())).set(1);
-                if (isOpen) r.child('n').transaction(v => (v || 0) + 1);
+                // Ziyaret kaydı önemsiz bir istatistiktir: hata verirse kullanıcıya uyarı çıkmasın
+                const quiet = pr => { try { if (pr && typeof pr.catch === 'function') pr.catch(() => {}); } catch (e) {} };
+                quiet(r.update(upd));
+                quiet(r.child('first').transaction(v => v || now.getTime()));
+                quiet(r.child('h').child(pad(now.getHours())).set(1));
+                if (isOpen) quiet(r.child('n').transaction(v => (v || 0) + 1));
             } catch (e) {}
         }
         window.addEventListener('load', () => { setTimeout(() => { if (!opened) { opened = true; ping(true); } }, 3000); });
