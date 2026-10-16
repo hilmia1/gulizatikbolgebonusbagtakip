@@ -824,6 +824,7 @@
                     <div class="flex-1 w-full">
                         <span class="px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-[11px] font-bold tracking-wider uppercase border border-pink-200" id="store-mode-badge">CANLI MAĞAZA PANELİ</span>
                         <h2 class="text-2xl sm:text-3xl font-black mt-2 text-slate-800" id="store-title">Mağaza Adı</h2>
+                        <button type="button" onclick="switchStore()" class="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 hover:border-pink-400 hover:text-pink-600 rounded-lg text-xs font-black text-slate-600 shadow-sm"><i class="fa-solid fa-right-left"></i>Mağaza Değiştir</button>
                         
                         <div class="flex flex-wrap gap-2 mt-2 mb-1">
                             <button type="button" onclick="openCatalogModal()" class="px-3 py-1.5 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5 w-max">
@@ -970,7 +971,7 @@
                     </div>
                     
                     <h2 class="text-2xl sm:text-3xl font-black mt-2" id="region-title">Bölge Müdürü Adı</h2>
-                    <div class="mt-2 inline-flex items-center gap-2 bg-white/15 border border-white/25 rounded-lg px-2 py-1 max-w-full"><i class="fa-solid fa-right-left text-xs"></i><select id="region-switch" onchange="switchRegion(this.value)" class="bg-transparent text-white text-xs font-bold outline-none max-w-[220px]"></select></div>
+                    <button type="button" id="region-switch" onclick="openRegionPicker()" class="mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-white/15 hover:bg-white/25 border border-white/30 rounded-lg text-xs font-black text-white shadow-sm max-w-full"><i class="fa-solid fa-right-left"></i><span id="region-switch-label" class="truncate">Bölge Müdürü Değiştir</span><i class="fa-solid fa-chevron-down text-[10px] opacity-70"></i></button>
                     
                     <div class="bg-indigo-900/40 p-2.5 rounded-xl border border-indigo-500/30 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 mt-3 w-full lg:w-max lg:max-w-full" id="region-date-filters">
                         <div class="flex items-center justify-between gap-2 bg-indigo-800 p-1.5 rounded-lg border border-indigo-400/50 shadow-inner">
@@ -2229,7 +2230,12 @@
         .pk-it.on{background:#e0e7ff;color:#3730a3}
         .pk-n{min-width:42px;text-align:center;background:#f1f5f9;color:#64748b;border-radius:8px;padding:3px 6px;font-size:11px;font-weight:900}
         .pk-it.on .pk-n{background:#c7d2fe;color:#3730a3}
-        .pk-em{padding:22px;text-align:center;color:#94a3b8;font-weight:800;font-size:13px}`;
+        .pk-em{padding:22px;text-align:center;color:#94a3b8;font-weight:800;font-size:13px}
+        .sw-in{animation:swIn .55s cubic-bezier(.2,.8,.2,1)}
+        @keyframes swIn{from{opacity:0;transform:translateX(46px) scale(.98)}to{opacity:1;transform:none}}
+        .sw-ov{position:fixed;left:50%;top:16%;z-index:99995;max-width:90vw;background:linear-gradient(135deg,#6366f1,#ec4899);color:#fff;padding:12px 22px;border-radius:999px;font-weight:900;font-size:15px;box-shadow:0 12px 40px rgba(99,102,241,.45);pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:swPop 1.4s both}
+        @keyframes swPop{0%{opacity:0;transform:translate(-50%,10px) scale(.85)}14%{opacity:1;transform:translate(-50%,0) scale(1)}80%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-12px) scale(.98)}}
+        @media (prefers-reduced-motion:reduce){.sw-in,.sw-ov{animation:none}}`;
         document.head.appendChild(st);
         const tr = s => String(s || '').toLocaleLowerCase('tr').replace(/ı/g, 'i').replace(/[çğöşü]/g, c => ({ ç: 'c', ğ: 'g', ö: 'o', ş: 's', ü: 'u' }[c]));
         const esc2 = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -2286,6 +2292,21 @@
             sync(sel);
         });
         setInterval(() => IDS.forEach(id => { const s = document.getElementById(id); if (s) sync(s); }), 1200);
+        // Geçiş efekti: yeni ekran sağdan kayarak gelir, üstte "→ İSİM" etiketi çıkar
+        window.swFx = function (label, screenId) {
+            try {
+                const sc = document.getElementById(screenId);
+                if (sc) { sc.classList.remove('sw-in'); void sc.offsetWidth; sc.classList.add('sw-in'); }
+                const el = document.createElement('div'); el.className = 'sw-ov'; el.textContent = '➜ ' + label;
+                document.body.appendChild(el); setTimeout(() => { try { el.remove(); } catch (e) {} }, 1500);
+                window.scrollTo && window.scrollTo(0, 0);
+            } catch (e) {}
+        };
+        // Dışarıdan çağrı: aynı arama penceresini herhangi bir liste için aç
+        window.pkOpen = function (title, items, current, cb) {
+            const fake = { options: [{ value: '', text: '-- ' + title + ' --' }].concat(items.map(i => ({ value: i.v, text: i.t }))), value: current, dispatchEvent() { try { cb(fake.value); } catch (e) { console.error(e); } } };
+            open(fake);
+        };
     } catch (e) { console.error('Seçim penceresi kurulamadı', e); } })();
 
     // ===== Duyuru şeritleri ve üst başlık: yapışma mesafelerini görünen şeritlere göre hesapla =====
@@ -4966,6 +4987,20 @@
         renderStoreUI();
     }
 
+    // Mağaza ekranından çıkmadan başka mağazaya geç (geri dönüş geçmişi korunur)
+    window.switchStore = function() {
+        if (currentRole !== 'store' || !window.pkOpen) return;
+        const items = allStoresList.map(x => ({ v: x.name, t: x.name }));
+        window.pkOpen('Mağaza Seçiniz', items, currentId, v => {
+            if (!v || v === currentId) return;
+            const keep = navStack.slice();
+            loginAsStore(v);
+            navStack = keep;
+            try { updateNavButtons(); } catch (e) {}
+            try { swFx(v, 'screen-store'); } catch (e) {}
+        });
+    }
+
     window.loadHistoricalStore = function() {
         const startStr = document.getElementById('store-start-date').value;
         const endStr = document.getElementById('store-end-date').value;
@@ -5317,6 +5352,12 @@
     window.regionDetailMode = 'bp';
     window.setRegionDetail = function (m) { window.regionDetailMode = m; renderRegionUI(); };
 
+    window.openRegionPicker = function() {
+        if (currentRole !== 'region' || !window.pkOpen) return;
+        const items = Object.keys(hierarchy).sort((a, b) => a.localeCompare(b, 'tr')).map(n => ({ v: n, t: n }));
+        window.pkOpen('Bölge Müdürü Seçiniz', items, currentId, v => switchRegion(v));
+    };
+
     window.switchRegion = function(name) {
         if (!name || currentRole !== 'region' || name === currentId) return;
         currentId = name;
@@ -5324,17 +5365,12 @@
         setURLParam('region', currentId);
         document.getElementById('region-title').innerText = currentId;
         renderRegionUI();
+        try { swFx(currentId, 'screen-region'); } catch (e) {}
     }
 
     function renderRegionUI() {
         try { window.tempoRefresh(); } catch (e) {}
-        try {
-            const sw = document.getElementById('region-switch');
-            if (sw) {
-                if (!sw.options.length) Object.keys(hierarchy).sort((a, b) => a.localeCompare(b, 'tr')).forEach(n => sw.add(new Option(n, n)));
-                sw.value = currentId;
-            }
-        } catch (e) {}
+        try { const lb = document.getElementById('region-switch-label'); if (lb) lb.textContent = currentId + ' · Değiştir'; } catch (e) {}
         try { if (window.wxPaint) wxPaint(); } catch (e) {}
         try { if (window.growPaint) growPaint(); } catch (e) {}
         if (currentRole !== 'region') return;
@@ -6810,6 +6846,14 @@
             render();
         }
         window.kpiOpen = function (role, id, push) { open(role, id, push !== false); };
+        window.kpiSwitchRegion = function () {
+            const items = Object.keys(effectiveHierarchy).sort((a, b) => a.localeCompare(b, 'tr')).map(n => ({ v: n, t: n }));
+            if (window.pkOpen) window.pkOpen('Bölge Müdürü Seçiniz', items, currentId, v => { if (v && v !== currentId) { open('kregion', v, false); try { swFx(v, 'screen-kregion'); } catch (e) {} } });
+        };
+        window.kpiSwitchStore = function () {
+            const items = allStoresList.map(x => ({ v: x.name, t: x.name }));
+            if (window.pkOpen) window.pkOpen('Mağaza Seçiniz', items, currentId, v => { if (v && v !== currentId) { navStack = []; open('kstore', v, false); try { swFx(v, 'screen-kstore'); } catch (e) {} } });
+        };
         window.kpiRestore = function (role, id) { open(role, id, false); };
 
         window.kpiLoginAsStore = function (directId) {
@@ -6996,7 +7040,7 @@
                 <div class="min-w-0"><span class="font-black text-slate-400 mr-1.5">${['🥇', '🥈', '🥉'][i] || (i + 1) + '.'}</span><span class="clickable-store text-xs font-bold text-slate-700">${esc(r.name)}</span><div class="text-[9px] text-slate-400 font-bold ml-6">${esc(r.bm)}</div></div>${pillPct(r.overall)}</div>`).join('')
                 : '<div class="text-xs text-slate-400 text-center py-3">Henüz sıralama oluşmadı.</div>';
 
-            body.innerHTML = header(c, 'KPI Mağaza Paneli', esc(st), 'Bölge Müdürü: ' + esc(bmOf(st)),
+            body.innerHTML = header(c, 'KPI Mağaza Paneli', esc(st) + ' <button type="button" onclick="kpiSwitchStore()" class="ml-2 align-middle px-3 py-1.5 bg-white/20 hover:bg-white/30 border border-white/40 rounded-lg text-xs font-black whitespace-nowrap"><i class="fa-solid fa-right-left mr-1"></i>Mağaza Değiştir</button>', 'Bölge Müdürü: ' + esc(bmOf(st)),
                 statBox('Genel Başarı', ov === null ? '—' : '%' + Math.round(ov)) +
                 statBox('Genel Sıra', ovRank.rank > 0 ? '#' + ovRank.rank + ' <span class="text-sm text-cyan-100">/ ' + ovRank.total + '</span>' : '—')) +
                 (hasTarget ? '' : `<div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 text-sm font-bold"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Mağazanız için bu yarışmada henüz hedef girilmemiş. Hedef Sistem Merkezi tarafından girilir.</div>`) +
@@ -7094,7 +7138,7 @@
 
             body.innerHTML = header(c, 'KPI Bölge Paneli', esc(bm), list.length + ' mağaza',
                 statBox('Bölge Genel Başarı', ov === null ? '—' : '%' + Math.round(ov)) + statBox('Hedefsiz Mağaza', noTarget)) +
-                `<div class="bg-white border border-indigo-200 rounded-2xl p-3 flex items-center gap-2"><i class="fa-solid fa-right-left text-indigo-500"></i><span class="text-xs font-black text-slate-500 whitespace-nowrap">Bölge Müdürü:</span><select onchange="kpiOpen('kregion', this.value, false)" class="flex-1 min-w-0 p-2 border border-slate-300 rounded-lg text-sm font-bold bg-white">${Object.keys(effectiveHierarchy).sort((a, b) => a.localeCompare(b, 'tr')).map(n => `<option value="${esc(n)}"${n === bm ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select></div>` +
+                `<button type="button" onclick="kpiSwitchRegion()" class="w-full sm:w-auto bg-white hover:bg-indigo-50 border border-indigo-200 rounded-2xl px-4 py-2.5 flex items-center gap-2 text-sm font-black text-slate-700 shadow-sm"><i class="fa-solid fa-right-left text-indigo-500"></i><span class="truncate">${esc(bm)}</span><span class="text-indigo-600 text-xs whitespace-nowrap">· Bölge Müdürü Değiştir</span></button>` +
                 podiumHost() +
                 `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">${totalCards(regionMs, c)}${regionMs.map(x => brandCard(x.b, x.m, c, { derived: x.derived })).join('')}</div>
                 ${staffReport(c, c.staff.filter(r => list.includes(r.store)), 'Bölge Personel Raporu (KPI adet markaları)')}
@@ -7694,6 +7738,7 @@
             if (window.__DEMO || !kpiGateOn()) return true;
             try { if (hasAdminSession()) return true; } catch (e) {}
             if (kpiPass) return true;
+            if (window.kpiMode) return true;   // KPI içindeyken (şifre girilip geçildi) mağaza seçerken tekrar sorma; KPI'dan çıkınca sıfırlanır
             try { localStorage.removeItem(KPI_GATE_KEY); } catch (e) {}   // eski sürümden kalan 12 saatlik hatırlama temizlenir
             return false;   // cihaz hatırlanmaz: her geçişte şifre sorulur
         }
@@ -7732,6 +7777,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.12</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.18</div>
 </body>
 </html>
