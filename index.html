@@ -4665,30 +4665,65 @@
             store: st ? { name: st, sales: t.stores[st] } : null
         };
     }
+    function socMonthDates() {
+        const p = ACTIVE_DATE.split('-').map(Number), out = [];
+        for (let d = 1; d <= p[2]; d++) out.push(p[0] + '-' + String(p[1]).padStart(2, '0') + '-' + String(d).padStart(2, '0'));
+        return out;
+    }
+    function socMonthAgg(dates) {
+        const known = socKnown(), staff = {}, stores = {}, fstores = {};
+        dates.forEach(dk => {
+            const day = (globalData.daily || {})[dk];
+            if (!day) return;
+            Object.keys(day).forEach(st => {
+                if (!known.has(st)) return;
+                const sf = (day[st] && day[st].staff) || {};
+                Object.keys(sf).forEach(id => {
+                    const rec = sf[id] || {};
+                    const v = Number(rec.sales) || 0, f = focusOf(rec).total;
+                    if (v <= 0 && f <= 0) return;
+                    if (!staff[id]) staff[id] = { id, store: st, sales: 0, focus: 0 };
+                    staff[id].sales += v; staff[id].focus += f; staff[id].store = st;
+                    stores[st] = (stores[st] || 0) + v;
+                    fstores[st] = (fstores[st] || 0) + f;
+                });
+            });
+        });
+        const st = Object.values(staff).map(x => Object.assign(x, { name: socNameOf(x.id, x.store) }));
+        return { staff: st, stores, fstores };
+    }
     function renderStars() {
         const box = document.getElementById('home-stars');
         if (!box) return;
-        const week = socWeekDates();
+        const ag = socMonthAgg(socMonthDates());
+        const byName = (a, b) => a.name.localeCompare(b.name, 'tr');
+        const topStaff = key => ag.staff.filter(x => x[key] > 0).sort((a, b) => (b[key] - a[key]) || (b.sales - a.sales) || byName(a, b)).slice(0, 3).map(x => ({ name: x.name, sub: x.store, v: x[key] }));
+        const topStores = map => Object.keys(map).filter(k => map[k] > 0).sort((a, b) => (map[b] - map[a]) || (ag.stores[b] - ag.stores[a]) || a.localeCompare(b, 'tr')).slice(0, 3).map(k => ({ name: k, sub: '', v: map[k] }));
+        const hasFocus = (window.activeContestBrands || []).length > 0;
         const cols = [
-            ['Dünün Yıldızı', '🌙', socStar([socDayKey(-1)]), 'from-indigo-500 to-violet-600'],
-            ['Bugünün Lideri', '☀️', socStar([ACTIVE_DATE]), 'from-amber-400 to-orange-500'],
-            ['Bu Haftanın Yıldızı', '👑', socStar(week), 'from-pink-500 to-rose-600']
+            ['En Çok Satan Mağazalar', '🏬', topStores(ag.stores), 'from-indigo-500 to-violet-600', 'text-indigo-600'],
+            ['En Çok Satan Personel', '🌟', topStaff('sales'), 'from-pink-500 to-rose-600', 'text-pink-600']
         ];
-        if (!cols.some(c => c[2].staff)) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+        if (hasFocus) {
+            cols.push(['Odak: Mağazalar', '🎯', topStores(ag.fstores), 'from-amber-400 to-orange-500', 'text-orange-600']);
+            cols.push(['Odak: Personel', '⭐', topStaff('focus'), 'from-emerald-500 to-teal-600', 'text-emerald-600']);
+        }
+        if (!cols.some(c => c[2].length)) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+        const AYLAR = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+        const mo = AYLAR[Number(ACTIVE_DATE.split('-')[1]) - 1];
+        const MED = ['🥇', '🥈', '🥉'];
         box.classList.remove('hidden');
         box.innerHTML = `<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
-            <h3 class="font-black text-slate-800 text-base"><span class="mr-1">🌟</span> Yıldızlar</h3>
-            <p class="text-[11px] text-slate-400 mb-3">Bonus Pack satışında tüm mağazalar arasında en çok satan personel ve mağaza. Hafta her Pazartesi yeniden başlar.</p>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">` + cols.map(c => {
-            const st = c[2].staff, sh = c[2].store;
+            <h3 class="font-black text-slate-800 text-base"><span class="mr-1">🌟</span> ${mo} Ayının Yıldızları</h3>
+            <p class="text-[11px] text-slate-400 mb-3">Ayın başından bugüne, tüm mağazalar arasında ilk 3. Eşit satışta aynı madalya verilir. Ay başında liste sıfırlanır.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 ${cols.length > 2 ? 'xl:grid-cols-4' : ''} gap-3">` + cols.map(c => {
+            const rows = c[2];
             return `<div class="rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
                 <div class="bg-gradient-to-r ${c[3]} text-white px-3 py-2 text-xs font-black flex items-center gap-2"><span class="text-base">${c[1]}</span>${c[0]}</div>
-                <div class="p-3 bg-white">` + (st
-                ? `<div class="font-black text-slate-800 text-sm leading-tight">${escHtml(st.name)}</div>
-                   <div class="text-[11px] text-slate-500 leading-tight">${escHtml(st.store)}</div>
-                   <div class="text-2xl font-black text-pink-600 mt-1">${st.sales} <span class="text-[11px] font-bold text-slate-400">adet</span></div>
-                   <div class="mt-2 pt-2 border-t border-slate-100 text-[11px] text-slate-500"><i class="fa-solid fa-store text-indigo-400 mr-1"></i>Mağaza: <b class="text-slate-700">${escHtml(sh.name)}</b> · ${sh.sales} adet</div>`
-                : `<div class="text-xs text-slate-400 font-bold py-4 text-center">İlk satış gelsin, kutlamaya hazırız ☀️</div>`) + `</div></div>`;
+                <div class="p-3 bg-white space-y-2">` + (rows.length ? rows.map((r, i) => {
+                const m = MED[rows.findIndex(x => x.v === r.v)] || '🥉';
+                return `<div class="flex items-center gap-2"><span class="text-lg leading-none">${m}</span><div class="min-w-0 flex-1"><div class="font-black text-slate-800 text-[13px] leading-tight truncate">${escHtml(r.name)}</div>${r.sub ? `<div class="text-[10px] text-slate-500 leading-tight truncate">${escHtml(r.sub)}</div>` : ''}</div><div class="font-black ${c[4]} text-lg leading-none">${r.v}<span class="text-[9px] font-bold text-slate-400 ml-0.5">adet</span></div></div>`;
+            }).join('') : `<div class="text-xs text-slate-400 font-bold py-3 text-center">Henüz satış yok</div>`) + `</div></div>`;
         }).join('') + `</div></div>`;
     }
 
@@ -7538,6 +7573,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · sürüm 16.10.2026 23:00</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · sürüm 16.10.2026 23:40</div>
 </body>
 </html>
