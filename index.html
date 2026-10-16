@@ -2437,6 +2437,9 @@
         st.textContent = `
         .mc-bob{animation:mcBob 2.8s ease-in-out infinite;transform-origin:50% 100%}
         @keyframes mcBob{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-4px) rotate(1.5deg)}}
+        .mc-bl{transform-box:fill-box;transform-origin:center;animation:mcBlink 4.6s infinite}
+        @keyframes mcBlink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}
+        .mc-look{transform:translate(var(--lx,0px),var(--ly,0px));transition:transform .18s}
         .mc-jump{animation:mcJump .7s ease-in-out infinite;transform-origin:50% 100%}
         @keyframes mcJump{0%,100%{transform:translateY(0) scale(1,1)}40%{transform:translateY(-10px) scale(.97,1.04)}70%{transform:translateY(0) scale(1.04,.96)}}
         .mc-bub{position:relative;background:#fff;border:2px solid #fbcfe8;border-radius:18px;padding:10px 14px;font-weight:800;font-size:13px;color:#334155;line-height:1.35}
@@ -2447,16 +2450,28 @@
         // mood: happy | cheer | rain | sleepy
         window.mascotSvg = function (mood, size) {
             size = size || 96; const g = 'mg' + (++uid);
+            const pup = (cx, d) => '<ellipse class="mc-bl" style="animation-delay:' + d + 's" cx="' + cx + '" cy="71" rx="5.5" ry="7" fill="#4a044e"/><circle cx="' + (cx + 2) + '" cy="68" r="2" fill="#fff"/>';
+            const heart = cx => '<path d="M' + cx + ' 77c-9-5-10-12-5-14 3-1 5 1 5 3 0-2 2-4 5-3 5 2 4 9-5 14z" fill="#e11d48"/>';
             const eyes = mood === 'cheer'
                 ? '<path d="M40 70q7-9 14 0M66 70q7-9 14 0" stroke="#4a044e" stroke-width="4" fill="none" stroke-linecap="round"/>'
                 : mood === 'sleepy'
                     ? '<path d="M40 72q7 6 14 0M66 72q7 6 14 0" stroke="#4a044e" stroke-width="4" fill="none" stroke-linecap="round"/>'
-                    : '<ellipse cx="47" cy="71" rx="5.5" ry="7" fill="#4a044e"/><ellipse cx="73" cy="71" rx="5.5" ry="7" fill="#4a044e"/><circle cx="49" cy="68" r="2" fill="#fff"/><circle cx="75" cy="68" r="2" fill="#fff"/>';
+                    : mood === 'wink'
+                        ? '<g class="mc-look">' + pup(47, 0) + '</g><path d="M66 72q7-8 14 0" stroke="#4a044e" stroke-width="4" fill="none" stroke-linecap="round"/>'
+                        : mood === 'love'
+                            ? '<g class="mc-look">' + heart(47) + heart(73) + '</g>'
+                            : mood === 'surprised'
+                                ? '<g class="mc-look"><ellipse cx="47" cy="70" rx="7" ry="9" fill="#fff" stroke="#4a044e" stroke-width="2.5"/><ellipse cx="73" cy="70" rx="7" ry="9" fill="#fff" stroke="#4a044e" stroke-width="2.5"/><circle cx="47" cy="71" r="3.6" fill="#4a044e"/><circle cx="73" cy="71" r="3.6" fill="#4a044e"/></g>'
+                                : '<g class="mc-look">' + pup(47, 0) + pup(73, 0.06) + '</g>';
             const mouth = mood === 'cheer'
                 ? '<path d="M48 82q12 18 24 0z" fill="#9d174d"/><path d="M53 88q7 6 14 0" fill="#f472b6"/>'
                 : mood === 'sleepy'
                     ? '<ellipse cx="60" cy="87" rx="4" ry="3" fill="#9d174d"/>'
-                    : '<path d="M50 84q10 11 20 0" stroke="#9d174d" stroke-width="4" fill="none" stroke-linecap="round"/>';
+                    : mood === 'surprised'
+                        ? '<ellipse cx="60" cy="90" rx="5" ry="7" fill="#9d174d"/>'
+                        : mood === 'wink' || mood === 'love'
+                            ? '<path d="M48 83q12 14 24 0" stroke="#9d174d" stroke-width="4" fill="#fb7185" stroke-linecap="round"/>'
+                            : '<path d="M50 84q10 11 20 0" stroke="#9d174d" stroke-width="4" fill="none" stroke-linecap="round"/>';
             const arms = mood === 'cheer'
                 ? '<path d="M26 74q-14-6-12-24M94 74q14-6 12-24" stroke="#ec4899" stroke-width="7" fill="none" stroke-linecap="round"/><circle cx="14" cy="48" r="5" fill="#fbcfe8"/><circle cx="106" cy="48" r="5" fill="#fbcfe8"/>'
                 : '<path d="M26 80q-10 4-12 14M94 80q10 4 12 14" stroke="#ec4899" stroke-width="7" fill="none" stroke-linecap="round"/><circle cx="14" cy="95" r="5" fill="#fbcfe8"/><circle cx="106" cy="95" r="5" fill="#fbcfe8"/>';
@@ -2492,11 +2507,199 @@
             const m = pick();
             box.innerHTML = '<div class="flex items-center gap-3 bg-gradient-to-r from-pink-50 to-indigo-50 border border-pink-100 rounded-2xl px-3 py-2.5">' +
                 '<button type="button" class="mc-bob shrink-0" style="background:none;border:0;padding:0;cursor:pointer" onclick="mascotPaint()" title="Bagi\'ye dokun">' + mascotSvg(m.mood, 64) + '</button>' +
-                '<div class="mc-bub flex-1 min-w-0"><span class="block text-[10px] font-black text-pink-500 uppercase tracking-wider mb-0.5">Bagi</span>' + m.text + '</div></div>';
+                '<div class="mc-bub flex-1 min-w-0"><span class="block text-[10px] font-black text-pink-500 uppercase tracking-wider mb-0.5">Bagi</span>' + m.text + '<button type="button" onclick="bagiToggleWalk()" class="block mt-1.5 text-[10px] font-black text-slate-400 hover:text-pink-500">🐾 Bagi ekranda gezsin: ' + (window.bagiWalkOn && !bagiWalkOn() ? 'KAPALI' : 'AÇIK') + '</button></div></div>';
         };
         setTimeout(() => { try { mascotPaint(); } catch (e) {} }, 300);
         setInterval(() => { try { mascotPaint(); } catch (e) {} }, 600000);
     } catch (e) { console.error('Maskot kurulamadı', e); } })();
+
+    // === Bagi ekranda gezer: yürür, bakınır, göz kırpar, şaşırır; gerektiğinde hedefe yürüyüp konuşur ===
+    ;(function roamInit() { try {
+        const st = document.createElement('style');
+        st.textContent = `
+        .bw{position:fixed;left:0;top:0;z-index:99980;pointer-events:none;will-change:transform;display:none}
+        .bw-in{position:relative}
+        .bw.walking .bw-in{animation:bwWalk .38s ease-in-out infinite}
+        @keyframes bwWalk{0%,100%{transform:rotate(-8deg) translateY(0)}50%{transform:rotate(8deg) translateY(-7px)}}
+        .bw-sv{display:block;transform-origin:50% 100%}
+        .bw-b{position:absolute;bottom:100%;left:50%;margin-bottom:4px;width:max-content;max-width:min(230px,70vw);background:#fff;border:2px solid #fbcfe8;border-radius:16px;padding:8px 12px;font-weight:800;font-size:12.5px;color:#334155;line-height:1.35;box-shadow:0 8px 24px rgba(236,72,153,.25);opacity:0;transform:translateX(-50%) scale(.85);transition:opacity .25s,transform .25s}
+        .bw-b.on{opacity:1;transform:translateX(-50%) scale(1)}
+        @media (prefers-reduced-motion:reduce){.bw.walking .bw-in{animation:none}}`;
+        document.head.appendChild(st);
+        const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+        const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+        const reduce = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches);
+        const first = n => { const w = String(n || '').replace(/\(.*?\)/g, '').trim().split(/\s+/)[0] || ''; return w.charAt(0).toLocaleUpperCase('tr') + w.slice(1).toLocaleLowerCase('tr'); };
+        const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+        const rnd = (a, b) => a + Math.random() * (b - a);
+        const size = () => innerWidth < 480 ? 54 : 66;
+        const enabled = () => lsGet('bb_walk') !== 'off' && !reduce();
+        let el = null, sv = null, bub = null, inn = null, face = '', curX = 0, curY = 0, busy = false, timer = 0, walkT = 0, last = 0, lastRain = 0, lastTarget = 0, n = 0;
+        const baseY = () => innerHeight - size() * 1.25 - 10;
+        function ensure() {
+            if (el || !document.body) return;
+            el = document.createElement('div'); el.className = 'bw';
+            el.innerHTML = '<div class="bw-in"><div class="bw-sv"></div><div class="bw-b"></div></div>';
+            document.body.appendChild(el);
+            inn = el.querySelector('.bw-in'); sv = el.querySelector('.bw-sv'); bub = el.querySelector('.bw-b');
+            curX = rnd(20, Math.max(40, innerWidth - 100)); curY = baseY();
+            el.style.transition = 'none'; el.style.transform = 'translate(' + curX + 'px,' + curY + 'px)';
+            setFace('happy', true);
+        }
+        function setFace(m, force) {
+            if (!sv || (!force && m === face)) return;
+            face = m; sv.innerHTML = mascotSvg(m, size());
+        }
+        function moveTo(x, y, ms, ease) {
+            if (!el) return;
+            const dx = x - curX;
+            if (Math.abs(dx) > 6) sv.style.transform = dx < 0 ? 'scaleX(-1)' : 'none';
+            el.style.transition = 'transform ' + ms + 'ms ' + (ease || 'linear');
+            void el.offsetWidth;
+            el.classList.add('walking');
+            el.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+            curX = x; curY = y;
+            clearTimeout(walkT);
+            walkT = setTimeout(() => { if (el) el.classList.remove('walking'); }, ms);
+        }
+        function say(text, ms) {
+            if (!bub) return;
+            bub.textContent = text; bub.style.marginLeft = '0px';
+            bub.classList.add('on');
+            const bb = bub.getBoundingClientRect();
+            if (bb.left < 8) bub.style.marginLeft = (8 - bb.left) + 'px';
+            else if (bb.right > innerWidth - 8) bub.style.marginLeft = (innerWidth - 8 - bb.right) + 'px';
+            setTimeout(() => { if (bub) bub.classList.remove('on'); }, ms || 2200);
+        }
+        function next(ms) { clearTimeout(timer); timer = setTimeout(step, ms); }
+        const FACES = ['wink', 'surprised', 'love', 'cheer', 'happy'];
+        const TALK = { wink: ['😉', 'Hı hı 😄'], surprised: ['Aaa!', 'Vay! 😮', 'Ooo!'], love: ['💜', 'Sizi seviyorum 💕'], cheer: ['Yaşasın! 🎉', 'Hadi hadi! 💪'], happy: ['😊'] };
+        function step() {
+            if (busy) return;
+            if (!enabled()) { if (el) el.style.display = 'none'; return next(4000); }
+            if (document.hidden) return next(4000);
+            ensure(); el.style.display = 'block';
+            const h = new Date().getHours(), night = h >= 23 || h < 6;
+            const r = Math.random();
+            if (night && r < .6) {
+                setFace('sleepy'); return next(rnd(4000, 7000));
+            }
+            if (face === 'sleepy') setFace('happy');
+            if (r < .5) {
+                const nx = clamp(curX + rnd(-1, 1) * innerWidth * .6, 6, innerWidth - size() - 6);
+                const ms = clamp(Math.abs(nx - curX) / 55 * 1000, 900, 7000);
+                moveTo(nx, baseY(), ms);
+                return next(ms + rnd(1200, 3500));
+            }
+            if (r < .68) {
+                const d = Math.random() < .5 ? -1 : 1;
+                el.style.setProperty('--lx', (d * 3) + 'px'); el.style.setProperty('--ly', '-1px');
+                setTimeout(() => { if (el) { el.style.setProperty('--lx', '0px'); el.style.setProperty('--ly', '0px'); } }, 1400);
+                return next(rnd(1500, 3000));
+            }
+            if (r < .92) {
+                const f = FACES[Math.floor(Math.random() * FACES.length)];
+                setFace(f);
+                if (Math.random() < .55) { const t = TALK[f]; say(t[Math.floor(Math.random() * t.length)], 1800); }
+                setTimeout(() => { if (!busy) setFace('happy'); }, 2300);
+                return next(rnd(2600, 4200));
+            }
+            sv.classList.remove('mc-jump'); void sv.offsetWidth; sv.classList.add('mc-jump');
+            setTimeout(() => { if (sv) sv.classList.remove('mc-jump'); }, 1500);
+            next(rnd(2200, 3800));
+        }
+        // Dışarıdan: kısa tepki (ör. satış girilince)
+        window.bagiReact = function (mood, ms) {
+            try {
+                if (busy || !el || el.style.display === 'none' || !enabled()) return;
+                setFace(mood || 'cheer');
+                sv.classList.remove('mc-jump'); void sv.offsetWidth; sv.classList.add('mc-jump');
+                setTimeout(() => { if (sv) sv.classList.remove('mc-jump'); if (!busy) setFace('happy'); }, ms || 1500);
+            } catch (e) {}
+        };
+        // Bir öğeye yürüyüp konuş, sonra yerine dön
+        window.bagiWalk = function (target, mood, text, done) {
+            if (busy || !target || !enabled()) return false;
+            busy = true; clearTimeout(timer);
+            ensure(); el.style.display = 'block';
+            const fin = () => { busy = false; last = Date.now(); try { done && done(); } catch (e) {} next(2500); };
+            try {
+                let r = target.getBoundingClientRect();
+                const need = r.top < 70 || r.bottom > innerHeight - 40;
+                if (need) target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                setTimeout(() => {
+                    try {
+                        r = target.getBoundingClientRect();
+                        const sz = size();
+                        const tx = r.left > 100 ? r.left - sz - 8 : Math.min(innerWidth - sz - 4, r.right + 6);
+                        const ty = clamp(r.top + r.height / 2 - sz * .8, 64, innerHeight - sz * 1.3);
+                        setFace(mood);
+                        moveTo(clamp(tx, 4, innerWidth - sz - 4), ty, 2300, 'cubic-bezier(.45,.05,.3,1)');
+                        setTimeout(() => {
+                            say(text, 4200);
+                            setTimeout(() => {
+                                setFace('happy');
+                                moveTo(clamp(curX, 6, innerWidth - sz - 6), baseY(), 1800, 'ease-in-out');
+                                setTimeout(fin, 1900);
+                            }, 4500);
+                        }, 2450);
+                    } catch (e) { fin(); }
+                }, need ? 650 : 0);
+            } catch (e) { fin(); return false; }
+            return true;
+        };
+        window.bagiWalkOn = () => lsGet('bb_walk') !== 'off';
+        window.bagiToggleWalk = function () {
+            lsSet('bb_walk', lsGet('bb_walk') === 'off' ? 'on' : 'off');
+            try { mascotPaint(); } catch (e) {}
+            if (window.bagiWalkOn()) { clearTimeout(timer); step(); } else if (el) el.style.display = 'none';
+        };
+        // Gözler imleci / parmağı takip etsin
+        let pf = 0;
+        window.addEventListener('pointermove', ev => {
+            if (pf || !el || busy || el.classList.contains('walking')) return;
+            pf = requestAnimationFrame(() => {
+                pf = 0;
+                const cx = curX + size() / 2, cy = curY + size() / 2;
+                el.style.setProperty('--lx', clamp((ev.clientX - cx) / 60, -3, 3).toFixed(1) + 'px');
+                el.style.setProperty('--ly', clamp((ev.clientY - cy) / 80, -2, 2).toFixed(1) + 'px');
+            });
+        }, { passive: true });
+        window.addEventListener('resize', () => { if (el) { curX = clamp(curX, 6, innerWidth - size() - 6); curY = baseY(); el.style.transition = 'none'; el.style.transform = 'translate(' + curX + 'px,' + curY + 'px)'; setFace(face || 'happy', true); } });
+
+        function storeScene() {
+            const now = Date.now();
+            const wx = document.querySelector('.wx-host[data-scope="store"]');
+            if (wx && wx.textContent.indexOf('Şemsiye') !== -1 && now - lastRain > 20 * 60000) {
+                lastRain = now; return bagiWalk(wx, 'rain', 'Yağmur var! Şemsiyeleri kasa önüne ve girişe alalım ☂️');
+            }
+            const stats = getStoreDailyStats(currentId, ACTIVE_DATE);
+            if (!isStoreHistorical && stats && !(stats.storeTarget > 0) && now - lastTarget > 10 * 60000) {
+                const ti = document.getElementById('store-target-input');
+                if (ti) { lastTarget = now; return bagiWalk(ti, 'happy', 'Mağaza hedefini girmeyi unutma 🎯'); }
+            }
+            const arr = Object.keys(stats.staff || {}).map(id => Object.assign({ id }, stats.staff[id])).filter(p => !p.isTransfer);
+            const near = arr.filter(p => p.target > 0 && p.target - p.sales >= 1 && p.target - p.sales <= 3).sort((a, b) => (a.target - a.sales) - (b.target - b.sales))[0];
+            const rowOf = id => { const tr = document.querySelector('#store-staff-list tr[data-pid="' + id + '"]'); return tr && (tr.querySelector('td') || tr); };
+            if (near) { const t = rowOf(near.id); if (t) return bagiWalk(t, 'happy', first(near.name) + ' için hedefe ' + (near.target - near.sales) + ' adet kaldı, haydi! 💪'); }
+            const lead = arr.filter(p => p.sales > 0).sort((a, b) => b.sales - a.sales)[0];
+            if (lead && (n++ % 2 === 0)) { const t = rowOf(lead.id); if (t) return bagiWalk(t, 'cheer', 'Bugünün lideri ' + first(lead.name) + ' 👏'); }
+            return false;
+        }
+        window.bagiScene = storeScene;
+        setInterval(() => {
+            try {
+                if (busy || document.hidden || !enabled()) return;
+                if (currentRole !== 'store' || isStoreHistorical) return;
+                if (document.querySelector('.pk-ov,.av-ov,.gl-ov')) return;
+                if (Date.now() - last < 75000) return;
+                storeScene();
+            } catch (e) {}
+        }, 15000);
+        let seen = '';
+        setInterval(() => { try { const k = currentRole === 'store' ? currentId : ''; if (k && k !== seen) { seen = k; last = Date.now() - 60000; } if (!k) seen = ''; } catch (e) {} }, 3000);
+        setTimeout(() => { try { step(); } catch (e) {} }, 1500);
+    } catch (e) { console.error('Bagi gezintisi kurulamadı', e); } })();
 
     // ===== Duyuru şeritleri ve üst başlık: yapışma mesafelerini görünen şeritlere göre hesapla =====
     // (Eskiden Güliz Atik şeridi sabit 42px'e yapışıyordu; Merkez şeridi yokken başlığın üstüne biniyordu.)
@@ -4229,6 +4432,7 @@
         Snd.play(change > 0 ? 'sale' : 'saleUndo');
 
         let next = Math.max(0, current + change);
+        try { if (change > 0 && window.bagiReact) bagiReact('cheer', 1600); } catch (e) {}
         try {
             if (change > 0 && !isStoreHistorical) {
                 const sp = getStoreDailyStats(currentId, ACTIVE_DATE).staff[id];
@@ -5412,7 +5616,7 @@
                 }
 
                 tbody.innerHTML += `
-                <tr class="${rowClass}">
+                <tr class="${rowClass}" data-pid="${p.id}">
                     <td class="py-2.5 px-2 sm:px-4 font-bold text-[10px] sm:text-sm text-slate-700 max-w-[65px] sm:max-w-none break-words leading-tight">
                         ${window.avatarHtml ? (p.isTransfer ? avatarHtml(currentId, p.id, p.name, 30, false) : avatarHtml(currentId, p.id, p.name, 30, !isStoreHistorical)) : ''} <span class="clickable-name" onclick="openStaffProfile('${p.id}')" title="Performans Karnesini Gör">${safePName}</span> 
                         ${fireBadge} 
@@ -7968,6 +8172,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.21</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.23</div>
 </body>
 </html>
