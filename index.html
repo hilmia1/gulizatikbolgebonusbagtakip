@@ -2309,6 +2309,61 @@
         };
     } catch (e) { console.error('Seçim penceresi kurulamadı', e); } })();
 
+    // === Kişisel hedef halkası ve kişiye özel kutlama ===
+    ;(function ringInit() { try {
+        const st = document.createElement('style');
+        st.textContent = `
+        .rg{transition:stroke-dashoffset .9s cubic-bezier(.2,.8,.2,1),stroke .4s}
+        .rg-box{display:flex;align-items:center;justify-content:center;gap:8px}
+        .rg-svg{width:44px;height:44px;flex:none}
+        @media(min-width:640px){.rg-svg{width:52px;height:52px}}
+        .gl-ov{position:fixed;left:50%;top:42%;z-index:99996;max-width:86vw;background:#fff;border-radius:26px;padding:22px 28px;text-align:center;box-shadow:0 20px 60px rgba(236,72,153,.35);border:2px solid #fbcfe8;pointer-events:none;animation:glPop 3.6s both}
+        .gl-em{font-size:42px;line-height:1}
+        .gl-t{font-weight:900;font-size:20px;color:#be185d;margin-top:6px}
+        .gl-s{font-weight:800;font-size:14px;color:#64748b;margin-top:2px}
+        @keyframes glPop{0%{opacity:0;transform:translate(-50%,-40%) scale(.7)}10%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}16%{transform:translate(-50%,-50%) scale(1)}84%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-62%) scale(.96)}}
+        @media (prefers-reduced-motion:reduce){.rg{transition:none}.gl-ov{animation:none}}`;
+        document.head.appendChild(st);
+        const C = 2 * Math.PI * 18;
+        window.__ringPrev = window.__ringPrev || {};
+        window.ringHtml = function (id, sales, target, hist) {
+            const k = (window.currentId || '') + '|' + id;
+            const pct = target > 0 ? Math.min(100, sales / target * 100) : 0;
+            const prev = (!hist && window.__ringPrev[k] != null) ? window.__ringPrev[k] : (hist ? pct : 0);
+            window.__ringPrev[k] = pct;
+            const col = target <= 0 ? '#cbd5e1' : pct >= 100 ? '#10b981' : pct >= 60 ? '#6366f1' : '#f59e0b';
+            const off = v => (C * (1 - v / 100)).toFixed(1);
+            const rem = Math.max(0, target - sales);
+            let cap;
+            if (target <= 0) cap = '<span class="text-slate-400">Hedef yok</span>';
+            else if (rem > 0) cap = '<span class="hidden sm:inline">Hedefe <b class="text-slate-800">' + rem + '</b> adet kaldı</span><span class="sm:hidden"><b class="text-slate-800">' + rem + '</b> kaldı</span>';
+            else cap = '<span class="text-emerald-600">Hedef tamam 🎉' + (sales > target ? ' <span class="text-slate-400">(+' + (sales - target) + ')</span>' : '') + '</span>';
+            const mid = target <= 0 ? '–' : pct >= 100 ? '✓' : Math.round(pct);
+            return '<div class="rg-box"><div style="position:relative;display:inline-block"><svg class="rg-svg" viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" fill="none" stroke="#e2e8f0" stroke-width="5"/>' +
+                '<circle class="rg" data-to="' + off(pct) + '" cx="22" cy="22" r="18" fill="none" stroke="' + col + '" stroke-width="5" stroke-linecap="round" stroke-dasharray="' + C.toFixed(1) + '" style="stroke-dashoffset:' + off(prev) + '" transform="rotate(-90 22 22)"/></svg>' +
+                '<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:' + col + '">' + mid + '</span></div>' +
+                '<div class="text-[10px] sm:text-[11px] font-bold text-slate-500 leading-tight text-left">' + cap + '</div></div>';
+        };
+        window.ringAnimate = function () {
+            const go = () => document.querySelectorAll('.rg').forEach(c => { c.style.strokeDashoffset = c.getAttribute('data-to'); });
+            if (window.requestAnimationFrame) requestAnimationFrame(() => requestAnimationFrame(go)); else go();
+        };
+        const first = n => { const w = String(n || '').replace(/\(.*?\)/g, '').trim().split(/\s+/)[0] || ''; return w.charAt(0).toLocaleUpperCase('tr') + w.slice(1).toLocaleLowerCase('tr'); };
+        window.goalCelebrate = function (name) {
+            try {
+                const old = document.querySelector('.gl-ov'); if (old) old.remove();
+                const el = document.createElement('div'); el.className = 'gl-ov';
+                el.innerHTML = '<div class="gl-em">🎉</div><div class="gl-t">Tebrikler ' + String(first(name)).replace(/[<>&]/g, '') + '!</div><div class="gl-s">Bugünkü hedefini geçtin</div>';
+                document.body.appendChild(el); setTimeout(() => { try { el.remove(); } catch (e) {} }, 3800);
+                if (typeof window.confetti === 'function') {
+                    const colors = ['#ec4899', '#6366f1', '#f59e0b', '#10b981'];
+                    window.confetti({ particleCount: 90, angle: 60, spread: 70, origin: { x: 0, y: 0.7 }, colors, zIndex: 99997 });
+                    window.confetti({ particleCount: 90, angle: 120, spread: 70, origin: { x: 1, y: 0.7 }, colors, zIndex: 99997 });
+                }
+            } catch (e) {}
+        };
+    } catch (e) { console.error('Halka kurulamadı', e); } })();
+
     // ===== Duyuru şeritleri ve üst başlık: yapışma mesafelerini görünen şeritlere göre hesapla =====
     // (Eskiden Güliz Atik şeridi sabit 42px'e yapışıyordu; Merkez şeridi yokken başlığın üstüne biniyordu.)
     ;(function barLayoutInit() { try {
@@ -4040,6 +4095,12 @@
         Snd.play(change > 0 ? 'sale' : 'saleUndo');
 
         let next = Math.max(0, current + change);
+        try {
+            if (change > 0 && !isStoreHistorical) {
+                const sp = getStoreDailyStats(currentId, ACTIVE_DATE).staff[id];
+                if (sp && sp.target > 0 && current < sp.target && next >= sp.target) setTimeout(() => window.goalCelebrate && goalCelebrate(sp.name), 350);
+            }
+        } catch (e) {}
         const recBefore = window.recState ? recState().today : 0;
         dbRoot.child('daily').child(ACTIVE_DATE).child(currentId).child('staff').child(id).update({ sales: next });
         if (change > 0 && window.recOnSale) recOnSale('region', id, recBefore, next - current);
@@ -5226,15 +5287,11 @@
                     </td>
                     <td class="py-2.5 px-1 sm:px-4 text-center">${targetEl}</td>
                     <td class="py-2.5 px-1 sm:px-4 text-center"><span class="inline-block font-black text-xs sm:text-sm text-pink-600 bg-white px-1.5 sm:px-2 py-0.5 rounded border border-pink-200 shadow-sm">${p.sales}</span> ${focusSalesBadge}</td>
-                    <td class="py-2.5 px-1 sm:px-4 text-center">
-                        <div class="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2">
-                            <div class="w-full bg-slate-200/80 rounded-full h-1.5 hidden sm:block"><div class="bg-indigo-500 h-1.5 rounded-full progress-bar" style="width: ${pPerc>100?100:pPerc}%"></div></div>
-                            <span class="text-[9px] sm:text-[10px] font-bold text-slate-500 whitespace-nowrap">%${pPerc}</span>
-                        </div>
-                    </td>
+                    <td class="py-2.5 px-1 sm:px-4 text-center">${window.ringHtml ? window.ringHtml(p.id, p.sales, p.target, isStoreHistorical) : '%' + pPerc}</td>
                     ${actions}
                 </tr>`;
             });
+            try { window.ringAnimate && ringAnimate(); } catch (e) {}
         }
     }
 
@@ -7777,6 +7834,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.18</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.19</div>
 </body>
 </html>
