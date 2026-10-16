@@ -1231,13 +1231,13 @@
                     <table class="w-full text-left text-sm">
                         <thead>
                             <tr class="text-[10px] sm:text-[11px] uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-200">
-                                <th class="py-2 px-1 sm:px-4 font-bold hidden sm:table-cell">Bölge M.</th>
-                                <th class="py-2 px-1 sm:px-4 font-bold">Mağaza Adı</th>
-                                <th class="py-2 px-1 sm:px-4 font-bold text-center">Hedef</th>
+                                <th data-gs="bm" onclick="sortGeneralStores('bm')" class="py-2 px-1 sm:px-4 font-bold cursor-pointer select-none hover:text-indigo-600 hidden sm:table-cell" title="Sıralamak için bas">Bölge M.<span class="gs-ar"></span></th>
+                                <th data-gs="name" onclick="sortGeneralStores('name')" class="py-2 px-1 sm:px-4 font-bold cursor-pointer select-none hover:text-indigo-600 " title="Sıralamak için bas">Mağaza Adı<span class="gs-ar"></span></th>
+                                <th data-gs="target" onclick="sortGeneralStores('target')" class="py-2 px-1 sm:px-4 font-bold cursor-pointer select-none hover:text-indigo-600 text-center" title="Sıralamak için bas">Hedef<span class="gs-ar"></span></th>
                                 <th class="py-2 px-1 sm:px-4 font-bold text-center hidden sm:table-cell">Dağıtım</th>
-                                <th class="py-2 px-1 sm:px-4 font-bold text-center">Satış</th>
-                                <th class="py-2 px-1 sm:px-4 font-bold">Başarı</th>
-                            </tr>
+                                <th data-gs="sales" onclick="sortGeneralStores('sales')" class="py-2 px-1 sm:px-4 font-bold cursor-pointer select-none hover:text-indigo-600 text-center" title="Sıralamak için bas">Satış<span class="gs-ar"></span></th>
+                                <th data-gs="perc" onclick="sortGeneralStores('perc')" class="py-2 px-1 sm:px-4 font-bold cursor-pointer select-none hover:text-indigo-600 " title="Sıralamak için bas">Başarı<span class="gs-ar"></span></th>
+</tr>
                         </thead>
                         <tbody id="general-stores-list" class="divide-y divide-slate-100"></tbody>
                     </table>
@@ -6284,9 +6284,34 @@
                 <tr id="bm-stores-${idx}" class="hidden transition-all">${subTableHtml}</tr>`;
         });
 
+        paintGeneralStores();
+    }
+
+    // Tüm Mağazalar tablosu: başlığa basınca sırala (aynı başlığa tekrar basınca yön değişir)
+    window.gStoreSort = window.gStoreSort || { k: 'sales', dir: -1 };
+    window.sortGeneralStores = function (k) {
+        const g = window.gStoreSort;
+        if (g.k === k) g.dir = -g.dir; else { g.k = k; g.dir = (k === 'name' || k === 'bm') ? 1 : -1; }
+        paintGeneralStores();
+    };
+    function paintGeneralStores() {
         const sList = document.getElementById('general-stores-list');
+        if (!sList) return;
+        const g = window.gStoreSort, pc = x => x.target > 0 ? x.sales / x.target : -1;
+        const val = { sales: x => x.sales, target: x => x.target, perc: pc, name: x => x.name, bm: x => x.bm }[g.k] || (x => x.sales);
+        const list = (window.lastAllStoresList || []).slice().sort((a, b) => {
+            const va = val(a), vb = val(b);
+            const c = typeof va === 'string' ? va.localeCompare(vb, 'tr') : (va - vb);
+            return (c * g.dir) || (b.sales - a.sales) || a.name.localeCompare(b.name, 'tr');
+        });
+        document.querySelectorAll('#gen-stores-body th[data-gs]').forEach(th => {
+            const on = th.getAttribute('data-gs') === g.k;
+            const ar = th.querySelector('.gs-ar');
+            if (ar) ar.textContent = on ? (g.dir < 0 ? ' ▼' : ' ▲') : '';
+            th.style.color = on ? '#4f46e5' : '';
+        });
         sList.innerHTML = '';
-        allStores.forEach(s => {
+        list.forEach(s => {
             let sPerc = s.target > 0 ? Math.round((s.sales / s.target) * 100) : 0;
 
             let rowClass = "border-b border-slate-200 transition ";
@@ -7707,6 +7732,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.11</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.12</div>
 </body>
 </html>
