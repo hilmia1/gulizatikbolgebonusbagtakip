@@ -742,7 +742,7 @@
                 <div class="mt-3 pt-3 border-t border-violet-700/40">
                     <div class="flex items-center justify-between gap-3">
                         <div class="min-w-0">
-                            <div class="text-violet-200 font-black text-xs"><i class="fa-solid fa-key mr-1"></i> Mağaza girişinde ortak şifre iste</div>
+                            <div class="text-violet-200 font-black text-xs"><i class="fa-solid fa-key mr-1"></i> KPI girişinde ortak şifre iste</div>
                             <div class="text-[11px] text-violet-200/70 font-bold mt-0.5">Ortak şifre Firebase'de <span class="text-violet-100">kpi@bonusbag.app</span> hesabında tutulur. Hesap yoksa önce oluşturun.</div>
                         </div>
                         <button type="button" id="kpi-gate-btn" onclick="setKpiGate()" class="shrink-0 px-4 py-2 rounded-xl border font-black text-xs transition"></button>
@@ -7359,12 +7359,14 @@
         window.switchMode = function () {
             const toKpi = !window.kpiMode;
             if (toKpi && kpiLocked()) { showKpiTeaser(); return; }
+            if (toKpi && !kpiGateOk()) { kpiGateAsk(() => window.switchMode()); return; }
             if (currentRole !== '' && /^k/.test(currentRole) === toKpi) return _switchMode();
             modeFx(toKpi, _switchMode);
         };
         window.setMode = function (mode) {
             const toKpi = (mode === 'kpi');
             if (toKpi && kpiLocked()) { showKpiTeaser(); return; }
+            if (toKpi && !kpiGateOk()) { kpiGateAsk(() => window.setMode(mode)); return; }
             if (toKpi === !!window.kpiMode) return;
             modeFx(toKpi, () => _setMode(mode));
         };
@@ -7418,11 +7420,11 @@
             b.className = 'shrink-0 px-4 py-2 rounded-xl border font-black text-xs transition ' + (on ? 'bg-emerald-500 text-white border-emerald-300 shadow-lg' : 'bg-slate-800 text-slate-300 border-slate-600 hover:bg-slate-700');
             b.textContent = on ? '🔒 Şifre AÇIK' : '🔓 Şifre KAPALI';
             const t = $('kpi-gate-text');
-            if (t) t.textContent = on ? 'Mağazalar KPI\'ya girerken ortak şifreyi yazar. Doğru girenin cihazı 12 saat hatırlanır.' : 'Şifre sorulmuyor, KPI açıkken mağazalar doğrudan girer.';
+            if (t) t.textContent = on ? 'KPI tarafına geçerken ve mağaza girişinde ortak şifre sorulur. Doğru girenin cihazı 12 saat hatırlanır.' : 'Şifre sorulmuyor, KPI açıkken herkes doğrudan girer.';
         };
 
         // test ve dış çağrılar için
-        window.__kpi = { ctxGet, metrics, overall, parseNum, matchStore, kpiGateOk, kpiGateOn };
+        window.__kpi = { ctxGet, metrics, overall, parseNum, matchStore, kpiGateOk, kpiGateOn, gateReset: function () { kpiOkUntil = 0; try { localStorage.removeItem(KPI_GATE_KEY); } catch (e) {} } };
     })();
 
 
