@@ -1052,6 +1052,8 @@
             </div>
 
 
+<div id="general-leaders" class="hidden"></div>
+
             <div class="bg-slate-900 rounded-2xl shadow-xl p-6 text-white flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 relative overflow-hidden border border-slate-700 mt-6">
                 <div class="absolute right-4 bottom-[-20px] text-white/5 text-9xl font-black pointer-events-none"><i class="fa-solid fa-chart-pie"></i></div>
                 <div class="relative z-10 w-full xl:w-5/12">
@@ -3713,7 +3715,7 @@
                         ? `<span class="bg-indigo-500/80 border border-indigo-400 text-[8px] px-1.5 py-0.5 rounded ml-1 uppercase text-white shadow-sm whitespace-nowrap">BÖLGE MESAJI</span>` 
                         : `<span class="bg-rose-500/80 border border-rose-400 text-[8px] px-1.5 py-0.5 rounded ml-1 uppercase text-white shadow-sm whitespace-nowrap">GENEL MESAJ</span>`;
                     
-                    activeMessages.push(`<span class="text-amber-300 font-bold ml-4 mr-1">${escHtml(sender)} ${badge}:</span><span class="text-white">${escHtml(ann.message)}</span>`);
+                    activeMessages.push(`<span class="text-amber-300 font-bold ml-4 mr-1">${escHtml(sender.split(' → ')[0])} ${badge}:</span><span class="text-white">${escHtml(ann.message)}</span>`);
                 }
             }
         });
@@ -3731,6 +3733,7 @@
     function initGlobalAnnouncementListener() {
         dbRoot.child('global_announcement').on('value', snap => {
             window.lastAnnouncementsData = snap.val() || {};
+            try { if (currentRole === 'general' && window.lastRegionStats) renderRegionLeaders(window.lastRegionStats, window.lastAllStoresList || [], window.generalAllStaff || []); } catch (e) {}
             try { notifyAnnouncements(); } catch (e) {}
             updateAnnouncementUI();
         });
@@ -3761,6 +3764,53 @@
             if(!dbChanged) updateAnnouncementUI(); 
         }, 30000); 
     }
+
+    // === GÜLİZ HANIM: BÖLGE BİRİNCİLERİ + BÖLGEYE ÖZEL TELSİZ ===
+    function renderRegionLeaders(regionStats, allStores, allStaff) {
+        const host = document.getElementById('general-leaders');
+        if (!host) return;
+        if (currentRole !== 'general') { host.classList.add('hidden'); return; }
+        const nf0 = n => Math.round(n || 0).toLocaleString('tr-TR');
+        const live = {};
+        const now = Date.now();
+        Object.keys(window.lastAnnouncementsData || {}).forEach(k => {
+            if (k.indexOf('GÜLİZ ATİK → ') === 0) { const a = window.lastAnnouncementsData[k]; if (a && now - a.time <= 3600000) live[k.slice(13)] = a.message; }
+        });
+        const rows = regionStats.map(r => {
+            const st = allStores.filter(x => x.bm === r.bm && x.sales > 0).sort((a, b) => b.sales - a.sales)[0];
+            const pe = allStaff.filter(x => x.bm === r.bm && x.sales > 0)[0];
+            const enc = encodeURIComponent(r.bm);
+            const on = live[r.bm];
+            return `<div class="flex flex-col sm:flex-row sm:items-center gap-2 py-2.5 border-b border-slate-700/60 last:border-0">
+                <div class="sm:w-44 font-black text-white text-sm">${escHtml(r.bm)}<div class="text-[10px] text-slate-400 font-bold">${nf0(r.sales)} adet • ${r.totalStores} mağaza</div></div>
+                <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                    <div class="bg-slate-900/60 rounded-lg px-3 py-1.5"><span class="text-amber-300">🥇 Mağaza:</span> <b class="text-white">${st ? escHtml(st.name) : '—'}</b> <span class="text-slate-400">${st ? nf0(st.sales) : ''}</span></div>
+                    <div class="bg-slate-900/60 rounded-lg px-3 py-1.5"><span class="text-amber-300">🥇 Kişi:</span> <b class="text-white">${pe ? escHtml(pe.name) + ' <span class="text-slate-400 font-bold">(' + escHtml(pe.store) + ')</span>' : '—'}</b> <span class="text-slate-400">${pe ? nf0(pe.sales) : ''}</span></div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button type="button" onclick="regionTelsiz(decodeURIComponent('${enc}'))" class="px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-black whitespace-nowrap"><i class="fa-solid fa-tower-broadcast mr-1"></i>Telsiz</button>
+                    ${on ? `<button type="button" onclick="regionTelsizClear(decodeURIComponent('${enc}'))" title="Yayındaki mesajı kaldır: ${escHtml(on)}" class="px-2.5 py-2 bg-slate-700 hover:bg-slate-600 text-rose-300 rounded-lg text-xs font-black"><i class="fa-solid fa-xmark"></i></button>` : ''}
+                </div></div>`;
+        }).join('');
+        host.innerHTML = `<div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-lg p-4">
+            <div class="flex items-center gap-2 mb-1 text-white font-black"><i class="fa-solid fa-ranking-star text-amber-300"></i> Bölge Birincileri <span class="text-[10px] text-slate-400 font-bold">(seçili tarih aralığı • satış sırasına göre)</span></div>
+            <div class="text-[11px] text-slate-400 mb-2">Telsiz: mesaj sadece o bölgenin mağazalarında ve bölge müdüründe 1 saat dönar.</div>${rows}</div>`;
+        host.classList.remove('hidden');
+    }
+
+    window.regionTelsiz = function (bm) {
+        if (currentRole !== 'general') return alert('Bu işlem için yetkiniz yok.');
+        const msg = (prompt(bm + ' bölgesine telsiz mesajı (en fazla 300 karakter):') || '').trim();
+        if (!msg) return;
+        if (msg.length > 300) return alert('Mesaj 300 karakteri geçmesin.');
+        if (!confirm('Bu mesaj SADECE ' + bm + ' bölgesinde 1 saat dönecek. Gönderilsin mi?')) return;
+        dbRoot.child('global_announcement').child('GÜLİZ ATİK → ' + bm).set({ message: msg, time: Date.now(), target: 'regional', bm: bm, startTime: '', endTime: '' })
+            .then(() => { try { renderGeneralUI && window.lastRegionStats && renderRegionLeaders(window.lastRegionStats, window.lastAllStoresList || [], window.generalAllStaff || []); } catch (e) {} });
+    };
+    window.regionTelsizClear = function (bm) {
+        if (!confirm(bm + ' bölgesindeki mesaj kaldırılsın mı?')) return;
+        dbRoot.child('global_announcement').child('GÜLİZ ATİK → ' + bm).remove();
+    };
 
     window.publishAnnouncement = function(inputId = 'announcement-input', targetType = 'global', startId = '', endId = '') {
         let inputEl = document.getElementById(inputId);
@@ -5944,6 +5994,7 @@
         allStores.sort((a, b) => b.sales - a.sales);
         window.lastAllStoresList = allStores;
         window.lastRegionStats = regionStats;
+        try { renderRegionLeaders(regionStats, allStores, generalAllStaff); } catch (e) { console.error(e); }
 
         let top3StoresGen = allStores.filter(s => s.sales > 0).slice(0, 3);
         updateTop3StoresBanner('general-top3-stores-banner', top3StoresGen, '🏆 EGE BÖLGESİ ŞAMPİYON MAĞAZALARI', 'Bonus Pack Satışında Seçili Aralık İlk 3 Mağaza');
@@ -7484,6 +7535,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · sürüm 16.10.2026 21:20</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · sürüm 16.10.2026 22:00</div>
 </body>
 </html>
