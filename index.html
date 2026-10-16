@@ -2364,6 +2364,72 @@
         };
     } catch (e) { console.error('Halka kurulamadı', e); } })();
 
+    // === Personel avatarı: renkli baş harf ya da seçilen emoji ===
+    ;(function avatarInit() { try {
+        const st = document.createElement('style');
+        st.textContent = `
+        .av{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-weight:900;color:#fff;flex:none;vertical-align:middle;line-height:1;user-select:none}
+        .av.em{background:#fdf2f8;border:1.5px solid #fbcfe8}
+        .av-btn{border:0;background:transparent;padding:0;cursor:pointer;transition:transform .15s}
+        .av-btn:hover{transform:scale(1.12)}
+        .av-ov{position:fixed;inset:0;z-index:99991;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(2px)}
+        .av-box{background:#fff;color:#0f172a;border-radius:22px;width:100%;max-width:380px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:pkUp .18s ease-out}
+        .av-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:12px}
+        .av-opt{aspect-ratio:1;border-radius:14px;border:2px solid #e2e8f0;background:#fff;font-size:24px;cursor:pointer}
+        .av-opt:hover,.av-opt:active{background:#fdf2f8;border-color:#f472b6}
+        .av-opt.on{border-color:#ec4899;background:#fce7f3}`;
+        document.head.appendChild(st);
+        const GRAD = ['#6366f1,#8b5cf6', '#ec4899,#f43f5e', '#f59e0b,#f97316', '#10b981,#14b8a6', '#0ea5e9,#6366f1', '#a855f7,#ec4899', '#ef4444,#f59e0b', '#14b8a6,#0ea5e9'];
+        const EMOJIS = ['🦄', '🐱', '🐼', '🦊', '🐶', '🦁', '🐯', '🐰', '🦋', '🐝', '🐬', '🐧', '🌸', '🌻', '🌈', '⭐', '🔥', '💎', '👑', '🎀', '🍓', '🍒', '🚀', '🎯'];
+        const clean = n => String(n || '').replace(/\(.*?\)/g, '').trim();
+        const initials = n => { const w = clean(n).split(/\s+/).filter(Boolean); return ((w[0] || '?').charAt(0) + (w.length > 1 ? w[w.length - 1].charAt(0) : '')).toLocaleUpperCase('tr'); };
+        const hash = s => { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; };
+        const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+        const lsSet = (k, v) => { try { if (v) localStorage.setItem(k, v); else localStorage.removeItem(k); } catch (e) {} };
+        window.avatarOf = function (store, id) {
+            const r = globalData && globalData.master_staff && globalData.master_staff[store] && globalData.master_staff[store][id];
+            const v = (r && r.avatar) || lsGet('bb_av_' + id) || '';
+            return EMOJIS.indexOf(v) !== -1 ? v : '';
+        };
+        window.avatarHtml = function (store, id, name, size, clickable) {
+            size = size || 30;
+            const e = window.avatarOf(store, id);
+            const inner = e
+                ? '<span class="av em" style="width:' + size + 'px;height:' + size + 'px;font-size:' + Math.round(size * 0.58) + 'px">' + e + '</span>'
+                : '<span class="av" style="width:' + size + 'px;height:' + size + 'px;font-size:' + Math.round(size * 0.4) + 'px;background:linear-gradient(135deg,' + GRAD[hash(clean(name)) % GRAD.length] + ')">' + String(initials(name)).replace(/[<>&]/g, '') + '</span>';
+            return clickable ? '<button type="button" class="av-btn" onclick="openAvatarPicker(\'' + String(id).replace(/[^A-Za-z0-9_-]/g, '') + '\')" title="Avatarını değiştir">' + inner + '</button>' : inner;
+        };
+        window.__avStore = () => currentId;
+        let ov = null;
+        function close() { if (ov) { ov.remove(); ov = null; } }
+        window.openAvatarPicker = function (id) {
+            close();
+            const store = window.__avStore ? window.__avStore() : '';
+            const cur = window.avatarOf(store, id);
+            ov = document.createElement('div'); ov.className = 'av-ov';
+            ov.innerHTML = '<div class="av-box"><div style="display:flex;justify-content:space-between;align-items:center;font-weight:900;font-size:16px"><span>Avatarını seç</span><button type="button" class="pk-x" aria-label="Kapat">✕</button></div>' +
+                '<div class="av-grid">' + EMOJIS.map(e => '<button type="button" class="av-opt' + (e === cur ? ' on' : '') + '" data-e="' + e + '">' + e + '</button>').join('') + '</div>' +
+                '<button type="button" id="av-reset" style="margin-top:12px;width:100%;padding:10px;border-radius:12px;border:2px solid #e2e8f0;background:#f8fafc;font-weight:900;font-size:13px;color:#475569;cursor:pointer">Baş harfe dön</button></div>';
+            document.body.appendChild(ov);
+            const pick = e => {
+                lsSet('bb_av_' + id, e);
+                try {
+                    const ref = dbRoot.child('master_staff').child(store).child(id);
+                    const pr = e ? ref.update({ avatar: e }) : ref.child('avatar').remove();
+                    if (pr && pr.catch) pr.catch(() => {});
+                } catch (x) {}
+                close();
+                try { renderStoreUI(); } catch (x) {}
+                try { renderStars(); } catch (x) {}
+            };
+            ov.addEventListener('click', ev => {
+                if (ev.target === ov || ev.target.closest('.pk-x')) return close();
+                const b = ev.target.closest('.av-opt'); if (b) return pick(b.getAttribute('data-e'));
+                if (ev.target.closest('#av-reset')) pick('');
+            });
+        };
+    } catch (e) { console.error('Avatar kurulamadı', e); } })();
+
     // ===== Duyuru şeritleri ve üst başlık: yapışma mesafelerini görünen şeritlere göre hesapla =====
     // (Eskiden Güliz Atik şeridi sabit 42px'e yapışıyordu; Merkez şeridi yokken başlığın üstüne biniyordu.)
     ;(function barLayoutInit() { try {
@@ -4911,7 +4977,7 @@
         if (!box) return;
         const ag = socMonthAgg(socMonthDates());
         const byName = (a, b) => a.name.localeCompare(b.name, 'tr');
-        const topStaff = key => ag.staff.filter(x => x[key] > 0).sort((a, b) => (b[key] - a[key]) || (b.sales - a.sales) || byName(a, b)).slice(0, 3).map(x => ({ name: x.name, sub: x.store, v: x[key] }));
+        const topStaff = key => ag.staff.filter(x => x[key] > 0).sort((a, b) => (b[key] - a[key]) || (b.sales - a.sales) || byName(a, b)).slice(0, 3).map(x => ({ name: x.name, sub: x.store, v: x[key], av: window.avatarHtml ? avatarHtml(x.store, x.id, x.name, 28, false) : '' }));
         const topStores = map => Object.keys(map).filter(k => map[k] > 0).sort((a, b) => (map[b] - map[a]) || (ag.stores[b] - ag.stores[a]) || a.localeCompare(b, 'tr')).slice(0, 3).map(k => ({ name: k, sub: '', v: map[k] }));
         const hasFocus = (window.activeContestBrands || []).length > 0;
         const cols = [
@@ -4936,7 +5002,7 @@
                 <div class="bg-gradient-to-r ${c[3]} text-white px-3 py-2 text-xs font-black flex items-center gap-2"><span class="text-base">${c[1]}</span>${c[0]}</div>
                 <div class="p-3 bg-white space-y-2">` + (rows.length ? rows.map((r, i) => {
                 const m = MED[rows.findIndex(x => x.v === r.v)] || '🥉';
-                return `<div class="flex items-center gap-2"><span class="text-lg leading-none">${m}</span><div class="min-w-0 flex-1"><div class="font-black text-slate-800 text-[13px] leading-tight truncate">${escHtml(r.name)}</div>${r.sub ? `<div class="text-[10px] text-slate-500 leading-tight truncate">${escHtml(r.sub)}</div>` : ''}</div><div class="font-black ${c[4]} text-lg leading-none">${r.v}<span class="text-[9px] font-bold text-slate-400 ml-0.5">adet</span></div></div>`;
+                return `<div class="flex items-center gap-2"><span class="text-lg leading-none">${m}</span>${r.av || ''}<div class="min-w-0 flex-1"><div class="font-black text-slate-800 text-[13px] leading-tight truncate">${escHtml(r.name)}</div>${r.sub ? `<div class="text-[10px] text-slate-500 leading-tight truncate">${escHtml(r.sub)}</div>` : ''}</div><div class="font-black ${c[4]} text-lg leading-none">${r.v}<span class="text-[9px] font-bold text-slate-400 ml-0.5">adet</span></div></div>`;
             }).join('') : `<div class="text-xs text-slate-400 font-bold py-3 text-center">Henüz satış yok</div>`) + `</div></div>`;
         }).join('') + `</div></div>`;
     }
@@ -5280,7 +5346,7 @@
                 tbody.innerHTML += `
                 <tr class="${rowClass}">
                     <td class="py-2.5 px-2 sm:px-4 font-bold text-[10px] sm:text-sm text-slate-700 max-w-[65px] sm:max-w-none break-words leading-tight">
-                        <span class="clickable-name" onclick="openStaffProfile('${p.id}')" title="Performans Karnesini Gör">${safePName}</span> 
+                        ${window.avatarHtml ? (p.isTransfer ? avatarHtml(currentId, p.id, p.name, 30, false) : avatarHtml(currentId, p.id, p.name, 30, !isStoreHistorical)) : ''} <span class="clickable-name" onclick="openStaffProfile('${p.id}')" title="Performans Karnesini Gör">${safePName}</span> 
                         ${fireBadge} 
                         ${nameBadge}
                         ${regionalBadge}
@@ -7834,6 +7900,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.19</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.20</div>
 </body>
 </html>
