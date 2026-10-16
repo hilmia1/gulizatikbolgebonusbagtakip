@@ -295,7 +295,8 @@
                 <p class="text-sm text-slate-500 mt-2 font-medium" id="modal-desc">Lütfen yönetici şifresini girin.</p>
             </div>
             <div class="space-y-4">
-                <input type="password" id="modal-password-input" autocapitalize="off" autocorrect="off" autocomplete="current-password" spellcheck="false" enterkeyhint="go" class="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-2xl text-center font-black tracking-[0.5em] text-2xl focus:outline-none focus:border-slate-800 transition-colors" placeholder="••••">
+                <input type="password" id="modal-password-input" inputmode="numeric" pattern="[0-9]*" autocapitalize="off" autocorrect="off" autocomplete="current-password" spellcheck="false" enterkeyhint="go" class="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-2xl text-center font-black tracking-[0.5em] text-2xl focus:outline-none focus:border-slate-800 transition-colors" placeholder="••••">
+                <button type="button" id="modal-kb-toggle" onclick="toggleModalKeyboard()" class="block mx-auto text-xs font-bold text-slate-400 hover:text-slate-600 py-1 px-3 rounded-lg transition"><i class="fa-regular fa-keyboard mr-1"></i><span id="modal-kb-text">Harfli klavye</span></button>
                 <button type="button" id="modal-submit-btn" class="w-full py-4 bg-slate-800 hover:bg-slate-900 text-white font-black rounded-2xl transition-all shadow-lg active:scale-95 text-lg">Giriş Yap</button>
             </div>
             <p id="modal-password-error" class="text-rose-500 text-sm font-bold text-center mt-4 hidden bg-rose-50 py-2 rounded-lg"><i class="fa-solid fa-circle-exclamation mr-1"></i> Hatalı şifre! Tekrar deneyin.</p>
@@ -738,6 +739,16 @@
                     <button type="button" id="kpi-st-maint" onclick="setKpiState('maint')" class="flex-1 px-3 py-2.5 rounded-xl border font-black text-xs sm:text-sm">🛠️ Çalışma Var</button>
                 </div>
                 <div id="kpi-st-text" class="text-[11px] text-violet-200 font-bold mt-2"></div>
+                <div class="mt-3 pt-3 border-t border-violet-700/40">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="min-w-0">
+                            <div class="text-violet-200 font-black text-xs"><i class="fa-solid fa-key mr-1"></i> Mağaza girişinde ortak şifre iste</div>
+                            <div class="text-[11px] text-violet-200/70 font-bold mt-0.5">Ortak şifre Firebase'de <span class="text-violet-100">kpi@bonusbag.app</span> hesabında tutulur. Hesap yoksa önce oluşturun.</div>
+                        </div>
+                        <button type="button" id="kpi-gate-btn" onclick="setKpiGate()" class="shrink-0 px-4 py-2 rounded-xl border font-black text-xs transition"></button>
+                    </div>
+                    <div id="kpi-gate-text" class="text-[11px] text-violet-200 font-bold mt-2"></div>
+                </div>
             </div>
 
             <!-- ÜRÜN BİTTİ YÖNETİMİ -->
@@ -2189,7 +2200,7 @@
     const ACTIVE_DATE = getActiveDateString(); 
     let reportDateRangeStr = ACTIVE_DATE; 
     // ===== Tarih ileri/geri okları (tüm tarih alanları) =====
-    ;(function dateNavInit() {
+    ;(function dateNavInit() { try {
         const P = n => String(n).padStart(2, '0');
         const parse = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); return m ? Date.UTC(+m[1], +m[2] - 1, +m[3]) : null; };
         const fmt = t => { const d = new Date(t); return d.getUTCFullYear() + '-' + P(d.getUTCMonth() + 1) + '-' + P(d.getUTCDate()); };
@@ -2282,7 +2293,7 @@
             el.addEventListener('change', refresh);
             refresh();
         });
-    })();
+    } catch (e) { try { console.error('Tarih okları kurulamadı:', e); } catch (_) {} } })();
     let currentRole = ''; 
     let currentId = ''; 
     let globalData = {}; 
@@ -2671,7 +2682,27 @@
     let authModalEmail = null;
     const MODAL_ERR_DEFAULT = '<i class="fa-solid fa-circle-exclamation mr-1"></i> Hatalı şifre! Tekrar deneyin.';
 
+    // Şifre kutusu varsayılan olarak sayı klavyesi açar; harfli şifresi olanlar "Harfli klavye" ile geçer (tercih hatırlanır)
+    function applyModalKeyboard(letters, refocus) {
+        const inp = document.getElementById('modal-password-input');
+        if (!inp) return;
+        inp.setAttribute('inputmode', letters ? 'text' : 'numeric');
+        if (letters) inp.removeAttribute('pattern'); else inp.setAttribute('pattern', '[0-9]*');
+        const t = document.getElementById('modal-kb-text');
+        if (t) t.textContent = letters ? 'Sayı klavyesi' : 'Harfli klavye';
+        if (refocus) { inp.blur(); setTimeout(() => inp.focus(), 60); }
+    }
+    window.toggleModalKeyboard = function () {
+        const inp = document.getElementById('modal-password-input');
+        const letters = !(inp && inp.getAttribute('inputmode') === 'text');
+        try { localStorage.setItem('bb_kb_letters', letters ? '1' : '0'); } catch (e) {}
+        applyModalKeyboard(letters, true);
+    };
+
     function resetModalState(title, desc, iconClass) {
+        let wantLetters = false;
+        try { wantLetters = localStorage.getItem('bb_kb_letters') === '1'; } catch (e) {}
+        applyModalKeyboard(wantLetters, false);
         document.getElementById('modal-title').innerText = title;
         document.getElementById('modal-desc').innerText = desc;
         document.getElementById('modal-icon').className = iconClass;
@@ -7249,7 +7280,8 @@
                 b.className = 'flex-1 px-3 py-2.5 rounded-xl border font-black text-xs sm:text-sm transition ' + (k === cur ? on[k] + ' shadow-lg ring-2 ring-white/40' : 'bg-slate-800 text-slate-300 border-slate-600 hover:bg-slate-700');
             });
             const t = $('kpi-st-text');
-            if (t) t.textContent = { soon: 'Şu an: ÇOK YAKINDA ekranı gösteriliyor', open: 'Şu an: KPI AÇIK, herkes girebilir', maint: 'Şu an: ÇALIŞMA VAR ekranı gösteriliyor' }[cur];
+            if (t) t.textContent = { soon: 'Şu an: ÇOK YAKINDA ekranı gösteriliyor', open: 'Şu an: KPI AÇIK', maint: 'Şu an: ÇALIŞMA VAR ekranı gösteriliyor' }[cur];
+            try { if (window.paintKpiGate) window.paintKpiGate(); } catch (e) {}
         };
 
         let teaserEl = null, teaserTimer = null;
@@ -7341,8 +7373,56 @@
             const f = window[n];
             window[n] = function () { if (kpiLocked()) { showKpiTeaser(); return; } return f.apply(this, arguments); };
         });
+        // ------------------------------------------------------------------
+        // KPI GİRİŞ ANAHTARI: mağaza girişinde ortak şifre (Firebase Authentication)
+        // Şifre kpi@bonusbag.app hesabında durur; sayfada saklanmaz. Doğru şifre sonrası bu cihaz 12 saat hatırlanır.
+        // Yönetici oturumu (merkez / Güliz Atik / bölge) şifre sormadan geçer.
+        // ------------------------------------------------------------------
+        const KPI_GATE_EMAIL = 'kpi@bonusbag.app', KPI_GATE_KEY = 'bb_kpi_ok', KPI_GATE_MS = 12 * 3600000;
+        let kpiOkUntil = 0;
+        function kpiGateOn() {
+            const v = globalData && globalData.settings && globalData.settings.kpiGate;
+            return v !== false;   // ayar yoksa açık kabul edilir
+        }
+        function kpiGateOk() {
+            if (window.__DEMO || !kpiGateOn()) return true;
+            try { if (hasAdminSession()) return true; } catch (e) {}
+            if (kpiOkUntil > Date.now()) return true;
+            try { const t = Number(localStorage.getItem(KPI_GATE_KEY)) || 0; if (t > Date.now()) { kpiOkUntil = t; return true; } } catch (e) {}
+            return false;
+        }
+        function kpiGateAsk(onOk) {
+            openAuthModal('KPI Girişi', 'KPI Yarışması için ortak şifreyi girin.', 'fa-solid fa-key text-violet-500', KPI_GATE_EMAIL, () => {
+                kpiOkUntil = Date.now() + KPI_GATE_MS;
+                try { localStorage.setItem(KPI_GATE_KEY, String(kpiOkUntil)); } catch (e) {}
+                try { auth.signOut(); } catch (e) {}
+                onOk();
+            });
+        }
+        const _kpiLoginStoreInner = window.kpiLoginAsStore;
+        window.kpiLoginAsStore = function (directId) {
+            if (kpiLocked() || kpiGateOk()) return _kpiLoginStoreInner.apply(this, arguments);
+            const id = directId || ($('kpi-select-store') || {}).value;
+            if (!id) return _kpiLoginStoreInner.apply(this, arguments);   // "mağaza seçin" uyarısı
+            kpiGateAsk(() => _kpiLoginStoreInner(id));
+        };
+        window.setKpiGate = function () {
+            if (!window.__DEMO && !merkezSession()) return alert('Bu ayar için Sistem Merkezi girişi gerekir.');
+            const next = !kpiGateOn();
+            if (!confirm(next ? 'Mağaza girişinde ortak şifre istensin mi?' : 'Mağaza girişinde şifre sorulmasın mı? KPI açıkken herkes şifresiz girebilir.')) return;
+            dbRoot.child('settings').update({ kpiGate: next }).catch(() => alert('Kaydedilemedi. database.rules.json dosyasının son halini Firebase Rules bölümünde yayınladınız mı?'));
+        };
+        window.paintKpiGate = function () {
+            const b = $('kpi-gate-btn'); if (!b) return;
+            const on = kpiGateOn();
+            b.className = 'shrink-0 px-4 py-2 rounded-xl border font-black text-xs transition ' + (on ? 'bg-emerald-500 text-white border-emerald-300 shadow-lg' : 'bg-slate-800 text-slate-300 border-slate-600 hover:bg-slate-700');
+            b.textContent = on ? '🔒 Şifre AÇIK' : '🔓 Şifre KAPALI';
+            const t = $('kpi-gate-text');
+            if (t) t.textContent = on ? 'Mağazalar KPI\'ya girerken ortak şifreyi yazar. Doğru girenin cihazı 12 saat hatırlanır.' : 'Şifre sorulmuyor, KPI açıkken mağazalar doğrudan girer.';
+        };
+
         // test ve dış çağrılar için
-        window.__kpi = { ctxGet, metrics, overall, parseNum, matchStore };
+        window.__kpi = { ctxGet, metrics, overall, parseNum, matchStore, kpiGateOk, kpiGateOn };
     })();
 
 
