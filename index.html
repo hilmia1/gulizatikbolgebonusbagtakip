@@ -7188,7 +7188,7 @@
             const ref = kpiRef(c, 'adj').child(store).child(bk);
             const raw = String(val).trim();
             if (raw === '') { ref.remove(); return; }
-            const v = Math.round(Number(raw)); if (!(v >= 0)) return alert('Geçerli bir sayı girin.');
+            const v = parseNum(raw); if (v === null || !(v >= 0)) return alert('Geçerli bir sayı girin.');
             const ds = (c.dsum[store] && c.dsum[store][bk]) || 0;
             ref.set(v - ds);
         };
@@ -7197,8 +7197,12 @@
         function parseNum(s) {
             s = String(s == null ? '' : s).replace(/[₺\s]/g, '').replace(/tl/i, '');
             if (s === '' || s === '-') return null;
-            if (s.indexOf(',') !== -1 && s.indexOf('.') !== -1) s = s.replace(/\./g, '').replace(',', '.');
-            else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+            if (s.indexOf(',') !== -1 && s.indexOf('.') !== -1) {
+                // İkisi birlikteyse sonraki ayraç ondalıktır: 1.234,56 (TR) ya da 1,234.56 (US)
+                if (s.lastIndexOf(',') > s.lastIndexOf('.')) s = s.replace(/\./g, '').replace(',', '.');
+                else s = s.replace(/,/g, '');
+            }
+            else if (/^\d{1,3}([.,]\d{3})+$/.test(s)) s = s.replace(/[.,]/g, '');   // 20,416 ya da 20.416 = yirmi bin dört yüz on altı (binlik ayracı)
             else s = s.replace(',', '.');
             const n = Number(s);
             return isFinite(n) ? Math.round(n) : NaN;
