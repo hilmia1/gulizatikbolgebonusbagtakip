@@ -7575,11 +7575,11 @@
         });
         // ------------------------------------------------------------------
         // KPI GİRİŞ ANAHTARI: mağaza girişinde ortak şifre (Firebase Authentication)
-        // Şifre kpi@bonusbag.app hesabında durur; sayfada saklanmaz. Doğru şifre sonrası bu cihaz 12 saat hatırlanır.
+        // Şifre kpi@bonusbag.app hesabında durur; sayfada saklanmaz. Cihaz hatırlanmaz: KPI'ya her geçişte şifre sorulur.
         // Yönetici oturumu (merkez / Güliz Atik / bölge) şifre sormadan geçer.
         // ------------------------------------------------------------------
         const KPI_GATE_EMAIL = 'kpi@bonusbag.app', KPI_GATE_KEY = 'bb_kpi_ok', KPI_GATE_MS = 12 * 3600000;
-        let kpiOkUntil = 0;
+        let kpiOkUntil = 0, kpiPass = false;   // kpiPass: şifre az önce doğru girildi, bu tek geçiş için geçerli
         function kpiGateOn() {
             const v = globalData && globalData.settings && globalData.settings.kpiGate;
             return v !== false;   // ayar yoksa açık kabul edilir
@@ -7587,16 +7587,15 @@
         function kpiGateOk() {
             if (window.__DEMO || !kpiGateOn()) return true;
             try { if (hasAdminSession()) return true; } catch (e) {}
-            if (kpiOkUntil > Date.now()) return true;
-            try { const t = Number(localStorage.getItem(KPI_GATE_KEY)) || 0; if (t > Date.now()) { kpiOkUntil = t; return true; } } catch (e) {}
-            return false;
+            if (kpiPass) return true;
+            try { localStorage.removeItem(KPI_GATE_KEY); } catch (e) {}   // eski sürümden kalan 12 saatlik hatırlama temizlenir
+            return false;   // cihaz hatırlanmaz: her geçişte şifre sorulur
         }
         function kpiGateAsk(onOk) {
             openAuthModal('KPI Girişi', 'KPI Yarışması için ortak şifreyi girin.', 'fa-solid fa-key text-violet-500', KPI_GATE_EMAIL, () => {
-                kpiOkUntil = Date.now() + KPI_GATE_MS;
-                try { localStorage.setItem(KPI_GATE_KEY, String(kpiOkUntil)); } catch (e) {}
                 try { auth.signOut(); } catch (e) {}
-                onOk();
+                kpiPass = true;
+                try { onOk(); } finally { kpiPass = false; }
             });
         }
         const _kpiLoginStoreInner = window.kpiLoginAsStore;
@@ -7618,7 +7617,7 @@
             b.className = 'shrink-0 px-4 py-2 rounded-xl border font-black text-xs transition ' + (on ? 'bg-emerald-500 text-white border-emerald-300 shadow-lg' : 'bg-slate-800 text-slate-300 border-slate-600 hover:bg-slate-700');
             b.textContent = on ? '🔒 Şifre AÇIK' : '🔓 Şifre KAPALI';
             const t = $('kpi-gate-text');
-            if (t) t.textContent = on ? 'KPI tarafına geçerken ve mağaza girişinde ortak şifre sorulur. Doğru girenin cihazı 12 saat hatırlanır.' : 'Şifre sorulmuyor, KPI açıkken herkes doğrudan girer.';
+            if (t) t.textContent = on ? 'KPI tarafına geçerken ve mağaza girişinde ortak şifre sorulur. Cihaz hatırlanmaz, her geçişte sorulur.' : 'Şifre sorulmuyor, KPI açıkken herkes doğrudan girer.';
         };
 
         // test ve dış çağrılar için
@@ -7627,6 +7626,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · sürüm 17.10.2026 00:10</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · sürüm 17.10.2026 00:30</div>
 </body>
 </html>
