@@ -813,6 +813,7 @@
             <div class="wx-host" data-scope="store"></div>
             <div class="gw-host" data-scope="store"></div>
             <div class="rec-host"></div>
+            <div id="store-tempo" class="hidden"></div>
             <div id="store-top3-stores-banner" class="hidden"></div>
             <!-- Sadece Personeller (Tüm Mağazalar Arası) -->
             <div id="store-focus-top3-banner" class="hidden"></div>
@@ -935,6 +936,7 @@
             <div class="wx-host" data-scope="region"></div>
             <div class="gw-host" data-scope="region"></div>
             <div class="rec-host"></div>
+            <div id="region-tempo" class="hidden"></div>
             <div id="region-focus-top5-banner" class="hidden"></div>
             <div id="region-top5-banner" class="hidden"></div>
             
@@ -1052,6 +1054,7 @@
             </div>
 
 
+<div id="general-tempo" class="hidden"></div>
 <div id="general-leaders" class="hidden"></div>
 
             <div class="bg-slate-900 rounded-2xl shadow-xl p-6 text-white flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 relative overflow-hidden border border-slate-700 mt-6">
@@ -3765,6 +3768,54 @@
         }, 30000); 
     }
 
+    // === SAATLİK TEMPO: bugün şu ana kadar (tamamlanan saatler) ↔ dün aynı saatler ===
+    function tempoCalc(store) {
+        const H = new Date().getHours();
+        if (H < 11) return null;                       // en az 2 tamamlanmış saat (09-10) olsun
+        const hr = d => ((globalData.daily || {})[d] || {})[store] ? (((globalData.daily || {})[d] || {})[store].hourly || {}) : {};
+        const cum = h => { let t = 0; for (let x = 9; x < Math.min(H, 23); x++) t += Number(h[String(x).padStart(2, '0')]) || 0; return t; };
+        const t = cum(hr(ACTIVE_DATE)), y = cum(hr(socDayKey(-1)));
+        if (y < 4) return null;                        // dün yeterli veri yoksa kıyas anlamsız
+        return { store, t, y, pct: t / y * 100, H: Math.min(H, 23) };
+    }
+    function tempoTone(pct) {
+        if (pct < 70) return { cls: 'bg-rose-50 border-rose-200 text-rose-800', ic: '🐢', txt: 'Geride' };
+        if (pct < 90) return { cls: 'bg-amber-50 border-amber-200 text-amber-800', ic: '⏳', txt: 'Hafif geride' };
+        if (pct < 115) return { cls: 'bg-emerald-50 border-emerald-200 text-emerald-800', ic: '✅', txt: 'Dünkü tempoda' };
+        return { cls: 'bg-emerald-50 border-emerald-300 text-emerald-800', ic: '🚀', txt: 'Dünden hızlı' };
+    }
+    function renderTempoStore() {
+        const box = document.getElementById('store-tempo');
+        if (!box) return;
+        const r = (currentRole === 'store' && !isStoreHistorical) ? tempoCalc(currentId) : null;
+        if (!r) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+        const tn = tempoTone(r.pct), pad = n => String(n).padStart(2, '0');
+        const need = r.pct < 90 ? ` Dünkü tempoya yetişmek için ${Math.max(1, r.y - r.t)} adet gerekiyor.` : '';
+        box.className = 'border rounded-2xl px-4 py-3 text-sm font-bold ' + tn.cls;
+        box.innerHTML = `<div class="flex items-center gap-2"><span class="text-xl">${tn.ic}</span><div class="min-w-0"><div class="font-black">Saatlik tempo: ${tn.txt} (%${Math.round(r.pct)})</div>
+            <div class="text-[12px] font-semibold opacity-90">09:00–${pad(r.H)}:00 arası bugün ${r.t} adet, dün aynı saatlerde ${r.y} adet.${need}</div></div></div>`;
+    }
+    function renderTempoMulti(hostId, stores, showBm) {
+        const box = document.getElementById(hostId);
+        if (!box) return;
+        const list = stores.map(tempoCalc).filter(Boolean).sort((a, b) => a.pct - b.pct);
+        if (!list.length) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+        const geri = list.filter(x => x.pct < 70).length, hafif = list.filter(x => x.pct >= 70 && x.pct < 90).length, iyi = list.length - geri - hafif;
+        const worst = list.filter(x => x.pct < 90).slice(0, 6);
+        const bmOf = n => { const e = (allStoresList || []).find(x => x.name === n); return e ? e.bm : ''; };
+        const rows = worst.map(x => `<div class="flex items-center justify-between gap-2 py-1.5 border-b border-slate-100 last:border-0 text-xs"><span class="font-black text-slate-700 truncate">${tempoTone(x.pct).ic} ${escHtml(x.store)}${showBm ? ` <span class="text-slate-400 font-bold">· ${escHtml(bmOf(x.store))}</span>` : ''}</span><span class="font-black whitespace-nowrap ${x.pct < 70 ? 'text-rose-600' : 'text-amber-600'}">${x.t} / ${x.y} (%${Math.round(x.pct)})</span></div>`).join('');
+        box.className = 'bg-white border border-slate-200 rounded-2xl shadow-sm p-4';
+        box.innerHTML = `<div class="flex flex-wrap items-center gap-2 mb-1"><span class="font-black text-slate-800 text-sm"><i class="fa-solid fa-gauge-high text-indigo-500 mr-1"></i>Saatlik Tempo <span class="text-[10px] text-slate-400 font-bold">(bugün ↔ dün aynı saatler)</span></span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-700">🐢 ${geri} geride</span><span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-700">⏳ ${hafif} hafif geride</span><span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700">✅ ${iyi} iyi</span></div>
+            ${rows || '<div class="text-xs text-emerald-700 font-bold py-1">Tüm mağazalar dünkü tempoda ya da önde 🎉</div>'}`;
+    }
+    window.tempoRefresh = function () {
+        try { renderTempoStore(); } catch (e) {}
+        try { if (currentRole === 'region' && !isRegionHistorical) renderTempoMulti('region-tempo', effectiveHierarchy[currentId] || [], false); else { const b = document.getElementById('region-tempo'); if (b) b.classList.add('hidden'); } } catch (e) {}
+        try { if (currentRole === 'general') renderTempoMulti('general-tempo', allStoresList.map(s => s.name), true); } catch (e) {}
+    };
+    setInterval(() => { try { window.tempoRefresh(); } catch (e) {} }, 300000);   // saat dönünce kendiliğinden güncellensin
+
     // === GÜLİZ HANIM: BÖLGE BİRİNCİLERİ + BÖLGEYE ÖZEL TELSİZ ===
     function renderRegionLeaders(regionStats, allStores, allStaff) {
         const host = document.getElementById('general-leaders');
@@ -4868,6 +4919,7 @@
 
         updateAnnouncementUI();
         renderHeatmap(stats.hourly || {}, 'store-heatmap-container', 'bg-pink-500');
+        try { window.tempoRefresh(); } catch (e) {}
 
         if(isStoreHistorical) {
             document.getElementById('store-mode-badge').innerText = "GEÇMİŞ RAPOR MODU";
@@ -5194,6 +5246,7 @@
     }
 
     function renderRegionUI() {
+        try { window.tempoRefresh(); } catch (e) {}
         try {
             const sw = document.getElementById('region-switch');
             if (sw) {
@@ -6033,6 +6086,7 @@
         window.lastAllStoresList = allStores;
         window.lastRegionStats = regionStats;
         try { renderRegionLeaders(regionStats, allStores, generalAllStaff); } catch (e) { console.error(e); }
+        try { window.tempoRefresh(); } catch (e) {}
 
         let top3StoresGen = allStores.filter(s => s.sales > 0).slice(0, 3);
         updateTop3StoresBanner('general-top3-stores-banner', top3StoresGen, '🏆 EGE BÖLGESİ ŞAMPİYON MAĞAZALARI', 'Bonus Pack Satışında Seçili Aralık İlk 3 Mağaza');
@@ -7573,6 +7627,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · sürüm 16.10.2026 23:40</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · sürüm 17.10.2026 00:10</div>
 </body>
 </html>
