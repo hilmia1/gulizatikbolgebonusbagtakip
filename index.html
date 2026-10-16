@@ -2201,6 +2201,26 @@
 
     const ACTIVE_DATE = getActiveDateString(); 
     let reportDateRangeStr = ACTIVE_DATE; 
+    // ===== Duyuru şeritleri ve üst başlık: yapışma mesafelerini görünen şeritlere göre hesapla =====
+    // (Eskiden Güliz Atik şeridi sabit 42px'e yapışıyordu; Merkez şeridi yokken başlığın üstüne biniyordu.)
+    ;(function barLayoutInit() { try {
+        const ids = ['central-announcement-bar', 'global-announcement-bar', 'record-bar'];
+        const run = () => {
+            let y = 0;
+            ids.forEach(id => {
+                const e = document.getElementById(id); if (!e) return;
+                e.style.top = y + 'px';
+                if (!e.classList.contains('hidden')) y += e.offsetHeight || 0;
+            });
+            const tb = document.querySelector('.app-topbar');
+            if (tb) tb.style.top = y + 'px';
+        };
+        window.layoutBars = run;
+        if (window.MutationObserver) ids.forEach(id => { const e = document.getElementById(id); if (e) new MutationObserver(run).observe(e, { attributes: true, attributeFilter: ['class'] }); });
+        window.addEventListener('resize', run);
+        window.addEventListener('load', run);
+        setTimeout(run, 0); setTimeout(run, 1500);
+    } catch (e) { try { console.error('Şerit düzeni kurulamadı:', e); } catch (_) {} } })();
     // ===== Tarih ileri/geri okları (tüm tarih alanları) =====
     ;(function dateNavInit() { try {
         const P = n => String(n).padStart(2, '0');
