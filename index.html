@@ -7242,12 +7242,12 @@
             const text = String(($('kc-bulk-' + kind) || {}).value || '');
             const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l);
             if (!lines.length) return alert('Önce yapıştırma alanına veri girin.');
-            const updates = {}; let okRows = 0, cells = 0; const bad = [];
+            const updates = {}; let okRows = 0, cells = 0; const bad = []; const preview = [];
             lines.forEach(line => {
                 const parts = line.split(/\t|;/).map(p => p.trim());
                 const store = matchStore(parts[0]);
                 if (!store) { bad.push(parts[0] || line); return; }
-                let any = false;
+                let any = false; const shown = [];
                 c.brands.forEach((b, i) => {
                     const n = parseNum(parts[i + 1]);
                     if (n === null || n === undefined) return;
@@ -7255,11 +7255,12 @@
                     if (kind === 'targets') updates[store + '/' + b.key] = n;
                     else updates[store + '/' + b.key] = n - ((c.dsum[store] && c.dsum[store][b.key]) || 0);
                     cells++; any = true;
+                    shown.push(b.name + ': ' + nf(n) + (b.unit === 'TL' ? ' TL' : ''));
                 });
-                if (any) okRows++;
+                if (any) { okRows++; if (preview.length < 3) preview.push(store.replace(/^\d+-/, '') + ' → ' + shown.join(' • ')); }
             });
             if (!cells) return alert('Geçerli satır bulunamadı. İlk sütun mağaza kodu/adı, sonraki sütunlar sayı olmalı.' + (bad.length ? '\nEşleşmeyen: ' + bad.slice(0, 5).join(', ') : ''));
-            const msg = okRows + ' mağaza, ' + cells + ' değer ' + (kind === 'targets' ? 'hedef olarak' : 'resmi rakam olarak') + ' yüklenecek.' + (bad.length ? '\n\nAtlanan ' + bad.length + ' satır/değer: ' + bad.slice(0, 6).join(', ') + (bad.length > 6 ? '...' : '') : '') + '\n\nOnaylıyor musunuz?';
+            const msg = okRows + ' mağaza, ' + cells + ' değer ' + (kind === 'targets' ? 'hedef olarak' : 'resmi rakam olarak') + ' yüklenecek.' + (preview.length ? '\n\nOkunan ilk satırlar:\n' + preview.join('\n') : '') + (bad.length ? '\n\nAtlanan ' + bad.length + ' satır/değer: ' + bad.slice(0, 6).join(', ') + (bad.length > 6 ? '...' : '') : '') + '\n\nOnaylıyor musunuz?';
             if (!confirm(msg)) return;
             kpiRef(c, kind === 'targets' ? 'targets/stores' : 'adj').update(updates).then(() => {
                 alert('Yükleme tamamlandı: ' + cells + ' değer.');
@@ -7455,5 +7456,6 @@
 
 
 </script>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · sürüm 16.10.2026 18:45</div>
 </body>
 </html>
