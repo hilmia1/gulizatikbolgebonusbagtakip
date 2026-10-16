@@ -3154,7 +3154,7 @@
                 if (!data || !r.length) { h.innerHTML = ''; return; }
                 let html = '';
                 if (scope === 'store') {
-                    html = '<div class="flex flex-wrap items-center gap-2">' + chip(r[0].city) + '<span class="text-xs font-bold text-slate-600">Bugün yağışlı; sıcak bir gülümseme ve kapıda küçük bir karşılama harika olur ☔</span></div><div class="mt-2 bg-sky-50 border border-sky-200 rounded-xl px-3 py-2 text-xs font-black text-sky-900">☂️ Şemsiye satışı için görünürlüğü artır: kasa önüne ve girişe koy, önerini yağmurlu müşteriye ilk sen yap.</div>';
+                    html = '<div class="flex flex-wrap items-center gap-2">' + chip(r[0].city) + '<span class="text-xs font-bold text-slate-600">Bugün yağışlı; sıcak bir gülümseme ve kapıda küçük bir karşılama harika olur ☔</span></div><div class="mt-2 bg-sky-50 border border-sky-200 rounded-xl px-3 py-2 text-xs font-black text-sky-900">☂️ Şemsiye satışı için görünürlüğü artır: kasa önüne ve girişe koy, yağmurda gelen müşteriye şemsiyeyi ilk sen öner.</div>';
                 } else if (scope === 'region') {
                     html = '<div class="flex flex-wrap items-center gap-1.5">' + r.map(x => chip(x.city)).join('') + '</div><div class="text-[11px] font-bold text-slate-500 mt-1">Yağışlı mağazalar: ' +
                         r.map(x => x.stores.map(s => escHtml(s.replace(/^\d+-/, ''))).join(', ')).join(', ') + '</div>';
@@ -7707,6 +7707,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.10</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.11</div>
 </body>
 </html>
