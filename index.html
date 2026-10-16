@@ -2207,6 +2207,87 @@
 
     const ACTIVE_DATE = getActiveDateString(); 
     let reportDateRangeStr = ACTIVE_DATE; 
+    // === Seçim kutuları: sistemin gri açılır listesi yerine aranabilir, büyük dokunuşlu pencere ===
+    ;(function pickerInit() { try {
+        const IDS = ['select-store', 'select-region', 'kpi-select-store', 'kpi-select-region'];
+        const st = document.createElement('style');
+        st.textContent = `
+        .pk-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;cursor:pointer;width:100%}
+        .pk-btn .pk-l{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .pk-btn .pk-ph{opacity:.6}
+        .pk-ov{position:fixed;inset:0;z-index:99990;background:rgba(15,23,42,.55);display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px)}
+        .pk-sh{background:#fff;color:#0f172a;width:100%;max-width:520px;max-height:82vh;border-radius:20px 20px 0 0;display:flex;flex-direction:column;box-shadow:0 -10px 40px rgba(0,0,0,.25);animation:pkUp .18s ease-out}
+        @media(min-width:640px){.pk-ov{align-items:center}.pk-sh{border-radius:20px;max-height:76vh}}
+        @keyframes pkUp{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+        .pk-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 6px;font-weight:900;font-size:15px}
+        .pk-x{width:32px;height:32px;border-radius:999px;border:0;background:#f1f5f9;color:#475569;font-weight:900;cursor:pointer}
+        .pk-q{box-sizing:border-box;margin:6px 16px 8px;padding:11px 14px;border:2px solid #e2e8f0;border-radius:12px;font-size:16px;font-weight:700;outline:none;width:calc(100% - 32px)}
+        .pk-q:focus{border-color:#6366f1}
+        .pk-ls{overflow-y:auto;padding:0 10px 14px;-webkit-overflow-scrolling:touch}
+        .pk-it{box-sizing:border-box;display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:transparent;padding:11px 10px;border-radius:12px;cursor:pointer;font-size:14px;font-weight:800;color:#1e293b}
+        .pk-it:hover,.pk-it:active{background:#eef2ff}
+        .pk-it.on{background:#e0e7ff;color:#3730a3}
+        .pk-n{min-width:42px;text-align:center;background:#f1f5f9;color:#64748b;border-radius:8px;padding:3px 6px;font-size:11px;font-weight:900}
+        .pk-it.on .pk-n{background:#c7d2fe;color:#3730a3}
+        .pk-em{padding:22px;text-align:center;color:#94a3b8;font-weight:800;font-size:13px}`;
+        document.head.appendChild(st);
+        const tr = s => String(s || '').toLocaleLowerCase('tr').replace(/ı/g, 'i').replace(/[çğöşü]/g, c => ({ ç: 'c', ğ: 'g', ö: 'o', ş: 's', ü: 'u' }[c]));
+        const esc2 = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        let ov = null;
+        function close() { if (ov) { ov.remove(); ov = null; document.removeEventListener('keydown', onKey); } }
+        function onKey(e) { if (e.key === 'Escape') close(); }
+        function open(sel) {
+            close();
+            const opts = Array.from(sel.options);
+            const title = (opts[0] && !opts[0].value ? opts[0].text.replace(/[-–]/g, '').trim() : 'Seçiniz');
+            ov = document.createElement('div'); ov.className = 'pk-ov';
+            ov.innerHTML = `<div class="pk-sh" role="dialog"><div class="pk-hd"><span>${esc2(title)}</span><button type="button" class="pk-x" aria-label="Kapat">✕</button></div>
+                <input class="pk-q" type="text" name="pk-ara" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Ara… (ör. forum, 148)"><div class="pk-ls"></div></div>`;
+            document.body.appendChild(ov);
+            const ls = ov.querySelector('.pk-ls'), q = ov.querySelector('.pk-q');
+            function paint() {
+                const k = tr(q.value).trim();
+                const rows = opts.filter(o => o.value && (!k || tr(o.text).indexOf(k) !== -1));
+                ls.innerHTML = rows.length ? rows.map(o => {
+                    const m = /^(\d+)-(.*)$/.exec(o.text);
+                    return `<button type="button" class="pk-it${o.value === sel.value ? ' on' : ''}" data-v="${esc2(o.value)}">${m ? `<span class="pk-n">${esc2(m[1])}</span><span>${esc2(m[2])}</span>` : `<span>${esc2(o.text)}</span>`}</button>`;
+                }).join('') : '<div class="pk-em">Sonuç yok</div>';
+                const on = ls.querySelector('.on'); if (on && !k) on.scrollIntoView({ block: 'center' });
+            }
+            paint();
+            q.addEventListener('input', paint);
+            ls.addEventListener('click', e => {
+                const b = e.target.closest('.pk-it'); if (!b) return;
+                sel.value = b.getAttribute('data-v');
+                sel.dispatchEvent(new Event('change', { bubbles: true }));
+                sync(sel); close();
+            });
+            ov.addEventListener('click', e => { if (e.target === ov || e.target.closest('.pk-x')) close(); });
+            document.addEventListener('keydown', onKey);
+            if (!(window.matchMedia && matchMedia('(pointer:coarse)').matches)) q.focus();
+        }
+        function sync(sel) {
+            const b = sel._pk; if (!b) return;
+            const o = sel.options[sel.selectedIndex], l = b.querySelector('.pk-l');
+            const txt = o ? o.text : '';
+            const ph = !sel.value;
+            if (l.textContent !== txt) l.textContent = txt;
+            l.classList.toggle('pk-ph', ph);
+        }
+        IDS.forEach(id => {
+            const sel = document.getElementById(id);
+            if (!sel || sel._pk) return;
+            const b = document.createElement('button');
+            b.type = 'button'; b.className = sel.className + ' pk-btn';
+            b.innerHTML = '<span class="pk-l"></span><i class="fa-solid fa-chevron-down" style="font-size:11px;opacity:.55"></i>';
+            sel.parentNode.insertBefore(b, sel);
+            sel.style.display = 'none'; sel._pk = b;
+            b.addEventListener('click', () => open(sel));
+            sync(sel);
+        });
+        setInterval(() => IDS.forEach(id => { const s = document.getElementById(id); if (s) sync(s); }), 1200);
+    } catch (e) { console.error('Seçim penceresi kurulamadı', e); } })();
+
     // ===== Duyuru şeritleri ve üst başlık: yapışma mesafelerini görünen şeritlere göre hesapla =====
     // (Eskiden Güliz Atik şeridi sabit 42px'e yapışıyordu; Merkez şeridi yokken başlığın üstüne biniyordu.)
     ;(function barLayoutInit() { try {
@@ -7626,6 +7707,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.7</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.8</div>
 </body>
 </html>
