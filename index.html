@@ -543,13 +543,13 @@
         <!-- ================= 1. GİRİŞ VE SEÇİM EKRANI ================= -->
         <div id="screen-home" class="screen space-y-6 hidden">
             <div class="rec-host"></div>
-            <div id="install-banner" class="hidden items-center justify-between gap-3 bg-gradient-to-r from-slate-900 to-indigo-900 text-white rounded-2xl p-3 sm:p-4 shadow-lg border border-indigo-500/40">
+            <div id="install-banner" class="hidden items-center justify-between gap-3 text-white rounded-2xl p-3 sm:p-4 shadow-lg border border-teal-300/40" style="background:linear-gradient(90deg,#007f86,#00a0a6 60%,#1a8fb0)">
                 <div class="flex items-center gap-3 min-w-0">
-                    <img src="icon-192.png" alt="" class="w-11 h-11 rounded-xl shadow flex-none">
-                    <div class="min-w-0"><div class="font-black text-sm sm:text-base leading-tight">Telefonuna uygulama gibi ekle</div><div class="text-[11px] sm:text-xs text-indigo-200 leading-snug">Tek dokunuşla aç, mağazanı hatırlasın.</div></div>
+                    <img src="icon-192.png?v=2" alt="" class="w-11 h-11 rounded-xl shadow flex-none">
+                    <div class="min-w-0"><div id="install-title" class="font-black text-sm sm:text-base leading-tight">Telefonuna uygulama gibi ekle</div><div id="install-desc" class="text-[11px] sm:text-xs text-teal-50/90 leading-snug">Tek dokunuşla aç, mağazanı hatırlasın.</div></div>
                 </div>
                 <div class="flex items-center gap-2 flex-none">
-                    <button type="button" onclick="installApp()" class="px-4 py-2 bg-pink-500 hover:bg-pink-400 rounded-xl text-xs font-black shadow whitespace-nowrap"><i class="fa-solid fa-download mr-1"></i> Ekle</button>
+                    <button type="button" onclick="installApp()" class="px-4 py-2 bg-white text-teal-800 hover:bg-teal-50 rounded-xl text-xs font-black shadow whitespace-nowrap"><i class="fa-solid fa-download mr-1"></i> <span id="install-btn-label">Ekle</span></button>
                     <button type="button" onclick="dismissInstall()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-sm" title="Kapat"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
@@ -571,7 +571,7 @@
                 <img src="icon-192.png?v=2" alt="W•EGE" width="96" height="96" class="mx-auto mb-4 rounded-3xl shadow-xl" style="width:96px;height:96px">
                 <h2 class="text-3xl font-black text-slate-800 mb-2 transition-colors">W•EGE'ye Hoş Geldiniz</h2>
                 <p class="text-slate-500 transition-colors">Görüntülemek istediğiniz paneli yetkinize göre seçiniz.</p>
-                <button type="button" onclick="wegeTourOpen()" class="mt-3 px-4 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 rounded-full text-xs font-black"><i class="fa-solid fa-circle-play mr-1"></i> Kısa tanıtım turu</button>
+                <div class="mt-3 flex flex-wrap justify-center gap-2"><button type="button" id="install-link" onclick="installApp()" class="hidden px-4 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-full text-xs font-black shadow"><i class="fa-solid fa-download mr-1"></i> <span>Bilgisayara yükle</span></button><button type="button" onclick="wegeTourOpen()" class="px-4 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 rounded-full text-xs font-black"><i class="fa-solid fa-circle-play mr-1"></i> Kısa tanıtım turu</button></div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -4027,7 +4027,18 @@
         const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
         window.__isStandalone = isStandalone;
 
+        function labelUi() {
+            const t = document.getElementById('install-title'), d = document.getElementById('install-desc'), l = document.getElementById('install-btn-label');
+            if (!isMobile) {
+                if (t) t.textContent = 'Bilgisayarına uygulama olarak yükle';
+                if (d) d.textContent = 'Masaüstünde ve görev çubuğunda kendi penceresiyle açılır.';
+                if (l) l.textContent = 'Yükle';
+            }
+            const lk = document.getElementById('install-link');
+            if (lk && !window.__DEMO && !isStandalone()) { lk.classList.remove('hidden'); const s = lk.querySelector('span'); if (s) s.textContent = isMobile ? 'Ana ekrana ekle' : 'Bilgisayara yükle'; }
+        }
         function showBanner() {
+            try { labelUi(); } catch (e) {}
             const b = document.getElementById('install-banner');
             if (!b || window.__DEMO || isStandalone() || lsGet('bb_install_dismissed') === '1') return;
             if (!isMobile && !deferred) return;
@@ -4044,11 +4055,17 @@
                 ? ['Siteyi <b>Safari</b> ile açın (Chrome değil).', 'Alttaki <b>Paylaş</b> düğmesine <i class="fa-solid fa-arrow-up-from-bracket"></i> basın.', '<b>"Ana Ekrana Ekle"</b> seçeneğini seçin.', 'Sağ üstte <b>Ekle</b>\'ye basın.']
                 : /Android/i.test(ua)
                     ? ['Chrome\'da sağ üstteki <b>⋮</b> menüsünü açın.', '<b>"Uygulamayı yükle"</b> ya da <b>"Ana ekrana ekle"</b> seçeneğine basın.', '<b>Yükle / Ekle</b> diyerek onaylayın.']
-                    : ['Adres çubuğunun sağındaki <b>yükle</b> simgesine <i class="fa-solid fa-download"></i> basın.', 'Yoksa tarayıcı menüsünden <b>"Uygulamayı yükle"</b> seçeneğini kullanın.'];
+                    : (/Edg\//.test(ua)
+                        ? ['Adres çubuğunun sağındaki <b>uygulama</b> simgesine <i class="fa-solid fa-download"></i> basın.', 'Görünmüyorsa <b>⋯</b> menü &gt; <b>Uygulamalar</b> &gt; <b>"Bu siteyi uygulama olarak yükle"</b>.', '<b>Yükle</b> deyin; istersen <b>görev çubuğuna sabitle</b> ve <b>masaüstü kısayolu</b> seçeneklerini işaretleyin.']
+                        : (/Safari/.test(ua) && !/Chrome|Chromium/.test(ua))
+                            ? ['Menü çubuğundan <b>Dosya</b> &gt; <b>"Dock\'a Ekle"</b> seçeneğini kullanın.', 'Adı <b>W•EGE</b> olarak bırakıp <b>Ekle</b> deyin.']
+                            : /Firefox/.test(ua)
+                                ? ['Firefox bilgisayara uygulama olarak yüklemeyi desteklemiyor. <b>Chrome</b> ya da <b>Edge</b> ile açıp yükleyebilirsiniz.']
+                                : ['Adres çubuğunun sağ ucundaki <b>yükle</b> simgesine <i class="fa-solid fa-download"></i> basın.', 'Görünmüyorsa <b>⋮</b> menü &gt; <b>Kaydet ve paylaş</b> &gt; <b>"Sayfayı uygulama olarak yükle"</b> seçeneğini kullanın.', '<b>Yükle</b> deyin. Uygulama masaüstünde ve görev çubuğunda kendi penceresiyle açılır.']);
             const el = document.createElement('div');
             el.setAttribute('style', 'position:fixed;inset:0;z-index:99990;background:rgba(15,23,42,.8);display:flex;align-items:center;justify-content:center;padding:16px');
             el.innerHTML = '<div style="background:#fff;border-radius:20px;max-width:380px;width:100%;padding:22px;font-family:inherit;color:#0f172a">' +
-                '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><img src="icon-192.png" alt="" style="width:48px;height:48px;border-radius:12px"><div style="font-weight:900;font-size:17px">Ana ekrana ekle</div></div>' +
+                '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><img src="icon-192.png?v=2" alt="" style="width:48px;height:48px;border-radius:12px"><div style="font-weight:900;font-size:17px">' + (isMobile ? 'Ana ekrana ekle' : 'Bilgisayara yükle') + '</div></div>' +
                 '<ol style="padding-left:20px;margin:0 0 16px;font-size:14px;line-height:1.7;color:#334155">' + steps.map(t => '<li>' + t + '</li>').join('') + '</ol>' +
                 '<button type="button" style="width:100%;padding:12px;border:0;border-radius:12px;background:#0f172a;color:#fff;font-weight:900;font-size:14px;cursor:pointer">Tamam</button></div>';
             el.addEventListener('click', e => { if (e.target === el || (e.target.tagName === 'BUTTON')) el.remove(); });
