@@ -968,6 +968,7 @@
                     </div>
                     
                     <h2 class="text-2xl sm:text-3xl font-black mt-2" id="region-title">Bölge Müdürü Adı</h2>
+                    <div class="mt-2 inline-flex items-center gap-2 bg-white/15 border border-white/25 rounded-lg px-2 py-1 max-w-full"><i class="fa-solid fa-right-left text-xs"></i><select id="region-switch" onchange="switchRegion(this.value)" class="bg-transparent text-white text-xs font-bold outline-none max-w-[220px]"></select></div>
                     
                     <div class="bg-indigo-900/40 p-2.5 rounded-xl border border-indigo-500/30 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 mt-3 w-full lg:w-max lg:max-w-full" id="region-date-filters">
                         <div class="flex items-center justify-between gap-2 bg-indigo-800 p-1.5 rounded-lg border border-indigo-400/50 shadow-inner">
@@ -5098,7 +5099,23 @@
     window.regionDetailMode = 'bp';
     window.setRegionDetail = function (m) { window.regionDetailMode = m; renderRegionUI(); };
 
+    window.switchRegion = function(name) {
+        if (!name || currentRole !== 'region' || name === currentId) return;
+        currentId = name;
+        isRegionHistorical = false;
+        setURLParam('region', currentId);
+        document.getElementById('region-title').innerText = currentId;
+        renderRegionUI();
+    }
+
     function renderRegionUI() {
+        try {
+            const sw = document.getElementById('region-switch');
+            if (sw) {
+                if (!sw.options.length) Object.keys(hierarchy).sort((a, b) => a.localeCompare(b, 'tr')).forEach(n => sw.add(new Option(n, n)));
+                sw.value = currentId;
+            }
+        } catch (e) {}
         try { if (window.wxPaint) wxPaint(); } catch (e) {}
         try { if (window.growPaint) growPaint(); } catch (e) {}
         if (currentRole !== 'region') return;
@@ -6212,7 +6229,7 @@
         const nf = n => Math.round(Number(n) || 0).toLocaleString('tr-TR');
         const fmtVal = (n, unit) => unit === 'TL' ? '₺' + nf(n) : nf(n);
         // Ciro (TL) tutarlarını sadece Güliz Atik ve Merkez görür; mağaza ve bölge ekranlarında sadece bar + yüzde
-        const seesMoney = () => currentRole === 'kgeneral' || currentRole === 'kcentral';
+        const seesMoney = () => currentRole === 'kgeneral' || currentRole === 'kcentral' || currentRole === 'kregion';
         const hideAmt = b => b.unit === 'TL' && !seesMoney();
         const toUTC = s => { const p = String(s).split('-').map(Number); return Date.UTC(p[0], p[1] - 1, p[2]); };
         const dayDiff = (a, b) => Math.round((toUTC(b) - toUTC(a)) / 86400000);
@@ -6351,6 +6368,18 @@
             const w = Math.min(100, pct || 0);
             const mark = (c.live || c.finished) ? `<div class="absolute top-[-4px] bottom-[-4px] w-[2px] bg-slate-700/70" style="left:${Math.min(100, c.pace * 100)}%" title="Bugün olması gereken seviye"></div>` : '';
             return `<div class="relative w-full bg-slate-200 rounded-full h-3"><div class="h-3 rounded-full progress-bar" style="width:${w}%;background:${color}"></div>${mark}</div>`;
+        }
+
+        function totalCards(ms, c) {
+            const out = [];
+            ['TL', 'adet'].forEach(u => {
+                const g = ms.filter(x => (x.b.unit === 'TL') === (u === 'TL') && x.m.target > 0);
+                if (g.length < 2) return;
+                const a = g.reduce((t, x) => t + (x.m.actual || 0), 0), tg = g.reduce((t, x) => t + x.m.target, 0);
+                const b = { key: '_total_' + u, name: 'TOPLAM • ' + (u === 'TL' ? 'Tüm markalar (ciro)' : 'Tüm markalar (adet)'), unit: u === 'TL' ? 'TL' : 'adet', color: '#0f766e' };
+                out.push(brandCard(b, metrics(a, tg, c), c, {}).replace('bg-white rounded-2xl border border-slate-200', 'bg-teal-50/60 rounded-2xl border-2 border-teal-300'));
+            });
+            return out.join('');
         }
 
         function brandCard(b, m, c, opts) {
@@ -6816,8 +6845,9 @@
 
             body.innerHTML = header(c, 'KPI Bölge Paneli', esc(bm), list.length + ' mağaza',
                 statBox('Bölge Genel Başarı', ov === null ? '—' : '%' + Math.round(ov)) + statBox('Hedefsiz Mağaza', noTarget)) +
+                `<div class="bg-white border border-indigo-200 rounded-2xl p-3 flex items-center gap-2"><i class="fa-solid fa-right-left text-indigo-500"></i><span class="text-xs font-black text-slate-500 whitespace-nowrap">Bölge Müdürü:</span><select onchange="kpiOpen('kregion', this.value, false)" class="flex-1 min-w-0 p-2 border border-slate-300 rounded-lg text-sm font-bold bg-white">${Object.keys(effectiveHierarchy).sort((a, b) => a.localeCompare(b, 'tr')).map(n => `<option value="${esc(n)}"${n === bm ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select></div>` +
                 podiumHost() +
-                `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">${regionMs.map(x => brandCard(x.b, x.m, c, { derived: x.derived })).join('')}</div>
+                `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">${totalCards(regionMs, c)}${regionMs.map(x => brandCard(x.b, x.m, c, { derived: x.derived })).join('')}</div>
                 ${staffReport(c, c.staff.filter(r => list.includes(r.store)), 'Bölge Personel Raporu (KPI adet markaları)')}
                 ${weakHtml}
                 ${chartCard('kchart-region', 'Bölgenin Gidişatı')}
@@ -6958,7 +6988,7 @@
             body.innerHTML = header(c, 'KPI Yönetim Paneli', 'GÜLİZ ATİK BÖLGESİ', ALL.length + ' mağaza • ' + Object.keys(effectiveHierarchy).length + ' bölge müdürü',
                 statBox('Bölge Genel Başarı', ov === null ? '—' : '%' + Math.round(ov)) + statBox('Hedefsiz Mağaza', noTarget)) +
                 trajectoryPanel(c, genMs) + podiumHost() +
-                `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">${genMs.map(x => brandCard(x.b, x.m, c, { derived: x.derived })).join('')}</div>
+                `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">${totalCards(genMs, c)}${genMs.map(x => brandCard(x.b, x.m, c, { derived: x.derived })).join('')}</div>
                 ${staffReport(c, c.staff, 'Personel Raporu (KPI adet markaları)')}
                 ${chartCard('kchart-general', 'Bölgenin Gidişatı')}
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"><div class="p-4 bg-slate-50 border-b border-slate-200"><h3 class="font-bold text-slate-800"><i class="fa-solid fa-ranking-star text-amber-500 mr-2"></i>Bölge Müdürleri Sıralaması</h3><p class="text-[10px] text-slate-400 mt-0.5">Her bölge, kendi hedefine göre değerlendirilir. İsme tıklayınca bölge detayı açılır.</p></div>${bmTable}</div>
@@ -7081,10 +7111,8 @@
 
             let totals = '';
             if (c) {
-                totals = `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">${c.brands.map(b => {
-                    const t = c.tGeneral(b.key);
-                    return brandCard(b, metrics(c.sumA(ALL, b.key), t.val, c), c, { derived: t.derived });
-                }).join('')}</div>`;
+                const cms = c.brands.map(b => { const t = c.tGeneral(b.key); return { b, m: metrics(c.sumA(ALL, b.key), t.val, c), derived: t.derived }; });
+                totals = `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">${totalCards(cms, c)}${cms.map(x => brandCard(x.b, x.m, c, { derived: x.derived })).join('')}</div>`;
             }
             return `${totals}
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
@@ -7456,6 +7484,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · sürüm 16.10.2026 18:45</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · sürüm 16.10.2026 21:20</div>
 </body>
 </html>
