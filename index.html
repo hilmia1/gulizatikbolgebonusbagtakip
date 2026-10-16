@@ -622,6 +622,7 @@
             </div>
 
             <div id="home-social" class="space-y-4">
+                <div id="home-mascot"></div>
                 <div id="home-stars" class="hidden"></div>
             </div>
         </div>
@@ -2353,7 +2354,7 @@
             try {
                 const old = document.querySelector('.gl-ov'); if (old) old.remove();
                 const el = document.createElement('div'); el.className = 'gl-ov';
-                el.innerHTML = '<div class="gl-em">🎉</div><div class="gl-t">Tebrikler ' + String(first(name)).replace(/[<>&]/g, '') + '!</div><div class="gl-s">Bugünkü hedefini geçtin</div>';
+                el.innerHTML = '<div class="mc-jump" style="display:inline-block">' + (window.mascotSvg ? mascotSvg('cheer', 92) : '🎉') + '</div><div class="gl-t">Tebrikler ' + String(first(name)).replace(/[<>&]/g, '') + '!</div><div class="gl-s">Bugünkü hedefini geçtin</div>';
                 document.body.appendChild(el); setTimeout(() => { try { el.remove(); } catch (e) {} }, 3800);
                 if (typeof window.confetti === 'function') {
                     const colors = ['#ec4899', '#6366f1', '#f59e0b', '#10b981'];
@@ -2429,6 +2430,73 @@
             });
         };
     } catch (e) { console.error('Avatar kurulamadı', e); } })();
+
+    // === Maskot: Bagi (pembe alışveriş çantası) ===
+    ;(function mascotInit() { try {
+        const st = document.createElement('style');
+        st.textContent = `
+        .mc-bob{animation:mcBob 2.8s ease-in-out infinite;transform-origin:50% 100%}
+        @keyframes mcBob{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-4px) rotate(1.5deg)}}
+        .mc-jump{animation:mcJump .7s ease-in-out infinite;transform-origin:50% 100%}
+        @keyframes mcJump{0%,100%{transform:translateY(0) scale(1,1)}40%{transform:translateY(-10px) scale(.97,1.04)}70%{transform:translateY(0) scale(1.04,.96)}}
+        .mc-bub{position:relative;background:#fff;border:2px solid #fbcfe8;border-radius:18px;padding:10px 14px;font-weight:800;font-size:13px;color:#334155;line-height:1.35}
+        .mc-bub:before{content:"";position:absolute;left:-9px;top:22px;width:14px;height:14px;background:#fff;border-left:2px solid #fbcfe8;border-bottom:2px solid #fbcfe8;transform:rotate(45deg)}
+        @media (prefers-reduced-motion:reduce){.mc-bob,.mc-jump{animation:none}}`;
+        document.head.appendChild(st);
+        let uid = 0;
+        // mood: happy | cheer | rain | sleepy
+        window.mascotSvg = function (mood, size) {
+            size = size || 96; const g = 'mg' + (++uid);
+            const eyes = mood === 'cheer'
+                ? '<path d="M40 70q7-9 14 0M66 70q7-9 14 0" stroke="#4a044e" stroke-width="4" fill="none" stroke-linecap="round"/>'
+                : mood === 'sleepy'
+                    ? '<path d="M40 72q7 6 14 0M66 72q7 6 14 0" stroke="#4a044e" stroke-width="4" fill="none" stroke-linecap="round"/>'
+                    : '<ellipse cx="47" cy="71" rx="5.5" ry="7" fill="#4a044e"/><ellipse cx="73" cy="71" rx="5.5" ry="7" fill="#4a044e"/><circle cx="49" cy="68" r="2" fill="#fff"/><circle cx="75" cy="68" r="2" fill="#fff"/>';
+            const mouth = mood === 'cheer'
+                ? '<path d="M48 82q12 18 24 0z" fill="#9d174d"/><path d="M53 88q7 6 14 0" fill="#f472b6"/>'
+                : mood === 'sleepy'
+                    ? '<ellipse cx="60" cy="87" rx="4" ry="3" fill="#9d174d"/>'
+                    : '<path d="M50 84q10 11 20 0" stroke="#9d174d" stroke-width="4" fill="none" stroke-linecap="round"/>';
+            const arms = mood === 'cheer'
+                ? '<path d="M26 74q-14-6-12-24M94 74q14-6 12-24" stroke="#ec4899" stroke-width="7" fill="none" stroke-linecap="round"/><circle cx="14" cy="48" r="5" fill="#fbcfe8"/><circle cx="106" cy="48" r="5" fill="#fbcfe8"/>'
+                : '<path d="M26 80q-10 4-12 14M94 80q10 4 12 14" stroke="#ec4899" stroke-width="7" fill="none" stroke-linecap="round"/><circle cx="14" cy="95" r="5" fill="#fbcfe8"/><circle cx="106" cy="95" r="5" fill="#fbcfe8"/>';
+            const extra = mood === 'cheer'
+                ? '<circle cx="18" cy="22" r="3" fill="#f59e0b"/><circle cx="104" cy="18" r="3" fill="#6366f1"/><rect x="92" y="30" width="6" height="6" rx="1" fill="#10b981" transform="rotate(25 95 33)"/><rect x="22" y="36" width="6" height="6" rx="1" fill="#ec4899" transform="rotate(-20 25 39)"/><path d="M60 4l2.5 6 6 .5-4.6 4 1.5 6L60 17l-5.4 3.5 1.5-6-4.6-4 6-.5z" fill="#fbbf24"/>'
+                : mood === 'sleepy'
+                    ? '<text x="88" y="34" font-size="18" font-weight="900" fill="#818cf8" font-family="sans-serif">z</text><text x="100" y="20" font-size="13" font-weight="900" fill="#a5b4fc" font-family="sans-serif">z</text>'
+                    : mood === 'rain'
+                        ? '<path d="M10 40q50-62 100 0z" fill="#38bdf8"/><path d="M10 40q10-8 20 0q10-8 20 0q10-8 20 0q10-8 20 0q10-8 20 0" fill="#0ea5e9"/><path d="M60 40v14" stroke="#0369a1" stroke-width="3"/><path d="M60 54q0 7-6 6" stroke="#0369a1" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M104 56l-3 8M16 60l-3 8M108 80l-3 8" stroke="#7dd3fc" stroke-width="3" stroke-linecap="round"/>'
+                        : '';
+            const handle = mood === 'rain' ? '' : '<path d="M44 46Q60 6 76 46" stroke="#be185d" stroke-width="7" fill="none" stroke-linecap="round"/>';
+            return '<svg viewBox="0 0 120 124" width="' + size + '" height="' + (size * 124 / 120).toFixed(0) + '" role="img" aria-label="Bagi, uygulama maskotu" style="overflow:visible"><defs><linearGradient id="' + g + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f472b6"/><stop offset="1" stop-color="#db2777"/></linearGradient></defs>' +
+                handle + '<ellipse cx="46" cy="116" rx="12" ry="5" fill="#9d174d"/><ellipse cx="74" cy="116" rx="12" ry="5" fill="#9d174d"/>' + arms +
+                '<rect x="24" y="42" width="72" height="72" rx="20" fill="url(#' + g + ')"/><path d="M30 56q30 10 60 0" stroke="#fff" stroke-opacity=".25" stroke-width="5" fill="none" stroke-linecap="round"/>' +
+                eyes + '<circle cx="36" cy="82" r="6" fill="#fda4af" opacity=".7"/><circle cx="84" cy="82" r="6" fill="#fda4af" opacity=".7"/>' + mouth + extra + '</svg>';
+        };
+        const LINES = {
+            sabah: ['Günaydın! Bugün de birlikte güzel satışlar yapacağız ☀️', 'Günaydın! Güne enerjiyle başlayalım 💜', 'Günaydın! İlk satış kimden gelecek? 🌟'],
+            gun: ['Kolay gelsin! Tempo çok güzel gidiyor 🚀', 'Kolay gelsin! Bir gülümseme bir satış demek 😊', 'Sen harikasın, devam! 💪'],
+            aksam: ['İyi akşamlar! Günün son bölümü, güzel kapatalım 🌙', 'Akşam vardiyası kahramanlarına selam! ✨', 'Az kaldı, birlikte bitirelim 🎯'],
+            gece: ['Geç saat oldu, iyi dinlenmeler 😴', 'Yarın yeni bir gün, yeni satışlar 🌅']
+        };
+        const DAYS = { 1: 'Yeni hafta, yeni rozetler başlıyor! 🏅', 5: 'Cuma! Hafta sonu yaklaşıyor 🎉' };
+        let seq = 0;
+        function pick() {
+            const d = new Date(), h = d.getHours(), dow = d.getDay();
+            const set = h < 5 ? 'gece' : h < 12 ? 'sabah' : h < 18 ? 'gun' : h < 22 ? 'aksam' : 'gece';
+            const arr = LINES[set].slice(); if (DAYS[dow] && set !== 'gece') arr.unshift(DAYS[dow]);
+            return { mood: set === 'gece' ? 'sleepy' : 'happy', text: arr[seq++ % arr.length] };
+        }
+        window.mascotPaint = function () {
+            const box = document.getElementById('home-mascot'); if (!box) return;
+            const m = pick();
+            box.innerHTML = '<div class="flex items-center gap-3 bg-gradient-to-r from-pink-50 to-indigo-50 border border-pink-100 rounded-2xl px-3 py-2.5">' +
+                '<button type="button" class="mc-bob shrink-0" style="background:none;border:0;padding:0;cursor:pointer" onclick="mascotPaint()" title="Bagi\'ye dokun">' + mascotSvg(m.mood, 64) + '</button>' +
+                '<div class="mc-bub flex-1 min-w-0"><span class="block text-[10px] font-black text-pink-500 uppercase tracking-wider mb-0.5">Bagi</span>' + m.text + '</div></div>';
+        };
+        setTimeout(() => { try { mascotPaint(); } catch (e) {} }, 300);
+        setInterval(() => { try { mascotPaint(); } catch (e) {} }, 600000);
+    } catch (e) { console.error('Maskot kurulamadı', e); } })();
 
     // ===== Duyuru şeritleri ve üst başlık: yapışma mesafelerini görünen şeritlere göre hesapla =====
     // (Eskiden Güliz Atik şeridi sabit 42px'e yapışıyordu; Merkez şeridi yokken başlığın üstüne biniyordu.)
@@ -3296,7 +3364,7 @@
                 if (!data || !r.length) { h.innerHTML = ''; return; }
                 let html = '';
                 if (scope === 'store') {
-                    html = '<div class="flex flex-wrap items-center gap-2">' + chip(r[0].city) + '<span class="text-xs font-bold text-slate-600">Bugün yağışlı; sıcak bir gülümseme ve kapıda küçük bir karşılama harika olur ☔</span></div><div class="mt-2 bg-sky-50 border border-sky-200 rounded-xl px-3 py-2 text-xs font-black text-sky-900">☂️ Şemsiye satışı için görünürlüğü artır: kasa önüne ve girişe koy, yağmurda gelen müşteriye şemsiyeyi ilk sen öner.</div>';
+                    html = '<div class="flex flex-wrap items-center gap-2">' + chip(r[0].city) + '<span class="text-xs font-bold text-slate-600">Bugün yağışlı; sıcak bir gülümseme ve kapıda küçük bir karşılama harika olur ☔</span></div><div class="mt-2 bg-sky-50 border border-sky-200 rounded-xl px-3 py-2 text-xs font-black text-sky-900 flex items-center gap-3"><span class="shrink-0 mc-bob">' + (window.mascotSvg ? mascotSvg('rain', 56) : '☂️') + '</span><span>Şemsiye satışı için görünürlüğü artır: kasa önüne ve girişe koy, yağmurda gelen müşteriye şemsiyeyi ilk sen öner.</span></div>';
                 } else if (scope === 'region') {
                     html = '<div class="flex flex-wrap items-center gap-1.5">' + r.map(x => chip(x.city)).join('') + '</div><div class="text-[11px] font-bold text-slate-500 mt-1">Yağışlı mağazalar: ' +
                         r.map(x => x.stores.map(s => escHtml(s.replace(/^\d+-/, ''))).join(', ')).join(', ') + '</div>';
@@ -7900,6 +7968,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.20</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.21</div>
 </body>
 </html>
