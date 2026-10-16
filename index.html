@@ -250,10 +250,11 @@
     <div id="wege-splash"><img src="icon-512.png?v=2" alt="W•EGE"><div class="sp-name">W•EGE</div><div class="sp-sub">GÜLİZ ATİK BÖLGESİ</div></div>
     <script>try { if (sessionStorage.getItem('bb_splash') === '1') { var __sp = document.getElementById('wege-splash'); if (__sp) __sp.style.display = 'none'; } else { sessionStorage.setItem('bb_splash', '1'); } } catch (e) {}</script>
     <div id="wege-tour"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden">
-        <div class="p-6 text-center text-white" style="background:linear-gradient(135deg,#3fe0c4 0%,#00a0a6 55%,#1a6fb0 100%)"><img src="icon-192.png?v=2" alt="" class="mx-auto mb-3 rounded-2xl shadow-lg" style="width:72px;height:72px"><div id="tour-title" class="font-black text-xl"></div></div>
+        <div class="p-6 text-center text-white" style="background:linear-gradient(135deg,#3fe0c4 0%,#00a0a6 55%,#1a6fb0 100%)"><div id="tour-mascot" class="mx-auto mb-2 flex justify-center" style="min-height:96px"><img src="icon-192.png?v=2" alt="" class="rounded-2xl shadow-lg" style="width:72px;height:72px"></div><div id="tour-title" class="font-black text-xl"></div></div>
+        <div style="height:3px;background:#e2e8f0"><div id="tour-bar" style="height:3px;width:0;background:#00a0a6"></div></div>
         <div class="p-5"><p id="tour-text" class="text-sm text-slate-600 font-semibold leading-relaxed min-h-[84px]"></p>
         <div id="tour-dots" class="flex justify-center gap-1.5 my-3"></div>
-        <div class="flex items-center justify-between gap-2"><button type="button" onclick="wegeTourClose()" class="px-3 py-2 text-xs font-bold text-slate-400 hover:text-slate-600">Atla</button><button type="button" id="tour-next" onclick="wegeTourNext()" class="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl text-sm shadow"></button></div></div>
+        <div class="flex items-center justify-between gap-2"><button type="button" onclick="wegeTourClose()" class="px-3 py-2 text-xs font-bold text-slate-400 hover:text-slate-600">Atla</button><button type="button" id="tour-play" onclick="wegeTourPlay()" class="px-3 py-2 text-xs font-black text-teal-600 hover:text-teal-800">⏸ Durdur</button><button type="button" id="tour-next" onclick="wegeTourNext()" class="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl text-sm shadow"></button></div></div>
     </div></div>
 
     <!-- ⚡ MERKEZ DUYURU BANDI -->
@@ -3834,17 +3835,41 @@
             ['Hedef ve rekor', 'Hedef barı gün boyu nereye geldiğini gösterir. Rekora yaklaşınca bir sayaç belirir; rekor kırılınca satışı giren arkadaşımız ve tüm bölge kutlanır 🎉'],
             ['Küçük ipuçları', 'Sağ üstten sesleri açıp kapatabilirsin. Uygulamayı telefonunun ana ekranına eklersen her an elinin altında olur. İyi satışlar! 💜']
         ];
-        let step = 0;
+        const MOODS = ['cheer', 'happy', 'surprised', 'love'];
+        const STEP_MS = 8000;
+        let step = 0, typeT = 0, autoT = 0, playing = true, t0 = 0, barT = 0;
         const el = id => document.getElementById(id);
+        const wOn = () => window.mascotSvg && (!window.wegiOn || wegiOn());
+        function typeText(full) {
+            clearInterval(typeT); const p = el('tour-text'); if (!p) return;
+            const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches;
+            if (reduce) { p.textContent = full; return; }
+            let i = 0; p.textContent = '';
+            typeT = setInterval(() => { i += 2; p.textContent = full.slice(0, i); if (i >= full.length) clearInterval(typeT); }, 28);
+        }
+        function schedule() {
+            clearTimeout(autoT); clearInterval(barT);
+            const bar = el('tour-bar'); if (bar) bar.style.width = '0';
+            const pl = el('tour-play'); if (pl) pl.textContent = playing ? '⏸ Durdur' : '▶ Oynat';
+            if (!playing) return;
+            t0 = Date.now();
+            barT = setInterval(() => { const b = el('tour-bar'); if (b) b.style.width = Math.min(100, (Date.now() - t0) / STEP_MS * 100) + '%'; }, 120);
+            autoT = setTimeout(() => { if (step >= STEPS.length - 1) { playing = false; schedule(); } else { step++; paint(); } }, STEP_MS);
+        }
         function paint() {
             const s = STEPS[step]; if (!el('tour-title')) return;
-            el('tour-title').textContent = s[0]; el('tour-text').textContent = s[1];
+            el('tour-title').textContent = s[0];
+            const m = el('tour-mascot');
+            if (m && wOn()) { m.innerHTML = '<div class="mc-jump" style="display:inline-block">' + mascotSvg(MOODS[step % MOODS.length], 92) + '</div>'; setTimeout(() => { const j = m.firstChild; if (j) j.classList.remove('mc-jump'); }, 1400); }
+            typeText(s[1]);
             el('tour-dots').innerHTML = STEPS.map((_, i) => '<span style="width:' + (i === step ? 22 : 8) + 'px;height:8px;border-radius:99px;background:' + (i === step ? '#00a0a6' : '#cbd5e1') + ';display:inline-block;transition:all .25s"></span>').join('');
             el('tour-next').textContent = step === STEPS.length - 1 ? 'Başlayalım' : 'İleri';
+            schedule();
         }
-        window.wegeTourOpen = function () { step = 0; paint(); const t = el('wege-tour'); if (t) t.classList.add('show'); };
-        window.wegeTourClose = function () { const t = el('wege-tour'); if (t) t.classList.remove('show'); try { localStorage.setItem('bb_tour', '1'); } catch (e) {} };
+        window.wegeTourOpen = function () { step = 0; playing = true; paint(); const t = el('wege-tour'); if (t) t.classList.add('show'); };
+        window.wegeTourClose = function () { clearTimeout(autoT); clearInterval(barT); clearInterval(typeT); const t = el('wege-tour'); if (t) t.classList.remove('show'); try { localStorage.setItem('bb_tour', '1'); } catch (e) {} };
         window.wegeTourNext = function () { if (step >= STEPS.length - 1) return wegeTourClose(); step++; paint(); };
+        window.wegeTourPlay = function () { playing = !playing; if (playing && step >= STEPS.length - 1) { step = 0; paint(); } else schedule(); };
         setTimeout(() => { try { if (!window.__DEMO && localStorage.getItem('bb_tour') !== '1') wegeTourOpen(); } catch (e) {} }, 2600);
     })();
 
@@ -8202,6 +8227,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.26</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.27</div>
 </body>
 </html>
