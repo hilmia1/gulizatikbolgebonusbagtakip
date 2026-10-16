@@ -4058,7 +4058,7 @@
             let sortedBySales = [...allStaff].filter(p => p.sales > 0).sort((a, b) => b.sales - a.sales);
             window.top3Staff = sortedBySales.slice(0, 3);
             
-            let sortedByFocus = [...allStaff].filter(p => p.focusSales > 0).sort((a, b) => b.focusSales - a.focusSales);
+            let sortedByFocus = [...allStaff].filter(p => p.focusSales > 0).sort((a, b) => (b.focusSales - a.focusSales) || ((b.sales || 0) - (a.sales || 0)));
             window.top3FocusStaffGlobal = sortedByFocus.slice(0, 3);
 
             let allStoresTop = Object.values(allStoresSalesMap);
@@ -5246,7 +5246,7 @@
                 document.getElementById('region-top5-banner').classList.add('hidden');
             }
 
-            regionFocusStaffList.sort((a, b) => b.focusSales - a.focusSales);
+            regionFocusStaffList.sort((a, b) => (b.focusSales - a.focusSales) || ((b.sales || 0) - (a.sales || 0)));
             window.currentRegionFocusTop5 = regionFocusStaffList.slice(0, 5);
             if (window.activeContestBrands.length > 0 && window.currentRegionFocusTop5.length > 0) {
                 updateFocusTopBanners('region-focus-top5-banner', window.currentRegionFocusTop5, 'BÖLGE ODAK ÜRÜN YILDIZLARI (İLK 5)', 'Kendi Bölgenizdeki En İyi Personeller', 5);
@@ -5315,7 +5315,7 @@
                 const n = Object.values(st.data.staff || {}).reduce((a, p) => a + ((p.focusBrands && p.focusBrands[b]) || 0), 0);
                 return `<span class="text-[10px] font-black text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full whitespace-nowrap">${escHtml(b)} ${n}</span>`;
             }).join(' ');
-            const odakRows = Object.values(st.data.staff || {}).filter(p => p.focusSales > 0).sort((a, b) => b.focusSales - a.focusSales);
+            const odakRows = Object.values(st.data.staff || {}).filter(p => p.focusSales > 0).sort((a, b) => (b.focusSales - a.focusSales) || ((b.sales || 0) - (a.sales || 0)));
             const odakHTML = odakRows.length === 0 ? `<div class="text-xs text-slate-400 text-center py-2">Bu mağazada odak ürün satışı yok.</div>`
                 : odakRows.map(p => {
                     const bt = Object.keys(p.focusBrands || {}).map(b => `${escHtml(b)} ${p.focusBrands[b]}`).join(', ');
@@ -5412,6 +5412,9 @@
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 
+    // Eşit satışta aynı madalya (ör. 2-2-2 adet → üçü de 🥇), sonraki sıra yarışma usulü (1,1,1,4...)
+    function tieRank(list, i, key) { const v = key(list[i]); return list.findIndex(x => key(x) === v); }
+
     window.shareRegionFocusTop5 = function() {
         if (isRegionHistorical) return alert("Odak yıldız listesi sadece Canlı Modda (bugünün) paylaşılabilir.");
         if (!window.activeContestBrands || window.activeContestBrands.length === 0) return alert("Şu an aktif bir odak ürün yok!");
@@ -5423,7 +5426,7 @@
         list.forEach((st, idx) => {
             let gr = (window.top3FocusStaffGlobal || []).findIndex(g => g.id === st.id);
             let gs = gr === 0 ? " 👑 *(EGE BÖLGE ODAK 1.Sİ)*" : gr === 1 ? " 🥈 *(EGE BÖLGE ODAK 2.Sİ)*" : gr === 2 ? " 🥉 *(EGE BÖLGE ODAK 3.SÜ)*" : "";
-            text += `${emojis[idx]} *${st.name}*: ${st.focusSales} Adet - _${st.store}_${gs}\n`;
+            text += `${emojis[tieRank(list, idx, x => x.focusSales)] || emojis[idx]} *${st.name}*: ${st.focusSales} Adet - _${st.store}_${gs}\n`;
         });
         text += `\nHarika gidiyorsunuz, tebrikler! 🚀👏\n🔗 *Canlı Takip:*\n${window.location.href.split('?')[0]}?region=${encodeURIComponent(currentId)}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
@@ -5447,7 +5450,7 @@
             else if (globalRank === 1) globalStatus = " 🥈 *(EGE BÖLGE 2.Sİ)*";
             else if (globalRank === 2) globalStatus = " 🥉 *(EGE BÖLGE 3.SÜ)*";
 
-            text += `${emojis[idx]} *${st.name}*: ${st.sales} Adet - _${st.store}_${globalStatus}\n`;
+            text += `${emojis[tieRank(window.currentRegionTop5, idx, x => x.sales)] || emojis[idx]} *${st.name}*: ${st.sales} Adet - _${st.store}_${globalStatus}\n`;
         });
         
         text += `\nHarika gidiyorsunuz, tebrikler! 🚀👏\n🔗 *Canlı Takip:*\n${window.location.href.split('?')[0]}?region=${encodeURIComponent(currentId)}`;
@@ -5741,19 +5744,19 @@
     const FOCUS_EMOJIS = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"];
 
     window.shareFocusStaff = function() {
-        const list = Object.values(window.lastFocusStaff || {}).sort((a, b) => b.focusSales - a.focusSales).slice(0, 10);
+        const list = Object.values(window.lastFocusStaff || {}).sort((a, b) => (b.focusSales - a.focusSales) || ((b.sales || 0) - (a.sales || 0))).slice(0, 10);
         if (list.length === 0) return alert("Seçili aralıkta odak ürün satan personel bulunmuyor!");
         let text = `⭐ *ODAK ÜRÜN - EN ÇOK SATAN İLK 10 PERSONEL* ⭐\n🗓️ *Tarih:* ${reportDateRangeStr}\n🎯 *Odak Ürünler:* ${(window.activeContestBrands || []).join(', ')}\n\n`;
-        list.forEach((p, i) => { text += `${FOCUS_EMOJIS[i]} *${p.name}*: ${p.focusSales} adet${focusBrandText(p)} - _${p.store}_\n`; });
+        list.forEach((p, i) => { text += `${FOCUS_EMOJIS[tieRank(list, i, x => x.focusSales)]} *${p.name}*: ${p.focusSales} adet${focusBrandText(p)} - _${p.store}_\n`; });
         text += `\nHarika iş çıkarıyorsunuz, tebrikler! 🚀👏`;
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 
     window.shareFocusStores = function() {
-        const list = Object.values(window.lastFocusStores || {}).sort((a, b) => b.focusSales - a.focusSales).slice(0, 10);
+        const list = Object.values(window.lastFocusStores || {}).sort((a, b) => (b.focusSales - a.focusSales) || ((b.sales || 0) - (a.sales || 0))).slice(0, 10);
         if (list.length === 0) return alert("Seçili aralıkta odak ürün satışı yapan mağaza bulunmuyor!");
         let text = `⭐ *ODAK ÜRÜN - EN ÇOK SATAN İLK 10 MAĞAZA* ⭐\n🗓️ *Tarih:* ${reportDateRangeStr}\n🎯 *Odak Ürünler:* ${(window.activeContestBrands || []).join(', ')}\n\n`;
-        list.forEach((s, i) => { text += `${FOCUS_EMOJIS[i]} *${s.name}*: ${s.focusSales} adet${focusBrandText(s)} - _${s.bm}_\n`; });
+        list.forEach((s, i) => { text += `${FOCUS_EMOJIS[tieRank(list, i, x => x.focusSales)]} *${s.name}*: ${s.focusSales} adet${focusBrandText(s)} - _${s.bm}_\n`; });
         text += `\nTüm mağazalarımıza bol satışlar! 🚀`;
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
@@ -5774,7 +5777,7 @@
         let text = `🎁 *BONUS PACK - EN ÇOK SATAN İLK 10 PERSONEL* 🎁\n🗓️ *Tarih:* ${reportDateRangeStr}\n\n`;
         const emojis = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"];
         all.forEach((p, i) => {
-            text += `${emojis[i]} *${p.name}*: ${p.sales} adet - _${p.store}_\n`;
+            text += `${emojis[tieRank(all, i, x => x.sales)] || emojis[i]} *${p.name}*: ${p.sales} adet - _${p.store}_\n`;
         });
         text += `\nHarika iş çıkarıyorsunuz, tebrikler! 🚀👏`;
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
@@ -5839,7 +5842,7 @@
             </tr>`).join('');
 
         // Lider personeller
-        const staffRows = Object.values(fp).sort((a, b) => b.focusSales - a.focusSales).slice(0, 20);
+        const staffRows = Object.values(fp).sort((a, b) => (b.focusSales - a.focusSales) || ((b.sales || 0) - (a.sales || 0))).slice(0, 20);
         document.getElementById('gen-focus-staff-head').innerHTML = headRow(th('#', true) + th('Personel') + th('Mağaza') + brandHead + th('Odak Toplam', true));
         document.getElementById('gen-focus-staff-list').innerHTML = staffRows.length ? staffRows.map((p, i) => `
             <tr class="hover:bg-purple-50/50 transition">
@@ -6169,11 +6172,11 @@
         });
 
         // Aktif odak ürün varsa özetini ekle
-        let fStaff = Object.values(window.lastFocusStaff || {}).sort((a, b) => b.focusSales - a.focusSales).slice(0, 3);
+        let fStaff = Object.values(window.lastFocusStaff || {}).sort((a, b) => (b.focusSales - a.focusSales) || ((b.sales || 0) - (a.sales || 0))).slice(0, 3);
         if ((window.activeContestBrands || []).length > 0 && fStaff.length > 0) {
             text += `\n⭐ *ODAK ÜRÜN LİDERLERİ (${window.activeContestBrands.join(', ')}):*\n`;
             fStaff.forEach((p, i) => {
-                text += `${["🥇", "🥈", "🥉"][i]} *${p.name}* - ${p.focusSales} adet (${p.store})\n`;
+                text += `${["🥇", "🥈", "🥉"][tieRank(fStaff, i, x => x.focusSales)] || "🥉"} *${p.name}* - ${p.focusSales} adet (${p.store})\n`;
             });
         }
 
@@ -7535,6 +7538,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · sürüm 16.10.2026 22:00</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · sürüm 16.10.2026 23:00</div>
 </body>
 </html>
