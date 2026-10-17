@@ -784,6 +784,21 @@
                 <div id="staff-arch-body" class="hidden mt-3 rounded-xl border border-slate-700 bg-slate-900" style="max-height:520px;overflow:auto"></div>
             </div>
 
+            <!-- VERİ YEDEĞİ -->
+            <div id="backup-card" class="bg-gradient-to-r from-amber-950 to-slate-900 p-4 rounded-2xl border border-amber-700/50 shadow-lg">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div class="min-w-0 flex-1">
+                        <div class="text-amber-100 font-black text-sm"><i class="fa-solid fa-shield-halved mr-2"></i>VERİ YEDEĞİ</div>
+                        <div class="text-[11px] text-amber-200/70 mt-0.5">Tüm veriyi (günlük satışlar, personel, geçmiş veri, rekorlar, ayarlar) tek dosya olarak bilgisayara indirir. Haftada bir almanız önerilir. Geri yükleme için Firebase → Realtime Database → ⋮ → <b>JSON'ı içe aktar</b> (watsons_v7 düğümünde).</div>
+                        <div id="backup-status" class="text-xs font-black mt-2 text-amber-300"></div>
+                    </div>
+                    <div class="flex flex-wrap gap-2 shrink-0">
+                        <button type="button" id="backup-btn" onclick="backupDownload()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-900 font-black text-xs"><i class="fa-solid fa-download mr-1"></i>Yedeği indir (JSON)</button>
+                        <button type="button" id="backup-csv-btn" onclick="backupCsv()" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-black text-xs"><i class="fa-solid fa-file-csv mr-1"></i>Satışlar (Excel)</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- PARMAK İZİ / YÜZ İLE GİRİŞ AÇ/KAPAT -->
             <div class="bg-gradient-to-r from-slate-800 to-slate-900 p-4 rounded-2xl border border-slate-600/60 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between shadow-lg">
                 <div class="min-w-0">
@@ -3393,6 +3408,73 @@
         }, 0);
         setInterval(() => { try { if (open && !(document.activeElement && document.activeElement.id === 'staff-arch-q')) archPaint(); } catch (e) {} }, 15000);
     } catch (e) { console.error('Personel arşivi kurulamadı', e); } })();
+
+    // ===== Veri yedeği: tüm veriyi JSON olarak indir + günlük satışları Excel (CSV) olarak indir =====
+    ;(function backupInit() { try {
+        const el = id => document.getElementById(id);
+        const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+        const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+        const pad = n => String(n).padStart(2, '0');
+        const stampNow = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + '-' + pad(d.getHours()) + pad(d.getMinutes()); };
+        const fmt = t => { const d = new Date(t); return pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '.' + d.getFullYear() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+        function save(name, text, type) {
+            const blob = new Blob([text], { type: type });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob); a.download = name; a.style.display = 'none';
+            document.body.appendChild(a); a.click();
+            setTimeout(() => { try { URL.revokeObjectURL(a.href); a.remove(); } catch (e) {} }, 2000);
+        }
+        function paint(extra) {
+            const box = el('backup-status'); if (!box) return;
+            const t = Number(lsGet('bb_backup_t')) || 0;
+            if (!t) { box.className = 'text-xs font-black mt-2 text-rose-300'; box.textContent = '⚠️ Bu cihazdan henüz yedek alınmadı.'; return; }
+            const days = Math.floor((Date.now() - t) / 864e5);
+            const old = days >= 7;
+            box.className = 'text-xs font-black mt-2 ' + (old ? 'text-rose-300' : 'text-emerald-300');
+            box.textContent = (old ? '⚠️ ' : '✅ ') + 'Son yedek: ' + fmt(t) + (days > 0 ? ' (' + days + ' gün önce)' : ' (bugün)') + (extra ? ' · ' + extra : '') + (old ? ' · yeni yedek almanın zamanı geldi' : '');
+        }
+        function fetchAll() {
+            return dbRoot.once('value').then(s => s.val() || {}).catch(() => globalData || {});
+        }
+        function busy(id, on) { const b = el(id); if (b) { b.disabled = on; b.style.opacity = on ? '.6' : ''; } }
+        window.backupDownload = function () {
+            busy('backup-btn', true);
+            fetchAll().then(d => {
+                const txt = JSON.stringify(d);
+                save('wege-yedek-' + stampNow() + '.json', txt, 'application/json');
+                lsSet('bb_backup_t', String(Date.now()));
+                paint((txt.length / 1048576).toFixed(2) + ' MB');
+            }).catch(e => { alert('Yedek alınamadı, internet bağlantısını kontrol edip tekrar dene.'); console.error(e); }).then(() => busy('backup-btn', false));
+        };
+        const cell = v => {
+            let s = String(v == null ? '' : v).replace(/[\r\n]+/g, ' ');
+            if (/^[=+\-@]/.test(s)) s = "'" + s;            // Excel formül enjeksiyonunu engelle
+            return /[";]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+        };
+        window.backupCsv = function () {
+            busy('backup-csv-btn', true);
+            fetchAll().then(d => {
+                const rows = [['Tarih', 'Mağaza', 'Personel', 'Bonus Pack', 'Odak toplam', 'Hedef', 'Alkış']];
+                const daily = d.daily || {}, ms = d.master_staff || {};
+                Object.keys(daily).sort().forEach(date => {
+                    const stores = daily[date] || {};
+                    Object.keys(stores).sort().forEach(store => {
+                        const staff = (stores[store] && stores[store].staff) || {};
+                        Object.keys(staff).forEach(id => {
+                            const r = staff[id] || {};
+                            let odak = 0; Object.keys(r.contest || {}).forEach(b => { odak += Number(r.contest[b]) || 0; });
+                            const nm = (ms[store] && ms[store][id] && ms[store][id].name) || id;
+                            rows.push([date, store.replace(/^\d+-/, ''), nm, Number(r.sales) || 0, odak, Number(r.target) || 0, Number(r.applause) || 0]);
+                        });
+                    });
+                });
+                const csv = '\ufeff' + rows.map(r => r.map(cell).join(';')).join('\r\n');
+                save('wege-satislar-' + stampNow() + '.csv', csv, 'text/csv;charset=utf-8');
+                const box = el('backup-status'); if (box && Number(lsGet('bb_backup_t'))) paint((rows.length - 1) + ' satır Excel dosyası indirildi');
+            }).catch(e => { alert('Dosya hazırlanamadı.'); console.error(e); }).then(() => busy('backup-csv-btn', false));
+        };
+        paint(); setTimeout(paint, 1500); setInterval(paint, 60000);
+    } catch (e) { console.error('Yedek kurulamadı', e); } })();
 
     // ===== Duyuru şeritleri ve üst başlık: yapışma mesafelerini görünen şeritlere göre hesapla =====
     // (Eskiden Güliz Atik şeridi sabit 42px'e yapışıyordu; Merkez şeridi yokken başlığın üstüne biniyordu.)
@@ -9027,6 +9109,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.56</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.57</div>
 </body>
 </html>
