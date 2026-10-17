@@ -675,16 +675,23 @@
             <div id="hist-card" class="bg-gradient-to-r from-indigo-950 to-slate-900 p-4 rounded-2xl border border-indigo-700/50 shadow-lg">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                     <div class="min-w-0">
-                        <div class="text-indigo-200 font-black text-sm"><i class="fa-solid fa-clock-rotate-left mr-2"></i>GEÇMİŞ VERİ GİRİŞİ · 28 Eylül – 8 Ekim</div>
-                        <div class="text-[11px] text-slate-400 mt-0.5">Uygulamadan önceki günlerin mağaza bazlı toplamları. 9 Ekim'den sonrası canlı veriden gelir. Güliz Atik ve bölge müdürü ekranlarında aylık gidişat olarak görünür.</div>
+                        <div class="text-indigo-200 font-black text-sm"><i class="fa-solid fa-clock-rotate-left mr-2"></i>GEÇMİŞ VERİ GİRİŞİ</div>
+                        <div class="text-[11px] text-slate-400 mt-0.5">Mağaza bazlı günlük toplamlar. Girdiğiniz günler için elle girilen değer geçerli olur, girmediğiniz günler canlı veriden gelir (28 Eylül'den itibaren). Güliz Atik ve bölge müdürü ekranlarında aylık gidişat olarak görünür.</div>
                     </div>
                     <div class="flex gap-1.5">
                         <button type="button" id="hist-m-b" onclick="histMetric('b')">Bonus Pack</button>
                         <button type="button" id="hist-m-o" onclick="histMetric('o')">Odak</button>
                     </div>
                 </div>
+                <div class="mt-3 flex flex-wrap items-center gap-2">
+                    <span class="text-[11px] font-black text-slate-300">Tarih aralığı:</span>
+                    <input type="date" id="hist-d1" value="2026-09-28" min="2026-09-28" onchange="histPaintCentral(true)" class="p-1.5 rounded-lg bg-white text-slate-800 font-bold text-xs border border-slate-300">
+                    <span class="text-slate-400 text-xs">–</span>
+                    <input type="date" id="hist-d2" value="2026-10-08" min="2026-09-28" onchange="histPaintCentral(true)" class="p-1.5 rounded-lg bg-white text-slate-800 font-bold text-xs border border-slate-300">
+                    <span id="hist-dn" class="text-[10px] font-bold text-slate-400"></span>
+                </div>
                 <div class="mt-3 text-[11px] font-black text-slate-300">1) Excel'den yapıştır</div>
-                <div class="text-[10px] text-slate-500 mb-1">Üst satır tarihler (28.09 … 08.10), ilk sütun mağaza adı veya kodu. Önce "Şablon" ile mağaza listesini alıp Excel'de doldurabilirsiniz. Boş hücreler atlanır.</div>
+                <div class="text-[10px] text-slate-500 mb-1">İlk sütun mağaza adı (18-FORUM BORNOVA) ya da kodu, yanında seçtiğiniz aralıktaki günlerin sayıları sırayla. Sondaki "toplam" sütunu otomatik atlanır. Tarih başlığı da yapıştırırsanız (28.Eyl, 01.Eki …) başlıktaki tarihler kullanılır. Boş hücreler atlanır.</div>
                 <textarea id="hist-paste" rows="5" placeholder="Mağaza&#9;28.09&#9;29.09 ..." class="w-full p-2 rounded-xl bg-white text-slate-800 text-xs font-mono border border-slate-300"></textarea>
                 <div class="flex flex-wrap gap-2 mt-2">
                     <button type="button" onclick="histTemplate()" class="px-3 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-black text-xs">Şablonu getir</button>
@@ -2864,11 +2871,15 @@
         function dates(a, b) { const out = []; for (let d = parseD(a); fmtD(d) <= b; d.setDate(d.getDate() + 1)) out.push(fmtD(d)); return out; }
         const range = () => { const t = todayStr(); return dates(HIST_START, t < HIST_START ? HIST_START : t); };
         const histDates = () => dates(HIST_START, HIST_END);
+        const selDates = () => {
+            const a = (document.getElementById('hist-d1') || {}).value || HIST_START, b = (document.getElementById('hist-d2') || {}).value || HIST_END;
+            const lo = a <= b ? a : b, hi = a <= b ? b : a;
+            return dates(lo, hi).slice(0, 62);
+        };
         function dayVal(store, date, m) {
-            if (date <= HIST_END) {
-                const h = globalData && globalData.history && globalData.history[store] && globalData.history[store][date];
-                return h && typeof h[m] === 'number' ? h[m] : null;
-            }
+            const h = globalData && globalData.history && globalData.history[store] && globalData.history[store][date];
+            if (h && typeof h[m] === 'number') return h[m];   // elle girilen değer her tarihte önceliklidir
+            if (date <= HIST_END) return null;
             const sd = globalData && globalData.daily && globalData.daily[date] && globalData.daily[date][store];
             if (!sd || !sd.staff) return 0;
             let t = 0;
@@ -2994,19 +3005,21 @@
             const idx = storeIdx(), out = { cells: [], unmatched: [], badDates: 0, stores: new Set() };
             let colDate = null, start = 0;
             for (let i = 0; i < Math.min(rows.length, 5); i++) { const ds = rows[i].map(parseDate); if (ds.filter(Boolean).length >= 2) { colDate = ds; start = i + 1; break; } }
-            const hd = histDates();
+            const hd = selDates(), today = todayStr(), counts = [];
             for (let r = start; r < rows.length; r++) {
                 const cells = rows[r], skip = colDate ? colDate.map(Boolean) : null, mt = matchStore(cells, idx, skip);
                 if (!mt) { const nm = cells.slice(0, 8).map((c, ci) => (skip && skip[ci]) ? '' : String(c || '').trim()).filter(Boolean).join(' ').slice(0, 40); if (nm) out.unmatched.push(nm); continue; }
-                const put = (d, v) => { if (v == null) return; if (!d || d < HIST_START || d > HIST_END) { out.badDates++; return; } out.cells.push({ store: mt.s, date: d, v }); out.stores.add(mt.s); };
+                const put = (d, v) => { if (v == null) return; if (!d || d < HIST_START || d > today) { out.badDates++; return; } out.cells.push({ store: mt.s, date: d, v }); out.stores.add(mt.s); };
                 if (colDate) cells.forEach((c, ci) => { if (ci !== mt.col && colDate[ci]) put(colDate[ci], numOf(c)); });
-                else { const nums = cells.slice(mt.col + 1).map(numOf); nums.forEach((v, i) => put(hd[i], v)); }
+                else { counts.push(cells.length - mt.col - 1); const nums = cells.slice(mt.col + 1, mt.col + 1 + hd.length).map(numOf); nums.forEach((v, i) => put(hd[i], v)); }
             }
+            out.hd = hd; out.header = !!colDate;
+            if (!colDate && counts.length) { counts.sort((x, y) => x - y); const med = counts[Math.floor(counts.length / 2)]; out.cols = med; if (med !== hd.length && med !== hd.length + 1) out.warn = 'Yapıştırdığınız satırlarda ortalama ' + med + ' sütun var ama seçili tarih aralığı ' + hd.length + ' gün (' + lbl(hd[0]) + ' – ' + lbl(hd[hd.length - 1]) + '). Aralığı kontrol edin.'; }
             return out;
         }
         window.histMetric = function (m) { hm = m; histPaintCentral(true); };
         window.histTemplate = function () {
-            const hd = histDates();
+            const hd = selDates();
             const lines = ['Mağaza\t' + hd.map(lbl).join('\t')];
             allStoresList.forEach(s => lines.push(s.name + '\t' + hd.map(d => { const h = globalData.history && globalData.history[s.name] && globalData.history[s.name][d]; return h && typeof h[hm] === 'number' ? h[hm] : ''; }).join('\t')));
             const t = lines.join('\n'), ta = el('hist-paste'); if (ta) ta.value = t;
@@ -3015,8 +3028,9 @@
         };
         window.histPreview = function () {
             const p = parsePaste((el('hist-paste') || {}).value), o = el('hist-msg'); if (!o) return p;
-            if (!p.cells.length) { o.innerHTML = '<span class="text-amber-300">Okunabilir sayı bulunamadı. Üst satırda tarihler (28.09 … 08.10), ilk sütunda mağaza adı olmalı.</span>'; return p; }
-            o.innerHTML = '<span class="text-emerald-300">' + p.stores.size + ' mağaza, ' + p.cells.length + ' hücre okundu (' + MET[hm].name + ').</span>' + (p.unmatched.length ? '<div class="text-amber-300 mt-1">Eşleşmeyen: ' + esc(p.unmatched.slice(0, 8).join(', ')) + (p.unmatched.length > 8 ? ' …' : '') + '</div>' : '') + (p.badDates ? '<div class="text-amber-300 mt-1">' + p.badDates + ' hücre 28 Eylül – 8 Ekim dışında olduğu için atlandı.</div>' : '');
+            if (!p.cells.length) { o.innerHTML = '<span class="text-amber-300">Okunabilir sayı bulunamadı. İlk sütunda mağaza adı/kodu, yanında sayılar olmalı; tarih aralığını yukarıdan seçtiğinizden emin olun.</span>'; return p; }
+            const dl = p.header ? 'başlıktaki tarihler' : (lbl(p.hd[0]) + ' – ' + lbl(p.hd[p.hd.length - 1]) + ' (' + p.hd.length + ' gün)');
+            o.innerHTML = '<span class="text-emerald-300">' + p.stores.size + ' mağaza, ' + p.cells.length + ' hücre okundu (' + MET[hm].name + ', ' + esc(dl) + ').</span>' + (p.warn ? '<div class="text-amber-300 mt-1">⚠ ' + esc(p.warn) + '</div>' : '') + (p.unmatched.length ? '<div class="text-amber-300 mt-1">Eşleşmeyen: ' + esc(p.unmatched.slice(0, 8).join(', ')) + (p.unmatched.length > 8 ? ' …' : '') + '</div>' : '') + (p.badDates ? '<div class="text-amber-300 mt-1">' + p.badDates + ' hücre 28 Eylül\'den önce ya da bugünden sonra olduğu için atlandı.</div>' : '');
             return p;
         };
         function saveCells(cells, done) {
@@ -3026,12 +3040,12 @@
         }
         window.histSave = function () {
             const p = histPreview(); if (!p.cells.length) return;
-            if (!confirm(p.stores.size + ' mağaza için ' + p.cells.length + ' hücre ' + MET[hm].name + ' olarak kaydedilsin mi? (Aynı gün varsa üzerine yazılır.)')) return;
+            if (!confirm((p.warn ? 'DİKKAT: ' + p.warn + '\n\n' : '') + p.stores.size + ' mağaza için ' + p.cells.length + ' hücre ' + MET[hm].name + ' olarak kaydedilsin mi? (Aynı gün varsa üzerine yazılır.)')) return;
             saveCells(p.cells, () => { const o = el('hist-msg'); if (o) o.innerHTML = '<span class="text-emerald-300">✓ Kaydedildi (' + p.cells.length + ' hücre).</span>'; });
         };
         window.histStoreSave = function () {
             const s = (el('hist-store') || {}).value; if (!s) return;
-            const cells = []; histDates().forEach(d => { const inp = el('hist-in-' + d); if (!inp) return; const v = numOf(inp.value); if (v != null) cells.push({ store: s, date: d, v }); });
+            const cells = []; selDates().forEach(d => { const inp = el('hist-in-' + d); if (!inp) return; const v = numOf(inp.value); if (v != null) cells.push({ store: s, date: d, v }); });
             if (!cells.length) return alert('Kaydedilecek sayı yok.');
             saveCells(cells, () => { const o = el('hist-msg'); if (o) o.innerHTML = '<span class="text-emerald-300">✓ ' + esc(s) + ' kaydedildi.</span>'; });
         };
@@ -3039,14 +3053,15 @@
         window.histPaintCentral = function (force) {
             const box = el('hist-card'); if (!box) return;
             ['b', 'o'].forEach(m => { const b = el('hist-m-' + m); if (b) b.className = 'px-3 py-1.5 rounded-lg border font-black text-xs ' + (hm === m ? 'text-white border-transparent' : 'bg-slate-800 text-slate-300 border-slate-600'); if (b && hm === m) b.style.background = MET[m].color; else if (b) b.style.background = ''; });
+            const dn = el('hist-dn'); if (dn) { const d = selDates(); dn.textContent = d.length + ' gün: ' + lbl(d[0]) + ' – ' + lbl(d[d.length - 1]); }
             const sel = el('hist-store');
             if (sel && !sel.options.length) sel.innerHTML = '<option value="">Mağaza seçin…</option>' + allStoresList.map(s => '<option value="' + esc(s.name) + '">' + esc(s.name) + '</option>').join('');
             const s = sel && sel.value, grid = el('hist-grid'); if (!grid) return;
             if (document.activeElement && grid.contains(document.activeElement) && force !== true) return;
-            const sig = s + '|' + hm + '|' + JSON.stringify((globalData.history || {})[s] || {});
+            const sig = s + '|' + hm + '|' + selDates().join(',') + '|' + JSON.stringify((globalData.history || {})[s] || {});
             if (sig === lastSig && force !== true) return; lastSig = sig;
             if (!s) { grid.innerHTML = '<div class="text-[11px] text-slate-500">Tek mağaza düzeltmek için yukarıdan mağaza seçin.</div>'; return; }
-            grid.innerHTML = '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2">' + histDates().map(d => { const h = globalData.history && globalData.history[s] && globalData.history[s][d]; const v = h && typeof h[hm] === 'number' ? h[hm] : ''; return '<label class="text-[10px] font-bold text-slate-400">' + lbl(d) + '<input id="hist-in-' + d + '" type="number" min="0" value="' + v + '" class="mt-0.5 w-full p-1.5 rounded-lg bg-white text-slate-800 font-black text-sm border border-slate-300"></label>'; }).join('') + '</div><button type="button" onclick="histStoreSave()" class="mt-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs">Bu mağazayı kaydet (' + MET[hm].name + ')</button>';
+            grid.innerHTML = '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2">' + selDates().map(d => { const h = globalData.history && globalData.history[s] && globalData.history[s][d]; const v = h && typeof h[hm] === 'number' ? h[hm] : ''; return '<label class="text-[10px] font-bold text-slate-400">' + lbl(d) + '<input id="hist-in-' + d + '" type="number" min="0" value="' + v + '" class="mt-0.5 w-full p-1.5 rounded-lg bg-white text-slate-800 font-black text-sm border border-slate-300"></label>'; }).join('') + '</div><button type="button" onclick="histStoreSave()" class="mt-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs">Bu mağazayı kaydet (' + MET[hm].name + ')</button>';
         };
         setTimeout(() => { try { histPaintCentral(true); } catch (e) {} }, 800);
         setInterval(() => { try { histPaintCentral(); } catch (e) {} }, 2000);
@@ -8658,6 +8673,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.37</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.38</div>
 </body>
 </html>
