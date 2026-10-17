@@ -1988,8 +1988,12 @@
             } catch (e) {}
             // yeni kırılan rekor için bir kez kutla
             const top1 = events[0].ev, t = Number(top1.time) || 0;
-            if (t > lastCeleb && Date.now() - t < 90000 && Number(lsGet('bb_rec_seen')) !== t) {
+            // Kutlama her cihazda her rekor günü/izi için SADECE BİR KEZ çıkar (eski sürümdeki cihazlar kaydı yeniden yazsa bile tekrarlamaz)
+            const dayKey = ACTIVE_DATE + '~' + events[0].track;
+            const doneKeys = (lsGet('bb_rec_done') || '').split('^').filter(Boolean);
+            if (t > lastCeleb && Date.now() - t < 90000 && Number(lsGet('bb_rec_seen')) !== t && doneKeys.indexOf(dayKey) === -1) {
                 lsSet('bb_rec_seen', String(t));
+                doneKeys.push(dayKey); lsSet('bb_rec_done', doneKeys.slice(-30).join('^'));
                 if (!document.hidden && !(document.body && document.body.classList.contains('kpi-mode'))) {
                     try { Snd.play(top1.first ? 'goal150' : 'goal'); } catch (e) {}
                     try {
@@ -9024,6 +9028,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.52</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.53</div>
 </body>
 </html>
