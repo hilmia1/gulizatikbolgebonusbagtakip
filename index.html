@@ -5404,6 +5404,15 @@
         renderStoreUI(); 
     }
 
+    // Türkçe sıra eki (büyük harf): 1.Sİ 2.Sİ 3.SÜ 4.SÜ 5.Sİ 6.SI 7.Sİ 8.Sİ 9.SU 10.SU
+    window.trOrdSuffix = function (n) {
+        n = Math.floor(Number(n)) || 0;
+        const m = { 1: 'Sİ', 2: 'Sİ', 3: 'SÜ', 4: 'SÜ', 5: 'Sİ', 6: 'SI', 7: 'Sİ', 8: 'Sİ', 9: 'SU', 10: 'SU', 20: 'Sİ', 30: 'SU', 40: 'Sİ', 50: 'Sİ', 60: 'SI', 70: 'Sİ', 80: 'Sİ', 90: 'SI', 100: 'SÜ' };
+        if (m[n]) return m[n];
+        if (n > 10 && n < 100 && n % 10) return m[n % 10] || 'Sİ';
+        return 'Sİ';
+    };
+
     window.updateStoreSale = function(id, change) {
         let current = globalData.daily?.[ACTIVE_DATE]?.[currentId]?.staff?.[id]?.sales || 0;
         
@@ -6545,11 +6554,11 @@
 
                 let currentStoreBM = allStoresList.find(s => s.name === currentId)?.bm;
                 if (!isStoreHistorical && window.allStaffGlobal && p.sales > 0 && currentStoreBM) {
-                    let regionalStaffList = window.allStaffGlobal.filter(st => st.bm === currentStoreBM && st.sales > 0);
+                    let regionalStaffList = window.allStaffGlobal.filter(st => st.bm === currentStoreBM && st.sales > 0).sort((a, b) => (b.sales - a.sales) || ((b.focusSales || 0) - (a.focusSales || 0)));   // o gün kendi bölgesinde en çok satanlar, çoktan aza
                     let regionalRankIndex = regionalStaffList.findIndex(st => st.id === p.id);
                     if (regionalRankIndex !== -1 && regionalRankIndex < 5) {
                         let rRank = regionalRankIndex + 1;
-                        regionalBadge = `<span class="block mt-1 w-max px-2 py-0.5 rounded text-[9px] font-black bg-cyan-100 text-cyan-800 shadow-sm border border-cyan-300" title="${currentStoreBM} Bölgesi'nde ${rRank}. Sırada"><i class="fa-solid fa-map-location-dot text-[9px] mr-1 text-cyan-600"></i> BÖLGE ${rRank}.Sİ</span>`;
+                        regionalBadge = `<span class="block mt-1 w-max px-2 py-0.5 rounded text-[9px] font-black bg-cyan-100 text-cyan-800 shadow-sm border border-cyan-300" title="${currentStoreBM} Bölgesi'nde ${rRank}. Sırada"><i class="fa-solid fa-map-location-dot text-[9px] mr-1 text-cyan-600"></i> BÖLGE ${rRank}.${trOrdSuffix(rRank)}</span>`;
                     }
                 }
 
@@ -9154,6 +9163,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.58</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.60</div>
 </body>
 </html>
