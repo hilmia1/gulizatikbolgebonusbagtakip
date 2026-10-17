@@ -45,7 +45,46 @@
     .rec-bar > i { display: block; height: 100%; border-radius: 9999px; background: linear-gradient(90deg, #e879f9, #fde047); transition: width .6s ease; }
     @keyframes recPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
     .rec-last { animation: recPulse 1s ease-in-out infinite; }
-    @media (prefers-reduced-motion: reduce) { .rec-track, .rec-last { animation: none; } }
+    /* kalp atışı: rekora 100 ve altı kalınca başlar, yaklaştıkça hızlanır (lub-dub) */
+    @keyframes recBeat { 0%,100% { transform: scale(1); } 12% { transform: scale(1.22); } 24% { transform: scale(1); } 38% { transform: scale(1.14); } 55% { transform: scale(1); } }
+    .rec-hb1 { animation: recBeat 1.5s ease-in-out infinite; }
+    .rec-hb2 { animation: recBeat 1.05s ease-in-out infinite; }
+    .rec-hb3 { animation: recBeat .78s ease-in-out infinite; text-shadow: 0 0 18px rgba(251,113,133,.75); }
+    .rec-hb4 { animation: recBeat .56s ease-in-out infinite; color: #fecdd3; text-shadow: 0 0 22px rgba(244,63,94,.95); }
+    .rec-heart { display: inline-block; color: #fb7185; filter: drop-shadow(0 0 6px rgba(244,63,94,.7)); }
+    .rec-card.hb-on { box-shadow: 0 8px 20px -8px rgba(0,0,0,.45), 0 0 0 1px rgba(251,113,133,.35), 0 0 22px -4px rgba(244,63,94,.45); }
+    /* rekor kutlaması: tüm ekranlarda WatKo'lar */
+    .rp-ov { position: fixed; inset: 0; z-index: 99997; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 14px 10px; background: radial-gradient(90% 70% at 50% 40%, rgba(88,28,135,.72), rgba(15,23,42,.82)); animation: rpIn .45s ease-out both; overflow: hidden; }
+    .rp-ov.rp-out { animation: rpOut .6s ease-in both; }
+    @keyframes rpIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes rpOut { to { opacity: 0; } }
+    .rp-title { text-align: center; color: #fde047; font-weight: 900; font-size: clamp(22px, 7vw, 40px); line-height: 1.05; text-shadow: 0 3px 18px rgba(0,0,0,.5); animation: rpTitle .9s cubic-bezier(.2,1.6,.4,1) both; }
+    .rp-sub { text-align: center; color: #fff; font-weight: 800; font-size: clamp(12px, 3.4vw, 16px); max-width: 560px; opacity: .95; }
+    .rp-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 4px; width: 100%; max-width: 760px; align-items: end; }
+    @media (min-width: 640px) { .rp-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+    .rp-cell { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; min-width: 0; opacity: 0; animation: rpCell .5s cubic-bezier(.2,1.5,.4,1) both; }
+    .rp-b { background: #fff; color: #334155; border: 2px solid #f0abfc; border-radius: 14px; padding: 5px 9px; font-weight: 900; font-size: clamp(10px, 2.9vw, 13px); line-height: 1.25; text-align: center; margin-bottom: 4px; max-width: 100%; box-shadow: 0 6px 14px -6px rgba(0,0,0,.5); }
+    .rp-tap { color: rgba(255,255,255,.65); font-size: 10px; font-weight: 700; }
+    @keyframes rpCell { from { opacity: 0; transform: translateY(40px) scale(.6); } to { opacity: 1; transform: none; } }
+    @keyframes rpTitle { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) { .rp-ov, .rp-cell, .rp-title { animation: none; opacity: 1; } }
+    /* rekora yaklaştıkça tema: kenarlarda kalp atışıyla nabız gibi atan renkli ışık; rekor kırılınca altın, süre dolunca normal */
+    #rec-theme { position: fixed; inset: 0; pointer-events: none; z-index: 99980; opacity: 0; transition: opacity .9s; }
+    #rec-theme[data-s] { opacity: 1; }
+    #rec-theme[data-s="1"] { box-shadow: inset 0 0 70px 6px rgba(217,70,239,.30); animation: rtGlow 1.5s ease-in-out infinite; }
+    #rec-theme[data-s="2"] { box-shadow: inset 0 0 100px 14px rgba(236,72,153,.40); animation: rtGlow 1.05s ease-in-out infinite; }
+    #rec-theme[data-s="3"] { box-shadow: inset 0 0 130px 22px rgba(244,63,94,.50); animation: rtGlow .78s ease-in-out infinite; }
+    #rec-theme[data-s="4"] { box-shadow: inset 0 0 160px 32px rgba(220,38,38,.62); animation: rtGlow .56s ease-in-out infinite; }
+    #rec-theme[data-s="g"] { box-shadow: inset 0 0 130px 18px rgba(250,204,21,.55); animation: rtGlow 2.4s ease-in-out infinite; }
+    @keyframes rtGlow { 0%,100% { opacity: .55; } 12% { opacity: 1; } 24% { opacity: .6; } 38% { opacity: .92; } 55% { opacity: .55; } }
+    body.kpi-mode #rec-theme, body.kpi-mode .rp-strip { display: none !important; }
+    /* kutlamadan sonra 5 dakika ekranın altında kalan WatKo'lar (tıklamayı engellemez) */
+    .rp-strip { position: fixed; left: 0; right: 0; bottom: 0; z-index: 99950; display: flex; justify-content: space-around; align-items: flex-end; padding: 0 4px 2px; pointer-events: none; background: linear-gradient(to top, rgba(88,28,135,.35), transparent); animation: rpIn .6s ease-out both; }
+    .rp-strip .rp-sc { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; min-width: 0; flex: 1 1 0; }
+    .rp-strip .rp-b { font-size: 10px; padding: 3px 7px; border-radius: 11px; margin-bottom: 2px; transition: opacity .3s; }
+    .rp-x { position: absolute; right: 6px; top: -26px; pointer-events: auto; width: 26px; height: 26px; border-radius: 9999px; border: 0; background: rgba(15,23,42,.7); color: #fff; font-weight: 900; font-size: 12px; line-height: 26px; padding: 0; cursor: pointer; }
+    @media (prefers-reduced-motion: reduce) { #rec-theme[data-s] { animation: none !important; } .rp-strip { animation: none; } }
+    @media (prefers-reduced-motion: reduce) { .rec-track, .rec-last, .rec-hb1, .rec-hb2, .rec-hb3, .rec-hb4 { animation: none; } }
 
     /* ===== Podyum banner ===== */
     .pd-wrap{--pd-a:#0f172a;--pd-b:#1e293b;--pd-acc:#fbbf24;--pd-txt:#fde68a;position:relative;overflow:hidden;margin-bottom:1.25rem;border-radius:1rem;padding:.9rem .75rem .75rem;background:radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.10),transparent 60%),linear-gradient(135deg,var(--pd-a),var(--pd-b));border:1px solid color-mix(in srgb,var(--pd-acc) 35%,transparent);box-shadow:0 10px 25px -8px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.08)}
@@ -635,6 +674,7 @@
 
         <!-- ================= SİSTEM MERKEZİ EKRANI ================= -->
         <div id="screen-central" class="screen hidden space-y-6">
+            <div class="rec-host"></div>
             <div class="wx-host" data-scope="central"></div>
             <div class="gw-host" data-scope="central"></div>
             <div class="bg-slate-900 rounded-2xl shadow-xl p-6 text-white flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative overflow-hidden border border-cyan-500/50">
@@ -1848,6 +1888,76 @@
             const v = Number(ev.value) || 0, n = cleanText(ev.staffName || ''), s = String(ev.store || '').replace(/^\d+-/, '');
             return isOdak(track) ? OMSGS[v % OMSGS.length](brandOf(track).toLocaleUpperCase('tr'), n, s, v) : MSGS[v % MSGS.length](n, s, v);
         }
+        // Rekor kırılınca ekranda tüm WatKo'lar kutlama mesajlarıyla çıkar (her ekranda, ana ekran dahil)
+        const PARTY = ['REKOR! 🏆', 'Harikasınız! 👏', 'Tarih yazdık! 🚀', 'Gurur duyuyoruz 💜', 'Hepimizin başarısı! 🙌', 'Güliz Atik bir numara! 🥇', 'Şampiyonlar! 🏅', 'Bravo ekip! 🎉', 'Efsane gün! 🔥', 'Teşekkürler herkese 💚', 'Alkışlar! 👏👏', 'Rekor kapıdan girdi! ✨'];
+        const PMOODS = ['cheer', 'love', 'wink', 'surprised', 'cheer', 'happy'];
+        window.recParty = function (title, sub, who) {
+            try {
+                const old = document.querySelector('.rp-ov'); if (old) old.remove();
+                const ok = window.mascotSvg && (!window.wegiOn || wegiOn());
+                const vw = window.innerWidth || 360, vh = window.innerHeight || 640;
+                const cols = vw >= 640 ? 4 : 3;
+                const rows = vh < 560 ? 2 : (vh < 760 || vw >= 640 ? 3 : 4);
+                const sz = Math.max(46, Math.min(84, Math.floor(vw / (cols + 1.3))));
+                const nm = cleanText(who || '').split(/\s+/)[0];
+                const pool = PARTY.slice();
+                if (nm) pool.splice(2, 0, 'Alkışlar ' + nm + '! 👏');
+                const cells = [];
+                for (let i = 0; i < cols * rows; i++) {
+                    const mood = PMOODS[i % PMOODS.length];
+                    const dl = ((i * 137) % 700) / 1000;
+                    cells.push('<div class="rp-cell" style="animation-delay:' + (0.15 + i * 0.07).toFixed(2) + 's"><div class="rp-b">' + escHtml(pool[i % pool.length]) + '</div><div class="mc-jump" style="display:inline-block;animation-delay:' + dl + 's">' + (ok ? mascotSvg(mood, sz) : '<span style="font-size:' + Math.round(sz * 0.7) + 'px">' + ['🎉', '🏆', '🥳', '👏'][i % 4] + '</span>') + '</div></div>');
+                }
+                const el = document.createElement('div'); el.className = 'rp-ov'; el.setAttribute('role', 'status');
+                el.innerHTML = '<div class="rp-title">' + escHtml(title) + '</div><div class="rp-sub">' + escHtml(sub) + '</div><div class="rp-grid">' + cells.join('') + '</div><div class="rp-tap">Kapatmak için dokun</div>';
+                const close = () => { if (!el.parentNode || el.classList.contains('rp-out')) return; el.classList.add('rp-out'); setTimeout(() => { try { el.remove(); } catch (e) {} }, 650); };
+                el.addEventListener('click', close);
+                document.body.appendChild(el);
+                setTimeout(close, 9000);
+                try { window.fireConfetti(); } catch (e) {}
+                partyUntil = Date.now() + STRIP_MS; applyTheme();
+                recStrip(STRIP_MS, pool, ok);
+            } catch (e) { console.error('Rekor kutlaması', e); }
+        };
+        // Büyük kutlama kapandıktan sonra 5 dakika boyunca WatKo'lar ekranın altında kalır
+        const STRIP_MS = 5 * 60 * 1000;
+        let partyUntil = 0, stripTimer = 0, stripRot = 0, curStage = 0;
+        function recStrip(ms, pool, ok) {
+            try {
+                const old = document.querySelector('.rp-strip'); if (old) old.remove();
+                clearInterval(stripRot); clearTimeout(stripTimer);
+                const vw = window.innerWidth || 360;
+                const n = vw >= 900 ? 8 : vw >= 640 ? 6 : 4, sz = vw >= 640 ? 64 : 50;
+                const cells = [];
+                for (let i = 0; i < n; i++) cells.push('<div class="rp-sc"><div class="rp-b">' + escHtml(pool[i % pool.length]) + '</div><div class="mc-jump" style="display:inline-block;animation-delay:' + ((i * 173) % 700) / 1000 + 's">' + (ok ? mascotSvg(PMOODS[i % PMOODS.length], sz) : '<span style="font-size:' + Math.round(sz * 0.7) + 'px">' + ['🎉', '🏆', '🥳', '👏'][i % 4] + '</span>') + '</div></div>');
+                const el = document.createElement('div'); el.className = 'rp-strip';
+                el.innerHTML = cells.join('') + '<button type="button" class="rp-x" aria-label="WatKo\'ları kapat">✕</button>';
+                const end = () => { clearInterval(stripRot); clearTimeout(stripTimer); try { el.remove(); } catch (e) {} partyUntil = 0; applyTheme(); };
+                el.querySelector('.rp-x').addEventListener('click', end);
+                document.body.appendChild(el);
+                let k = 0;
+                stripRot = setInterval(() => {
+                    if (!el.isConnected) { clearInterval(stripRot); return; }
+                    k++; const bs = el.querySelectorAll('.rp-b');
+                    bs.forEach((b, i) => { b.textContent = pool[(i + k) % pool.length]; });
+                }, 3800);
+                stripTimer = setTimeout(end, ms);
+            } catch (e) { console.error(e); }
+        }
+        // Tema: rekora kalan 100/30/10/3 eşiklerinde kenar ışığı değişir; kutlamada altın; sonra normal
+        const THEME_COL = { '1': '#a21caf', '2': '#be185d', '3': '#be123c', '4': '#b91c1c', g: '#a16207' };
+        let baseThemeColor = null;
+        function applyTheme() {
+            try {
+                let el = document.getElementById('rec-theme');
+                if (!el) { el = document.createElement('div'); el.id = 'rec-theme'; el.setAttribute('aria-hidden', 'true'); document.body.appendChild(el); }
+                const s = Date.now() < partyUntil ? 'g' : (curStage ? String(curStage) : '');
+                if (s) el.setAttribute('data-s', s); else el.removeAttribute('data-s');
+                const m = document.querySelector('meta[name="theme-color"]');
+                if (m) { if (baseThemeColor === null) baseThemeColor = m.getAttribute('content'); m.setAttribute('content', s ? THEME_COL[s] : baseThemeColor); }
+            } catch (e) {}
+        }
+        function stageOf(rem) { return rem <= 3 ? 4 : rem <= 10 ? 3 : rem <= 30 ? 2 : rem <= 100 ? 1 : 0; }
         function paintBar(events) {
             const bar = document.getElementById('record-bar'), tx = document.getElementById('record-bar-text');
             if (!bar || !tx) return;
@@ -1867,9 +1977,13 @@
             const top1 = events[0].ev, t = Number(top1.time) || 0;
             if (t > lastCeleb && Date.now() - t < 90000 && Number(lsGet('bb_rec_seen')) !== t) {
                 lsSet('bb_rec_seen', String(t));
-                if (!document.hidden) {
+                if (!document.hidden && !(document.body && document.body.classList.contains('kpi-mode'))) {
                     try { Snd.play(top1.first ? 'goal150' : 'goal'); } catch (e) {}
-                    if (top1.first) { try { window.fireConfetti(); } catch (e) {} }
+                    try {
+                        const tr1 = events[0].track, v1 = Number(top1.value) || 0;
+                        const nm1 = isOdak(tr1) ? brandOf(tr1).toLocaleUpperCase('tr') + ' REKORU!' : 'YENİ BÖLGE REKORU!';
+                        recParty(nm1, 'Günlük ' + v1 + ' ' + (isOdak(tr1) ? 'adet' : 'satış') + (top1.staffName ? ' • Rekoru getiren: ' + cleanText(top1.staffName) : ''), top1.staffName);
+                    } catch (e) {}
                 }
             }
             lastCeleb = Math.max(lastCeleb, t);
@@ -1887,16 +2001,17 @@
             const tick = lastTicks[track] !== undefined && lastTicks[track] !== key;
             lastTicks[track] = key;
             const unit = odak ? 'adet' : 'satış';
+            const hb = remaining <= 3 ? 'rec-hb4' : remaining <= 10 ? 'rec-hb3' : remaining <= 30 ? 'rec-hb2' : remaining <= 100 ? 'rec-hb1' : '';
             if (broken) return `<div class="rec-card hot flex items-center gap-3">
                     <div class="text-3xl">${odak ? '⭐' : '🔥'}</div>
                     <div class="min-w-0 flex-1">
                         <div class="text-[10px] font-black uppercase tracking-widest text-yellow-200">${escHtml(title)} rekor günü!</div>
                         <div class="font-black text-sm leading-tight">Bugün <span class="text-yellow-300 text-lg">${st.today}</span> ${unit} • önceki rekor ${st.prior} (${d}) aşıldı, <span class="text-yellow-300">+${st.today - st.prior}</span></div>
                     </div></div>`;
-            return `<div class="rec-card ${odak ? 'rec-odak' : ''} flex items-center gap-3">
+            return `<div class="rec-card ${odak ? 'rec-odak' : ''} ${hb ? 'hb-on' : ''} flex items-center gap-3">
                     <div class="text-center shrink-0 w-20">
-                        <div class="text-[9px] font-black uppercase tracking-widest text-fuchsia-200">Rekora kalan</div>
-                        <div class="rec-num ${tick ? 'tick' : ''} ${remaining <= 3 ? 'rec-last' : ''}">${remaining}</div>
+                        <div class="text-[9px] font-black uppercase tracking-widest text-fuchsia-200">${hb ? '<span class="rec-heart ' + hb + '">♥</span> ' : ''}Rekora kalan</div>
+                        <div class="rec-num ${tick && !hb ? 'tick' : ''} ${hb}">${remaining}</div>
                     </div>
                     <div class="min-w-0 flex-1">
                         <div class="flex items-center justify-between gap-2 text-[11px] font-black"><span class="truncate"><i class="fa-solid ${odak ? 'fa-star' : 'fa-trophy'} text-yellow-300 mr-1"></i>${escHtml(title)} günlük rekoru: <span class="text-yellow-300">${st.prior}</span> <span class="text-fuchsia-200 font-bold">(${d})</span></span><span class="text-fuchsia-100 shrink-0">Bugün ${st.today}</span></div>
@@ -1916,6 +2031,11 @@
                     html += cardHtml(tr, st);
                 });
                 paintBar(events);
+                let minRem = Infinity;
+                tracks().forEach(tr => { const st = recState(tr); if (st.prior > 0 && st.today <= st.prior && st.today >= st.prior * SHOW_AT) minRem = Math.min(minRem, st.prior - st.today + 1); });
+                curStage = minRem === Infinity ? 0 : stageOf(minRem);
+                if (partyUntil && Date.now() >= partyUntil) partyUntil = 0;
+                applyTheme();
                 hosts.forEach(h => { h.innerHTML = html ? `<div class="space-y-2">${html}</div>` : ''; });
                 if (html.indexOf('rec-num tick') !== -1) setTimeout(() => { document.querySelectorAll('.rec-num.tick').forEach(e => e.classList.remove('tick')); }, 300);
             } catch (e) { console.error(e); }
@@ -8845,6 +8965,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.43</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.45</div>
 </body>
 </html>
