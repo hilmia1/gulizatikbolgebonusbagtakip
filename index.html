@@ -109,6 +109,9 @@
         .dark-date-input::-webkit-calendar-picker-indicator, .dark-time-input::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; opacity: 0.7; transition: opacity 0.2s; }
         .dark-date-input::-webkit-calendar-picker-indicator:hover, .dark-time-input::-webkit-calendar-picker-indicator:hover { opacity: 1; }
         .light-date-input::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; transition: opacity 0.2s; }
+        .dark-date-input::-webkit-calendar-picker-indicator { opacity: 1; width: 22px; height: 22px; padding: 4px; border-radius: 6px; background-color: rgba(255,255,255,.22); }
+        .light-date-input::-webkit-calendar-picker-indicator { opacity: 1; width: 22px; height: 22px; padding: 4px; border-radius: 6px; background-color: rgba(100,116,139,.18); }
+        .dark-date-input, .light-date-input { min-height: 34px; }
         .light-date-input::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 
         /* Duyuru Bandı Animasyonu */
@@ -3274,6 +3277,26 @@
             wrap.append(prev, next);
             const holder = eEl.closest('div') || eEl.parentNode;
             holder.parentNode.insertBefore(wrap, holder.nextSibling);
+            // Hızlı aralıklar: tarih seçici açılmasa bile (ör. WhatsApp içi tarayıcı) tek dokunuşla süre seçilir
+            const chips = document.createElement('div');
+            chips.className = 'flex flex-wrap items-center gap-1.5 w-full';
+            chips.setAttribute('data-datechips', '1');
+            const mkChip = (label, so, eo, month) => {
+                const c = document.createElement('button');
+                c.type = 'button'; c.textContent = label;
+                c.className = (light ? 'bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200' : 'bg-white/10 hover:bg-white/25 text-white border border-white/25') + ' rounded-full font-black text-[11px] px-3 py-1.5 select-none';
+                c.addEventListener('click', () => {
+                    const ne = add(ACTIVE_DATE, -eo), ns = month ? ACTIVE_DATE.slice(0, 8) + '01' : add(ACTIVE_DATE, -so);
+                    sEl.value = ns; eEl.value = ne; fire(sEl);
+                    if (cfg.run && typeof window[cfg.run] === 'function') window[cfg.run]();
+                    refresh();
+                });
+                return c;
+            };
+            [['Bugün', 0, 0], ['Dün', 1, 1], ['Son 3 gün', 2, 0], ['Son 5 gün', 4, 0], ['Son 7 gün', 6, 0], ['Son 30 gün', 29, 0], ['Bu ay', 0, 0, true]].forEach(a => chips.appendChild(mkChip.apply(null, a)));
+            wrap.parentNode.insertBefore(chips, wrap.nextSibling);
+            // Bazı tarayıcılarda (uygulama içi tarayıcılar) alana dokununca takvim açılmaz: elle aç
+            [sEl, eEl].forEach(inp => inp.addEventListener('click', () => { try { if (inp.showPicker) inp.showPicker(); } catch (e) {} }));
             const range = () => {
                 let s = sEl.value || ACTIVE_DATE, e = eEl.value || ACTIVE_DATE;
                 if (s > e) { const t = s; s = e; e = t; }
@@ -8822,6 +8845,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.42</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.43</div>
 </body>
 </html>
