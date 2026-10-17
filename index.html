@@ -2753,6 +2753,88 @@
         setTimeout(() => { try { step(); } catch (e) {} }, 1500);
     } catch (e) { console.error('Wegi gezintisi kurulamadı', e); } })();
 
+    // === Ekip hedefi: mağazanın ortak çubuğu, kim ne kadar katkı verdi, dönüm noktaları ===
+    ;(function teamGoalInit() { try {
+        const st = document.createElement('style');
+        st.textContent = `
+        .tg-card{background:linear-gradient(135deg,#f0fdfa,#ecfeff);border:1px solid #99f6e4;border-radius:18px;padding:14px 16px;margin-top:16px}
+        .tg-track{position:relative;height:16px;border-radius:99px;background:#e2e8f0;margin:30px 0 8px}
+        .tg-seg{position:absolute;top:0;bottom:0;transition:left .6s,width .6s}
+        .tg-fill{position:absolute;inset:0;border-radius:99px;overflow:hidden}
+        .tg-tick{position:absolute;top:-3px;bottom:-3px;width:2px;background:rgba(255,255,255,.9)}
+        .tg-w{position:absolute;top:-34px;transform:translateX(-50%);transition:left .6s;pointer-events:none}
+        .tg-chip{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #ccfbf1;border-radius:99px;padding:3px 10px 3px 4px;font-size:11px;font-weight:800;color:#334155}
+        .tg-ms{display:inline-block;font-size:10px;font-weight:900;border-radius:99px;padding:2px 9px;border:1px solid #cbd5e1;color:#94a3b8;background:#fff}
+        .tg-ms.on{background:#14b8a6;border-color:#14b8a6;color:#fff}
+        .tg-toast{position:fixed;left:50%;top:76px;transform:translateX(-50%);z-index:99996;background:#0f766e;color:#fff;border-radius:99px;padding:8px 18px;font-weight:900;font-size:13px;box-shadow:0 10px 30px rgba(15,118,110,.4);animation:tgIn .35s ease-out}
+        @keyframes tgIn{from{opacity:0;transform:translate(-50%,-10px)}to{opacity:1;transform:translate(-50%,0)}}
+        @media (prefers-reduced-motion:reduce){.tg-seg,.tg-w{transition:none}.tg-toast{animation:none}}`;
+        document.head.appendChild(st);
+        const COLORS = ['#ec4899', '#6366f1', '#f59e0b', '#10b981', '#06b6d4', '#8b5cf6', '#ef4444', '#84cc16'];
+        const esc = v => String(v == null ? '' : v).replace(/[<>&"']/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' }[c]));
+        const first = n => { const w = String(n || '').replace(/\(.*?\)/g, '').trim().split(/\s+/)[0] || ''; return w.charAt(0).toLocaleUpperCase('tr') + w.slice(1).toLocaleLowerCase('tr'); };
+        let last = { key: '', m: -1 };
+        function toast(msg) {
+            try { const o = document.querySelector('.tg-toast'); if (o) o.remove(); const t = document.createElement('div'); t.className = 'tg-toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => { try { t.remove(); } catch (e) {} }, 3600); } catch (e) {}
+        }
+        function teamCelebrate(total) {
+            try {
+                const old = document.querySelector('.gl-ov'); if (old) old.remove();
+                const el = document.createElement('div'); el.className = 'gl-ov';
+                el.innerHTML = '<div class="mc-jump" style="display:inline-block">' + (window.mascotSvg && (!window.wegiOn || wegiOn()) ? mascotSvg('cheer', 92) : '🎉') + '</div><div class="gl-t">Ekip hedefi tamam!</div><div class="gl-s">Hep birlikte ' + total + ' adet 💚</div>';
+                document.body.appendChild(el); setTimeout(() => { try { el.remove(); } catch (e) {} }, 3800);
+            } catch (e) {}
+        }
+        function msgFor(perc, left, over) {
+            if (perc >= 100) return over > 0 ? 'Ekip hedefi tamam, üstüne ' + over + ' adet daha! Hep birlikte 🎉' : 'Ekip hedefi tamam! Hep birlikte başardık 🎉';
+            if (perc >= 75) return 'Son düzlük! Hedefe ' + left + ' adet kaldı, ekip olarak yaparız 💪';
+            if (perc >= 50) return 'Yarıyı geçtik! Ekip olarak ilerliyoruz, ' + left + ' adet kaldı.';
+            if (perc >= 25) return 'İlk çeyrek tamam. Birlikte devam, ' + left + ' adet kaldı.';
+            if (perc > 0) return 'Isınıyoruz! Her satış çubuğu ileri taşıyor.';
+            return 'Güne başlıyoruz. İlk satış ekipten gelsin!';
+        }
+        window.teamGoalPaint = function (stats, staffArray, totalSales, perc, historical) {
+            try {
+                let box = document.getElementById('team-goal');
+                if (!box) {
+                    const anchor = document.getElementById('store-heatmap-card'); if (!anchor || !anchor.parentNode) return;
+                    box = document.createElement('div'); box.id = 'team-goal'; anchor.parentNode.insertBefore(box, anchor);
+                }
+                const target = stats.storeTarget || 0;
+                if (!target || !staffArray.length) { box.innerHTML = ''; box.className = 'hidden'; return; }
+                box.className = '';
+                const contrib = staffArray.filter(p => p.sales > 0).sort((a, b) => b.sales - a.sales);
+                const pctClamp = Math.min(100, perc);
+                let acc = 0;
+                const segs = contrib.map((p, i) => {
+                    const w = Math.max(0, Math.min(100 - acc, p.sales / target * 100)); const left = acc; acc += w;
+                    return '<div class="tg-seg" style="left:' + left + '%;width:' + w + '%;background:' + COLORS[i % COLORS.length] + '" title="' + esc(first(p.name)) + ': ' + p.sales + '"></div>';
+                }).join('');
+                const ticks = [25, 50, 75].map(m => '<div class="tg-tick" style="left:' + m + '%"></div>').join('');
+                const left = Math.max(0, target - totalSales), over = Math.max(0, totalSales - target);
+                const wegiOk = window.mascotSvg && (!window.wegiOn || wegiOn());
+                const marker = wegiOk ? '<div class="mc-bob">' + mascotSvg(perc >= 100 ? 'cheer' : 'happy', 30) + '</div>' : '<div style="font-size:20px">⭐</div>';
+                const chips = contrib.map((p, i) => '<span class="tg-chip">' + (window.avatarHtml ? avatarHtml(currentId, p.id, p.name, 22, false) : '<span style="width:10px;height:10px;border-radius:99px;background:' + COLORS[i % COLORS.length] + ';margin-left:6px"></span>') + esc(first(p.name)) + ' <span style="color:' + COLORS[i % COLORS.length] + '">' + p.sales + '</span></span>').join(' ');
+                const ms = [25, 50, 75, 100].map(m => '<span class="tg-ms' + (perc >= m ? ' on' : '') + '">' + (perc >= m ? '✓ ' : '') + '%' + m + '</span>').join(' ');
+                box.innerHTML = '<div class="tg-card"><div class="flex items-start justify-between gap-2"><div><div class="font-black text-teal-800 text-sm"><i class="fa-solid fa-people-group mr-1.5"></i>EKİP HEDEFİ</div><div class="text-[11px] font-bold text-teal-700/80 mt-0.5">' + esc(msgFor(perc, left, over)) + '</div></div><div class="text-right shrink-0"><div class="font-black text-2xl text-teal-700 leading-none">' + totalSales + '<span class="text-sm text-teal-600/70"> / ' + target + '</span></div><div class="text-[10px] font-bold text-teal-600">%' + perc + '</div></div></div>'
+                    + '<div class="tg-track"><div class="tg-fill">' + segs + '</div>' + ticks + '<div class="tg-w" style="left:' + pctClamp + '%">' + marker + '</div></div>'
+                    + '<div class="flex flex-wrap gap-1.5 mt-3">' + (chips || '<span class="text-[11px] font-bold text-slate-400">İlk satışı girince çubuk renklenir.</span>') + '</div>'
+                    + '<div class="flex flex-wrap gap-1.5 mt-3">' + ms + '</div></div>';
+                // dönüm noktası kutlaması: sadece canlı ekranda, ilk çizimde sessiz
+                const key = currentId + '|' + ACTIVE_DATE;
+                const m = perc >= 100 ? 100 : perc >= 75 ? 75 : perc >= 50 ? 50 : perc >= 25 ? 25 : 0;
+                if (historical) { last = { key: '', m: -1 }; return; }
+                if (last.key !== key) { last = { key, m }; return; }
+                if (m > last.m) {
+                    if (m === 100) teamCelebrate(totalSales);
+                    else toast('🎯 Ekip hedefinin %' + m + '\'i tamam!');
+                    try { if (window.bagiReact) bagiReact('cheer', 1800); } catch (e) {}
+                }
+                last.m = m;
+            } catch (e) { console.error('Ekip hedefi', e); }
+        };
+    } catch (e) { console.error('Ekip hedefi kurulamadı', e); } })();
+
     // ===== Duyuru şeritleri ve üst başlık: yapışma mesafelerini görünen şeritlere göre hesapla =====
     // (Eskiden Güliz Atik şeridi sabit 42px'e yapışıyordu; Merkez şeridi yokken başlığın üstüne biniyordu.)
     ;(function barLayoutInit() { try {
@@ -5682,6 +5764,7 @@
         let perc = stats.storeTarget > 0 ? Math.round((totalSales / stats.storeTarget) * 100) : 0;
         document.getElementById('store-progress-bar').style.width = (perc > 100 ? 100 : perc) + "%";
         document.getElementById('store-progress-text').innerText = perc;
+        try { if (window.teamGoalPaint) teamGoalPaint(stats, staffArray, totalSales, perc, isStoreHistorical); } catch (e) {}
 
         if (!isStoreHistorical && stats.storeTarget > 0) {
             if (perc >= 100 && !window.firedConfetti.store) {
@@ -8357,6 +8440,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.29</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.30</div>
 </body>
 </html>
