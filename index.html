@@ -693,8 +693,8 @@
             <!-- WEGİ (MASKOT) AÇ/KAPAT -->
             <div class="bg-gradient-to-r from-teal-900 to-slate-800 p-4 rounded-2xl border border-teal-600/50 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between shadow-lg">
                 <div class="min-w-0">
-                    <div class="text-teal-200 font-black text-sm"><i class="fa-solid fa-paw mr-2"></i>WEGİ (UYGULAMA MASKOTU)</div>
-                    <div id="wegi-text" class="text-[11px] text-slate-300 mt-0.5">Ana ekrandaki karşılama, ekranda gezinme, hedef kutlaması ve yağmur uyarısındaki Wegi.</div>
+                    <div class="text-teal-200 font-black text-sm"><i class="fa-solid fa-paw mr-2"></i>WATKO (UYGULAMA MASKOTU)</div>
+                    <div id="wegi-text" class="text-[11px] text-slate-300 mt-0.5">Ana ekrandaki karşılama, ekranlarda ara sıra belirip ipucu / tebrik verme, hedef kutlaması ve yağmur uyarısındaki WatKo.</div>
                 </div>
                 <button type="button" id="wegi-btn" onclick="setWegi()" class="shrink-0 px-4 py-2 rounded-xl border font-black text-xs transition"></button>
             </div>
@@ -2514,8 +2514,8 @@
                         ? '<path d="M10 30q50-62 100 0z" fill="#38bdf8"/><path d="M10 30q10-8 20 0q10-8 20 0q10-8 20 0q10-8 20 0q10-8 20 0" fill="#0ea5e9"/><path d="M60 30v10" stroke="#0369a1" stroke-width="3"/><path d="M104 46l-3 8M16 50l-3 8M110 72l-3 8" stroke="#7dd3fc" stroke-width="3" stroke-linecap="round"/>'
                         : '';
             const leaf = mood === 'rain' ? '' : '<path d="M60 38q3-16 22-20q-1 18-22 20z" fill="#86efac" stroke="#16a34a" stroke-width="2"/><path d="M60 40v-8" stroke="#166534" stroke-width="3" stroke-linecap="round"/>';
-            const neck = '<path d="M31 92Q60 120 89 92" stroke="#fbbf24" stroke-width="2.6" fill="none" stroke-linecap="round"/><circle cx="60" cy="106" r="9.5" fill="#ec4899" stroke="#fff" stroke-width="1.6"/><text x="60" y="110.4" text-anchor="middle" font-size="12.5" font-weight="900" fill="#fff" font-family="Arial,sans-serif">W</text>';
-            return '<svg viewBox="0 0 120 124" width="' + size + '" height="' + (size * 124 / 120).toFixed(0) + '" role="img" aria-label="Wegi, uygulama maskotu" style="overflow:visible"><defs><linearGradient id="' + g + '" x1="0.1" y1="0" x2="0.9" y2="1"><stop offset="0" stop-color="#3ee0cf"/><stop offset="1" stop-color="#00877e"/></linearGradient></defs>' +
+            const neck = '<path d="M31 92Q60 120 89 92" stroke="#fbbf24" stroke-width="2.6" fill="none" stroke-linecap="round"/><circle cx="60" cy="106" r="11" fill="#ec4899" stroke="#fff" stroke-width="1.6"/><path d="M52.16 102.46L55.34 109.54M56.75 109.59L59.25 104.91M60.75 104.91L63.25 109.59M64.66 109.54L67.84 102.46" stroke="#fff" stroke-width="3" stroke-linecap="round" fill="none"/>';
+            return '<svg viewBox="0 0 120 124" width="' + size + '" height="' + (size * 124 / 120).toFixed(0) + '" role="img" aria-label="WatKo, uygulama maskotu" style="overflow:visible"><defs><linearGradient id="' + g + '" x1="0.1" y1="0" x2="0.9" y2="1"><stop offset="0" stop-color="#3ee0cf"/><stop offset="1" stop-color="#00877e"/></linearGradient></defs>' +
                 leaf + '<ellipse cx="45" cy="117" rx="13" ry="5.5" fill="#05645c"/><ellipse cx="75" cy="117" rx="13" ry="5.5" fill="#05645c"/>' + arms +
                 '<ellipse cx="60" cy="76" rx="38" ry="40" fill="url(#' + g + ')"/><ellipse cx="60" cy="88" rx="25" ry="22" fill="#fff" opacity=".12"/><ellipse cx="44" cy="52" rx="8" ry="12" fill="#fff" opacity=".28" transform="rotate(25 44 52)"/>' +
                 eyes + '<circle cx="34" cy="82" r="7" fill="#fda4af" opacity=".8"/><circle cx="86" cy="82" r="7" fill="#fda4af" opacity=".8"/>' + mouth + neck + extra + '</svg>';
@@ -2539,8 +2539,8 @@
             if (window.wegiOn && !wegiOn()) { box.innerHTML = ''; return; }
             const m = pick();
             box.innerHTML = '<div class="flex items-center gap-3 bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-100 rounded-2xl px-3 py-2.5">' +
-                '<button type="button" class="mc-bob shrink-0" style="background:none;border:0;padding:0;cursor:pointer" onclick="mascotPaint()" title="Wegi\'ye dokun">' + mascotSvg(m.mood, 64) + '</button>' +
-                '<div class="mc-bub flex-1 min-w-0"><span class="block text-[10px] font-black text-teal-600 uppercase tracking-wider mb-0.5">Wegi</span>' + m.text + '<button type="button" onclick="bagiToggleWalk()" class="block mt-1.5 text-[10px] font-black text-slate-400 hover:text-teal-600">🐾 Wegi ekranda gezsin: ' + (window.bagiWalkOn && !bagiWalkOn() ? 'KAPALI' : 'AÇIK') + '</button></div></div>';
+                '<button type="button" class="mc-bob shrink-0" style="background:none;border:0;padding:0;cursor:pointer" onclick="mascotPaint()" title="WatKo\'ya dokun">' + mascotSvg(m.mood, 64) + '</button>' +
+                '<div class="mc-bub flex-1 min-w-0"><span class="block text-[10px] font-black text-teal-600 uppercase tracking-wider mb-0.5">WatKo</span>' + m.text + '<button type="button" onclick="bagiToggleWalk()" class="block mt-1.5 text-[10px] font-black text-slate-400 hover:text-teal-600">🐾 WatKo ara sıra belirsin: ' + (window.bagiWalkOn && !bagiWalkOn() ? 'KAPALI' : 'AÇIK') + '</button></div></div>';
         };
         setTimeout(() => { try { mascotPaint(); } catch (e) {} }, 300);
         setInterval(() => { try { mascotPaint(); } catch (e) {} }, 600000);
@@ -2551,7 +2551,7 @@
     window.setWegi = function () {
         if (!window.__DEMO && currentRole !== 'central') return alert('Bu ayar için Sistem Merkezi girişi gerekir.');
         const next = !wegiOn();
-        if (!confirm(next ? 'Wegi herkes için açılsın mı?' : 'Wegi herkes için kapatılsın mı? (Ana ekran kartı, gezinme, kutlama ve yağmur kartlarındaki maskot gizlenir.)')) return;
+        if (!confirm(next ? 'WatKo herkes için açılsın mı?' : 'WatKo herkes için kapatılsın mı? (Ana ekran kartı, belirip konuşma, kutlama ve yağmur kartlarındaki maskot gizlenir.)')) return;
         try {
             const pr = dbRoot.child('settings').update({ wegi: next });
             if (pr && pr.catch) pr.catch(() => alert('Kaydedilemedi. database.rules.json dosyasının son halini Firebase Rules bölümünde yayınladınız mı?'));
@@ -2561,7 +2561,7 @@
         const b = document.getElementById('wegi-btn'); if (!b) return;
         const on = wegiOn();
         b.className = 'shrink-0 px-4 py-2 rounded-xl border font-black text-xs transition ' + (on ? 'bg-emerald-500 text-white border-emerald-300 shadow-lg' : 'bg-slate-800 text-slate-300 border-slate-600 hover:bg-slate-700');
-        b.textContent = on ? '🐾 Wegi AÇIK' : '😴 Wegi KAPALI';
+        b.textContent = on ? '🐾 WatKo AÇIK' : '😴 WatKo KAPALI';
     };
     (function () { let lastOn = null; setInterval(() => { try { const on = wegiOn(); wegiPaint(); if (on !== lastOn) { lastOn = on; if (window.mascotPaint) mascotPaint(); } } catch (e) {} }, 1500); })();
 
@@ -2571,12 +2571,16 @@
         st.textContent = `
         .bw{position:fixed;left:0;top:0;z-index:99980;pointer-events:none;will-change:transform;display:none}
         .bw-in{position:relative}
+        .bw.bw-pop .bw-in{animation:bwPop .38s cubic-bezier(.2,1.4,.4,1)}
+        .bw.bw-out .bw-in{animation:bwOut .35s ease-in forwards}
+        @keyframes bwPop{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:scale(1)}}
+        @keyframes bwOut{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(.4)}}
         .bw.walking .bw-in{animation:bwWalk .38s ease-in-out infinite}
         @keyframes bwWalk{0%,100%{transform:rotate(-8deg) translateY(0)}50%{transform:rotate(8deg) translateY(-7px)}}
         .bw-sv{display:block;transform-origin:50% 100%}
         .bw-b{position:absolute;bottom:100%;left:50%;margin-bottom:4px;width:max-content;max-width:min(230px,70vw);background:#fff;border:2px solid #99f6e4;border-radius:16px;padding:8px 12px;font-weight:800;font-size:12.5px;color:#334155;line-height:1.35;box-shadow:0 8px 24px rgba(0,135,126,.25);opacity:0;transform:translateX(-50%) scale(.85);transition:opacity .25s,transform .25s}
         .bw-b.on{opacity:1;transform:translateX(-50%) scale(1)}
-        @media (prefers-reduced-motion:reduce){.bw.walking .bw-in{animation:none}}`;
+        @media (prefers-reduced-motion:reduce){.bw.walking .bw-in,.bw.bw-pop .bw-in,.bw.bw-out .bw-in{animation:none}}`;
         document.head.appendChild(st);
         const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
         const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
@@ -2586,7 +2590,7 @@
         const rnd = (a, b) => a + Math.random() * (b - a);
         const size = () => innerWidth < 480 ? 54 : 66;
         const enabled = () => lsGet('bb_walk') !== 'off' && !reduce() && (window.wegiOn ? wegiOn() : true);
-        let el = null, sv = null, bub = null, inn = null, face = '', curX = 0, curY = 0, busy = false, timer = 0, walkT = 0, last = 0, lastRain = 0, lastTarget = 0, n = 0;
+        let el = null, sv = null, bub = null, inn = null, face = '', curX = 0, curY = 0, busy = false, timer = 0, walkT = 0, last = 0, lastRain = 0, lastTarget = 0, lastTeam = 0, n = 0;
         const baseY = () => innerHeight - size() * 1.25 - 10;
         function ensure() {
             if (el || !document.body) return;
@@ -2597,6 +2601,7 @@
             curX = rnd(20, Math.max(40, innerWidth - 100)); curY = baseY();
             el.style.transition = 'none'; el.style.transform = 'translate(' + curX + 'px,' + curY + 'px)';
             setFace('happy', true);
+            el.style.display = 'none';
         }
         function setFace(m, force) {
             if (!sv || (!force && m === face)) return;
@@ -2626,40 +2631,8 @@
         function next(ms) { clearTimeout(timer); timer = setTimeout(step, ms); }
         const FACES = ['wink', 'surprised', 'love', 'cheer', 'happy'];
         const TALK = { wink: ['😉', 'Hı hı 😄'], surprised: ['Aaa!', 'Vay! 😮', 'Ooo!'], love: ['💜', 'Sizi seviyorum 💕'], cheer: ['Yaşasın! 🎉', 'Hadi hadi! 💪'], happy: ['😊'] };
-        function step() {
-            if (busy) return;
-            if (!enabled()) { if (el) el.style.display = 'none'; return next(4000); }
-            if (document.hidden) return next(4000);
-            ensure(); el.style.display = 'block';
-            const h = new Date().getHours(), night = h >= 23 || h < 6;
-            const r = Math.random();
-            if (night && r < .6) {
-                setFace('sleepy'); return next(rnd(4000, 7000));
-            }
-            if (face === 'sleepy') setFace('happy');
-            if (r < .5) {
-                const nx = clamp(curX + rnd(-1, 1) * innerWidth * .6, 6, innerWidth - size() - 6);
-                const ms = clamp(Math.abs(nx - curX) / 55 * 1000, 900, 7000);
-                moveTo(nx, baseY(), ms);
-                return next(ms + rnd(1200, 3500));
-            }
-            if (r < .68) {
-                const d = Math.random() < .5 ? -1 : 1;
-                el.style.setProperty('--lx', (d * 3) + 'px'); el.style.setProperty('--ly', '-1px');
-                setTimeout(() => { if (el) { el.style.setProperty('--lx', '0px'); el.style.setProperty('--ly', '0px'); } }, 1400);
-                return next(rnd(1500, 3000));
-            }
-            if (r < .92) {
-                const f = FACES[Math.floor(Math.random() * FACES.length)];
-                setFace(f);
-                if (Math.random() < .55) { const t = TALK[f]; say(t[Math.floor(Math.random() * t.length)], 1800); }
-                setTimeout(() => { if (!busy) setFace('happy'); }, 2300);
-                return next(rnd(2600, 4200));
-            }
-            sv.classList.remove('mc-jump'); void sv.offsetWidth; sv.classList.add('mc-jump');
-            setTimeout(() => { if (sv) sv.classList.remove('mc-jump'); }, 1500);
-            next(rnd(2200, 3800));
-        }
+        // Gezinme yok: Wegi sadece sahneler sırasında belirir (bagiWalk), sonra kaybolur.
+        function step() { if (busy) return; if (el && !busy) el.style.display = 'none'; next(5000); }
         // Dışarıdan: kısa tepki (ör. satış girilince)
         window.bagiReact = function (mood, ms) {
             try {
@@ -2669,12 +2642,12 @@
                 setTimeout(() => { if (sv) sv.classList.remove('mc-jump'); if (!busy) setFace('happy'); }, ms || 1500);
             } catch (e) {}
         };
-        // Bir öğeye yürüyüp konuş, sonra yerine dön
+        // Bir öğenin yanında belirir (yürümez), konuşur, sonra kaybolur
         window.bagiWalk = function (target, mood, text, done) {
             if (busy || !target || !enabled()) return false;
             busy = true; clearTimeout(timer);
-            ensure(); el.style.display = 'block';
-            const fin = () => { busy = false; last = Date.now(); try { done && done(); } catch (e) {} next(2500); };
+            ensure();
+            const fin = () => { busy = false; last = Date.now(); try { done && done(); } catch (e) {} };
             try {
                 let r = target.getBoundingClientRect();
                 const need = r.top < 70 || r.bottom > innerHeight - 40;
@@ -2683,19 +2656,23 @@
                     try {
                         r = target.getBoundingClientRect();
                         const sz = size();
-                        const tx = r.left > 100 ? r.left - sz - 8 : Math.min(innerWidth - sz - 4, r.right + 6);
-                        const ty = clamp(r.top + r.height / 2 - sz * .8, 64, innerHeight - sz * 1.3);
+                        const left = r.left > 100;
+                        const tx = left ? r.left - sz - 8 : Math.min(innerWidth - sz - 4, r.right + 6);
+                        curX = clamp(tx, 4, innerWidth - sz - 4);
+                        curY = clamp(r.top + r.height / 2 - sz * .8, 64, innerHeight - sz * 1.3);
+                        el.style.transition = 'none';
+                        el.style.transform = 'translate(' + curX + 'px,' + curY + 'px)';
+                        sv.style.transform = left ? 'none' : 'scaleX(-1)';
                         setFace(mood);
-                        moveTo(clamp(tx, 4, innerWidth - sz - 4), ty, 2300, 'cubic-bezier(.45,.05,.3,1)');
+                        el.style.display = 'block'; el.classList.remove('bw-out'); el.classList.add('bw-pop');
+                        sv.classList.remove('mc-jump'); void sv.offsetWidth; sv.classList.add('mc-jump');
+                        setTimeout(() => { if (sv) sv.classList.remove('mc-jump'); }, 1500);
+                        setTimeout(() => say(text, 4200), 350);
                         setTimeout(() => {
-                            say(text, 4200);
-                            setTimeout(() => {
-                                setFace('happy');
-                                moveTo(clamp(curX, 6, innerWidth - sz - 6), baseY(), 1800, 'ease-in-out');
-                                setTimeout(fin, 1900);
-                            }, 4500);
-                        }, 2450);
-                    } catch (e) { fin(); }
+                            el.classList.remove('bw-pop'); el.classList.add('bw-out');
+                            setTimeout(() => { el.style.display = 'none'; el.classList.remove('bw-out'); fin(); }, 380);
+                        }, 4900);
+                    } catch (e) { if (el) el.style.display = 'none'; fin(); }
                 }, need ? 650 : 0);
             } catch (e) { fin(); return false; }
             return true;
@@ -2731,6 +2708,10 @@
                 if (ti) { lastTarget = now; return bagiWalk(ti, 'happy', 'Mağaza hedefini girmeyi unutma 🎯'); }
             }
             const arr = Object.keys(stats.staff || {}).map(id => Object.assign({ id }, stats.staff[id])).filter(p => !p.isTransfer);
+            const tot = arr.reduce((t, p) => t + (p.sales || 0), 0), tg = stats.storeTarget || 0;
+            const tc = document.querySelector('#team-goal .tg-card');
+            if (!isStoreHistorical && tg > 0 && tc && tot >= tg && now - lastTeam > 30 * 60000) { lastTeam = now; return bagiWalk(tc, 'cheer', 'Ekip hedefi tamam, hepinizi tebrik ederim! 🎉'); }
+            if (!isStoreHistorical && tg > 0 && tc && tot < tg && tot / tg >= .75 && now - lastTeam > 30 * 60000) { lastTeam = now; return bagiWalk(tc, 'happy', 'Hedefe ' + (tg - tot) + ' adet kaldı, hadi, birlikte yaparız! 💪'); }
             const near = arr.filter(p => p.target > 0 && p.target - p.sales >= 1 && p.target - p.sales <= 3).sort((a, b) => (a.target - a.sales) - (b.target - b.sales))[0];
             const rowOf = id => { const tr = document.querySelector('#store-staff-list tr[data-pid="' + id + '"]'); return tr && (tr.querySelector('td') || tr); };
             if (near) { const t = rowOf(near.id); if (t) return bagiWalk(t, 'happy', first(near.name) + ' için hedefe ' + (near.target - near.sales) + ' adet kaldı, haydi! 💪'); }
@@ -2749,7 +2730,7 @@
             } catch (e) {}
         }, 15000);
         let seen = '';
-        setInterval(() => { try { const k = currentRole === 'store' ? currentId : ''; if (k && k !== seen) { seen = k; last = Date.now() - 60000; } if (!k) seen = ''; } catch (e) {} }, 3000);
+        setInterval(() => { try { const k = currentRole === 'store' ? currentId : ''; if (k && k !== seen) { seen = k; last = Date.now() - 60000; setTimeout(() => { try { if (!busy && currentRole === 'store' && !isStoreHistorical && enabled() && !document.querySelector('.pk-ov,.av-ov,.gl-ov')) storeScene(); } catch (e) {} }, 2200); } if (!k) seen = ''; } catch (e) {} }, 3000);
         setTimeout(() => { try { step(); } catch (e) {} }, 1500);
     } catch (e) { console.error('Wegi gezintisi kurulamadı', e); } })();
 
@@ -2781,7 +2762,9 @@
             try {
                 const old = document.querySelector('.gl-ov'); if (old) old.remove();
                 const el = document.createElement('div'); el.className = 'gl-ov';
-                el.innerHTML = '<div class="mc-jump" style="display:inline-block">' + (window.mascotSvg && (!window.wegiOn || wegiOn()) ? mascotSvg('cheer', 92) : '🎉') + '</div><div class="gl-t">Ekip hedefi tamam!</div><div class="gl-s">Hep birlikte ' + total + ' adet 💚</div>';
+                const ok = window.mascotSvg && (!window.wegiOn || wegiOn());
+                const w = (sz, dl) => '<div class="mc-jump" style="display:inline-block;animation-delay:' + dl + 's">' + (ok ? mascotSvg('cheer', sz) : '🎉') + '</div>';
+                el.innerHTML = '<div style="display:flex;justify-content:center;align-items:flex-end;gap:2px">' + w(66, .15) + w(92, 0) + w(66, .3) + '</div><div class="gl-t">Ekip hedefi tamam!</div><div class="gl-s">Hep birlikte ' + total + ' adet 💚</div>';
                 document.body.appendChild(el); setTimeout(() => { try { el.remove(); } catch (e) {} }, 3800);
             } catch (e) {}
         }
@@ -8440,6 +8423,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.30</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.35</div>
 </body>
 </html>
