@@ -2469,14 +2469,15 @@
         .av-btn{border:0;background:transparent;padding:0;cursor:pointer;transition:transform .15s}
         .av-btn:hover{transform:scale(1.12)}
         .av-ov{position:fixed;inset:0;z-index:99991;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(2px)}
-        .av-box{background:#fff;color:#0f172a;border-radius:22px;width:100%;max-width:380px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:pkUp .18s ease-out}
+        .av-box{background:#fff;color:#0f172a;border-radius:22px;width:100%;max-width:380px;max-height:86vh;overflow-y:auto;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:pkUp .18s ease-out}
         .av-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:12px}
         .av-opt{aspect-ratio:1;border-radius:14px;border:2px solid #e2e8f0;background:#fff;font-size:24px;cursor:pointer}
         .av-opt:hover,.av-opt:active{background:#fdf2f8;border-color:#f472b6}
         .av-opt.on{border-color:#ec4899;background:#fce7f3}`;
         document.head.appendChild(st);
         const GRAD = ['#6366f1,#8b5cf6', '#ec4899,#f43f5e', '#f59e0b,#f97316', '#10b981,#14b8a6', '#0ea5e9,#6366f1', '#a855f7,#ec4899', '#ef4444,#f59e0b', '#14b8a6,#0ea5e9'];
-        const EMOJIS = ['🦄', '🐱', '🐼', '🦊', '🐶', '🦁', '🐯', '🐰', '🦋', '🐝', '🐬', '🐧', '🌸', '🌻', '🌈', '⭐', '🔥', '💎', '👑', '🎀', '🍓', '🍒', '🚀', '🎯'];
+        const EMOJIS = ['🦄', '🐱', '🐼', '🦊', '🐶', '🦁', '🐯', '🐰', '🦋', '🐝', '🐬', '🐧', '🌸', '🌻', '🌈', '⭐', '🔥', '💎', '👑', '🎀', '🍓', '🍒', '🚀', '🎯',
+            '🐆', '🐺', '🦅', '🦉', '🐘', '🦒', '🦓', '🐻', '🐨', '🦈', '🐙', '🦖', '🐉', '🦜', '🐢', '🐊', '🐎', '🦌', '🐍', '🦔', '🐒', '🦘', '🐋', '🦚'];
         const clean = n => String(n || '').replace(/\(.*?\)/g, '').trim();
         const initials = n => { const w = clean(n).split(/\s+/).filter(Boolean); return ((w[0] || '?').charAt(0) + (w.length > 1 ? w[w.length - 1].charAt(0) : '')).toLocaleUpperCase('tr'); };
         const hash = s => { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; };
@@ -3143,25 +3144,35 @@
             });
             return { dates, people: Object.values(people) };
         }
+        let sk = 'name', sd = 1;
+        window.archSort = function (k) {
+            if (sk === k) sd = -sd; else { sk = k; sd = (k === 'name' || k === 'store') ? 1 : -1; }
+            archPaint();
+        };
         window.archPaint = function () {
             const box = document.getElementById('staff-arch-body'); if (!box || !open) return;
             const { dates, people } = collect();
             const qq = norm(q.trim());
             let list = people.filter(p => !qq || norm(p.name).includes(qq) || norm(p.store).includes(qq));
-            list.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
+            list.forEach(p => {
+                p.tot = 0; p.fire = 0; p.app = 0; p.v = {};
+                dates.forEach(d => { const x = p.d[d]; if (!x) return; const v = m === 'b' ? x.s : x.f; p.v[d] = v; p.tot += v; if (x.fire) p.fire++; p.app += x.a; });
+            });
+            const val = p => sk === 'name' ? p.name : sk === 'store' ? p.store : sk === 'tot' ? p.tot : sk === 'fire' ? p.fire : sk === 'app' ? p.app : (p.v[sk.slice(2)] || 0);
+            list.sort((a, b) => { const x = val(a), y = val(b); const c = typeof x === 'string' ? x.localeCompare(y, 'tr') : (x - y); return (c * sd) || a.name.localeCompare(b.name, 'tr'); });
             const cnt = document.getElementById('staff-arch-count'); if (cnt) cnt.textContent = list.length + ' personel';
             ['b', 'o'].forEach(k => { const b = document.getElementById('arch-m-' + k); if (b) { b.className = 'px-3 py-1.5 rounded-lg border font-black text-xs ' + (m === k ? 'text-white border-transparent' : 'bg-slate-800 text-slate-300 border-slate-600'); b.style.background = m === k ? (k === 'b' ? '#ec4899' : '#8b5cf6') : ''; } });
             if (!dates.length) { box.innerHTML = '<div class="text-xs text-slate-400 p-3">Henüz günlük satış verisi yok.</div>'; return; }
-            const th = 'style="position:sticky;top:0;background:#1e293b;z-index:2"';
-            let h = '<table class="w-full text-[11px] border-collapse"><thead><tr><th ' + th + ' class="text-left px-2 py-1.5 text-slate-300" style="position:sticky;top:0;left:0;z-index:3;background:#1e293b">Personel</th><th ' + th + ' class="text-left px-2 text-slate-400">Mağaza</th>' + dates.map(d => '<th ' + th + ' class="px-1.5 text-slate-300 whitespace-nowrap">' + lbl(d) + '</th>').join('') + '<th ' + th + ' class="px-2 text-teal-300">Toplam</th><th ' + th + ' class="px-1.5">🔥</th><th ' + th + ' class="px-1.5">👏</th></tr></thead><tbody>';
+            const arrow = k => sk === k ? (sd > 0 ? ' ▲' : ' ▼') : '';
+            const th = (k, label, cls, extra) => '<th onclick="archSort(\'' + k + '\')" title="Sırala" class="' + cls + ' cursor-pointer select-none hover:text-white" style="position:sticky;top:0;background:#1e293b;z-index:2;' + (extra || '') + '">' + label + arrow(k) + '</th>';
+            let h = '<table class="w-full text-[11px] border-collapse"><thead><tr>' + th('name', 'Personel', 'text-left px-2 py-1.5 text-slate-300', 'left:0;z-index:3') + th('store', 'Mağaza', 'text-left px-2 text-slate-400') + dates.map(d => th('d:' + d, lbl(d), 'px-1.5 text-slate-300 whitespace-nowrap')).join('') + th('tot', 'Toplam', 'px-2 text-teal-300') + th('fire', '🔥', 'px-1.5') + th('app', '👏', 'px-1.5') + '</tr></thead><tbody>';
             list.forEach(p => {
-                let tot = 0, fire = 0, app = 0;
                 const cells = dates.map(d => {
-                    const x = p.d[d]; if (!x) return '<td class="text-center text-slate-600">·</td>';
-                    const v = m === 'b' ? x.s : x.f; tot += v; if (x.fire) fire++; app += x.a;
+                    const v = p.v[d];
                     return v > 0 ? '<td class="text-center font-black px-1" style="color:' + (m === 'b' ? '#f9a8d4' : '#c4b5fd') + '">' + v + '</td>' : '<td class="text-center text-slate-600">·</td>';
                 }).join('');
-                h += '<tr class="border-t border-slate-700/60 hover:bg-slate-800/60 cursor-pointer" onclick="openStaffProfile(\'' + jsq(p.id) + '\')"><td class="px-2 py-1 font-black text-slate-100 whitespace-nowrap" style="position:sticky;left:0;background:#0f172a">' + esc(p.name) + '</td><td class="px-2 text-slate-400 whitespace-nowrap">' + esc(p.store) + '</td>' + cells + '<td class="text-center font-black text-teal-300 px-2">' + tot + '</td><td class="text-center text-slate-300">' + (fire || '') + '</td><td class="text-center text-slate-300">' + (app || '') + '</td></tr>';
+                const av = window.avatarHtml ? avatarHtml(p.store, p.id, p.name, 22, false) : '';
+                h += '<tr class="border-t border-slate-700/60 hover:bg-slate-800/60 cursor-pointer" onclick="openStaffProfile(\'' + jsq(p.id) + '\')"><td class="px-2 py-1 font-black text-slate-100 whitespace-nowrap" style="position:sticky;left:0;background:#0f172a"><span class="inline-flex items-center gap-2">' + av + esc(p.name) + '</span></td><td class="px-2 text-slate-400 whitespace-nowrap">' + esc(p.store) + '</td>' + cells + '<td class="text-center font-black text-teal-300 px-2">' + p.tot + '</td><td class="text-center text-slate-300">' + (p.fire || '') + '</td><td class="text-center text-slate-300">' + (p.app || '') + '</td></tr>';
             });
             box.innerHTML = h + '</tbody></table>';
         };
@@ -8811,6 +8822,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.40</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.42</div>
 </body>
 </html>
