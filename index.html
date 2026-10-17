@@ -1880,13 +1880,13 @@
             } catch (e) { console.error(e); }
         };
         const MSGS = [
-            (n, s, v) => `🛍️ ${n} (${s}) girdiği son Bonus Pack ile tüm zamanların Güliz Atik bölge rekorunu kırdık! 🏆🎉 Bu hepimizin başarısı! 👏🩵`,
-            (n, s, v) => `🏆🛍️ ${n} (${s}) girdiği son Bonus Pack ile Güliz Atik bölgesi tüm zamanların rekorunu kırdı: günlük ${v} satış! 🚀✨ Bu başarı hepimizin, hepinize teşekkürler! 🥳🩵`,
+            (n, s, v) => `🛍️ ${n} (${s}) girdiği son Bonus Pack ile tüm zamanların Ege bölge rekorunu kırdık! 🏆🎉 Bu hepimizin başarısı! 👏🩵`,
+            (n, s, v) => `🏆🛍️ ${n} (${s}) girdiği son Bonus Pack ile Ege bölgesi tüm zamanların rekorunu kırdı: günlük ${v} satış! 🚀✨ Bu başarı hepimizin, hepinize teşekkürler! 🥳🩵`,
             (n, s, v) => `🥳🛍️ ${n} (${s}) girdiği son Bonus Pack ile tüm zamanların bölge rekoruna imza attık! 🎊 Bu hepimizin ortak başarısı, her mağazaya, her arkadaşımıza sonsuz teşekkürler! 🩵👏🔥`
         ];
         const OMSGS = [
             (b, n, s, v) => `⭐🛍️ ${n} (${s}) girdiği son ${b} ile tüm zamanların ${b} rekorunu kırdık! 🏆🎉 Bu hepimizin başarısı, ${b} satan tüm arkadaşlarımıza teşekkürler! 👏🩵`,
-            (b, n, s, v) => `🎯🛍️ ${n} (${s}) girdiği son ${b} ile ${b} satışında tüm zamanların rekoru kırıldı: günlük ${v} adet! 🚀✨ Bu başarı hepimizin, tebrikler Güliz Atik! 🥳🩵`,
+            (b, n, s, v) => `🎯🛍️ ${n} (${s}) girdiği son ${b} ile ${b} satışında tüm zamanların rekoru kırıldı: günlük ${v} adet! 🚀✨ Bu başarı hepimizin, tebrikler Ege! 🥳🩵`,
             (b, n, s, v) => `🥳⭐ ${n} (${s}) girdiği son ${b} ile ${b} için tüm zamanların rekoruna ulaştık! 🎊 Bu hepimizin ortak başarısı, hepinize sonsuz teşekkürler! 🩵👏🔥`
         ];
         let lastTicks = {}, lastCeleb = 0;
@@ -1902,7 +1902,7 @@
             return isOdak(track) ? OMSGS[v % OMSGS.length](brandOf(track).toLocaleUpperCase('tr'), n, s, v) : MSGS[v % MSGS.length](n, s, v);
         }
         // Rekor kırılınca ekranda tüm WatKo'lar kutlama mesajlarıyla çıkar (her ekranda, ana ekran dahil)
-        const PARTY = ['REKOR! 🏆', 'Harikasınız! 👏', 'Tarih yazdık! 🚀', 'Bravo Güliz Atik! 🩵', 'Hepimizin başarısı! 🙌', 'Güliz Atik bir numara! 🥇', 'Şampiyonlar! 🏅', 'Bravo ekip! 🎉', 'Efsane gün! 🔥', 'Teşekkürler herkese 🩵', 'Alkışlar! 👏👏', 'Rekor kapıdan girdi! ✨'];
+        const PARTY = ['REKOR! 🏆', 'Harikasınız! 👏', 'Tarih yazdık! 🚀', 'Bravo Ege! 🩵', 'Hepimizin başarısı! 🙌', 'Ege bir numara! 🥇', 'Şampiyonlar! 🏅', 'Bravo ekip! 🎉', 'Efsane gün! 🔥', 'Teşekkürler herkese 🩵', 'Alkışlar! 👏👏', 'Rekor kapıdan girdi! ✨'];
         const PMOODS = ['cheer', 'love', 'wink', 'surprised', 'cheer', 'happy'];
         window.recParty = function (title, sub, who) {
             try {
@@ -9024,6 +9024,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.51</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.52</div>
 </body>
 </html>
