@@ -299,6 +299,8 @@
                 <input type="text" id="modal-password-input" name="bb-giris-kodu" inputmode="numeric" pattern="[0-9]*" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" enterkeyhint="go" data-lpignore="true" data-1p-ignore="true" data-form-type="other" style="-webkit-text-security:disc;text-security:disc" class="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-2xl text-center font-black tracking-[0.5em] text-2xl focus:outline-none focus:border-slate-800 transition-colors" placeholder="••••">
                 <button type="button" id="modal-kb-toggle" onclick="toggleModalKeyboard()" class="block mx-auto text-xs font-bold text-slate-400 hover:text-slate-600 py-1 px-3 rounded-lg transition"><i class="fa-regular fa-keyboard mr-1"></i><span id="modal-kb-text">Harfli klavye</span></button>
                 <button type="button" id="modal-submit-btn" class="w-full py-4 bg-slate-800 hover:bg-slate-900 text-white font-black rounded-2xl transition-all shadow-lg active:scale-95 text-lg">Giriş Yap</button>
+                <button type="button" id="modal-bio-btn" onclick="bioLogin()" class="hidden w-full py-3 bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 font-black rounded-2xl transition text-sm"><i class="fa-solid fa-fingerprint mr-2"></i>Parmak izi / yüz ile gir</button>
+                <button type="button" id="modal-bio-forget" onclick="bioForgetHere()" class="hidden block mx-auto text-[11px] font-bold text-slate-400 hover:text-rose-500">Bu cihazdan parmak izini kaldır</button>
             </div>
             <p id="modal-password-error" class="text-rose-500 text-sm font-bold text-center mt-4 hidden bg-rose-50 py-2 rounded-lg"><i class="fa-solid fa-circle-exclamation mr-1"></i> Hatalı şifre! Tekrar deneyin.</p>
         </div>
@@ -668,6 +670,25 @@
             </div>
 
             <div id="central-ann-list" class="space-y-2"></div>
+
+            <!-- PARMAK İZİ / YÜZ İLE GİRİŞ AÇ/KAPAT -->
+            <div class="bg-gradient-to-r from-slate-800 to-slate-900 p-4 rounded-2xl border border-slate-600/60 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between shadow-lg">
+                <div class="min-w-0">
+                    <div class="text-slate-200 font-black text-sm"><i class="fa-solid fa-fingerprint mr-2"></i>PARMAK İZİ / YÜZ İLE GİRİŞ</div>
+                    <div class="text-[11px] text-slate-400 mt-0.5">Şifreyi bilenler (KPI ortak şifre, bölge müdürü, Güliz Atik) ilk girişten sonra şifre yerine parmak iziyle girebilir. Sistem Merkezi girişi kapsam dışıdır.</div>
+                </div>
+                <button type="button" id="bio-btn" onclick="setBio()" class="shrink-0 px-4 py-2 rounded-xl border font-black text-xs transition"></button>
+            </div>
+            <div class="bg-slate-900/70 p-4 rounded-2xl border border-slate-700 -mt-1">
+                <div class="text-slate-300 font-black text-xs mb-2"><i class="fa-solid fa-users mr-1.5"></i>Parmak izi / yüz kullanan kişiler <span class="text-slate-500 font-bold">(cihaz sayısı)</span></div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                    <div class="bg-indigo-950/60 border border-indigo-700/40 rounded-xl py-2"><div id="bio-n-region" class="text-2xl font-black text-indigo-200">0</div><div class="text-[10px] font-bold text-indigo-300/80">Bölge müdürü</div></div>
+                    <div class="bg-emerald-950/60 border border-emerald-700/40 rounded-xl py-2"><div id="bio-n-general" class="text-2xl font-black text-emerald-200">0</div><div class="text-[10px] font-bold text-emerald-300/80">Güliz Atik</div></div>
+                    <div class="bg-violet-950/60 border border-violet-700/40 rounded-xl py-2"><div id="bio-n-kpi" class="text-2xl font-black text-violet-200">0</div><div class="text-[10px] font-bold text-violet-300/80">KPI girişi</div></div>
+                    <div class="bg-slate-800 border border-slate-600 rounded-xl py-2"><div id="bio-n-total" class="text-2xl font-black text-white">0</div><div class="text-[10px] font-bold text-slate-400">Toplam</div></div>
+                </div>
+                <div class="text-[10px] text-slate-500 font-bold mt-2">Bir kişi iki cihaz kurarsa iki sayılır. Sayı, parmak izini açan cihazlardır; kaldıran düşer.</div>
+            </div>
 
             <!-- WEGİ (MASKOT) AÇ/KAPAT -->
             <div class="bg-gradient-to-r from-teal-900 to-slate-800 p-4 rounded-2xl border border-teal-600/50 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between shadow-lg">
@@ -3265,6 +3286,7 @@
         err.classList.add('hidden');
         const btn = document.getElementById('modal-submit-btn');
         btn.disabled = false; btn.innerText = 'Giriş Yap';
+        ['modal-bio-btn', 'modal-bio-forget'].forEach(i => { const x = document.getElementById(i); if (x) x.classList.add('hidden'); });
         document.getElementById('password-modal').classList.remove('hidden');
         setTimeout(() => document.getElementById('modal-password-input').focus(), 100);
     }
@@ -3283,7 +3305,111 @@
         expectedPassword = "";
         passwordSuccessCallback = onSuccess;
         resetModalState(title, desc, iconClass);
+        try { window.bioShow && bioShow(email); } catch (e) {}
     }
+
+
+    // ===== Parmak izi / yüz ile giriş (kolaylık kilidi) =====
+    // Şifre bu cihazda, dışarı alınamayan bir AES anahtarıyla şifreli saklanır; açmak için cihazın parmak izi/yüz/PIN doğrulaması gerekir.
+    // Bu bir sunucu doğrulaması değildir, sadece şifreyi bilenlere kolaylıktır. Sistem Merkezi hesabı kapsam dışıdır.
+    ;(function () {
+        const DBN = 'bb_bio', ST = 'k';
+        let platformOk = false;
+        try { if (window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(v => { platformOk = !!v; }).catch(() => {}); } catch (e) {}
+        const supported = () => !!(window.PublicKeyCredential && navigator.credentials && window.crypto && crypto.subtle && window.indexedDB && window.isSecureContext && platformOk);
+        const settingOn = () => { try { return !(globalData && globalData.settings && globalData.settings.bio === false); } catch (e) { return true; } };
+        const skip = em => { try { return em === ADMIN_EMAILS.central; } catch (e) { return false; } };
+        const rand = n => crypto.getRandomValues(new Uint8Array(n));
+        const idb = () => new Promise((res, rej) => { const r = indexedDB.open(DBN, 1); r.onupgradeneeded = () => r.result.createObjectStore(ST); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+        const idbDo = (mode, fn) => idb().then(db => new Promise((res, rej) => { const tx = db.transaction(ST, mode), out = fn(tx.objectStore(ST)); tx.oncomplete = () => res(out && out.result); tx.onerror = () => rej(tx.error); }));
+        const getRec = em => idbDo('readonly', s => s.get(em));
+        const putRec = (em, v) => idbDo('readwrite', s => s.put(v, em));
+        const delRec = em => idbDo('readwrite', s => s.delete(em));
+        const kindOf = em => { try { return em === ADMIN_EMAILS.region ? 'region' : em === ADMIN_EMAILS.general ? 'general' : em === 'kpi@bonusbag.app' ? 'kpi' : ''; } catch (e) { return ''; } };
+        const devId = () => { let d = ''; try { d = localStorage.getItem('bb_dev') || ''; if (!d) { d = Array.from(rand(9)).map(x => (x % 36).toString(36)).join(''); localStorage.setItem('bb_dev', d); } } catch (e) {} return d || 'anon' + Math.floor(Math.random() * 1e6); };
+        const statSet = em => { try { const k = kindOf(em); if (k && dbRoot) dbRoot.child('bio_devices').child(k).child(devId()).set({ t: Date.now() }).catch(() => {}); } catch (e) {} };
+        const statDel = em => { try { const k = kindOf(em); if (k && dbRoot) dbRoot.child('bio_devices').child(k).child(devId()).remove().catch(() => {}); } catch (e) {} };
+        window.bioForget = em => { try { delRec(em).catch(() => {}); statDel(em); } catch (e) {} };
+        let shownFor = null;
+        window.bioShow = function (email) {
+            shownFor = email;
+            if (!email || skip(email) || !settingOn() || !window.indexedDB) return;
+            getRec(email).then(rec => {
+                if (!rec || shownFor !== email || !supported()) return;
+                try { const k = kindOf(email), g = globalData && globalData.bio_devices; if (k && !(g && g[k] && g[k][devId()])) statSet(email); } catch (e) {}
+                ['modal-bio-btn', 'modal-bio-forget'].forEach(i => { const x = document.getElementById(i); if (x) x.classList.remove('hidden'); });
+                setTimeout(() => { const m = document.getElementById('password-modal'); if (m && !m.classList.contains('hidden') && shownFor === email) bioLogin(true); }, 250);
+            }).catch(() => {});
+        };
+        window.bioLogin = function (auto) {
+            const em = shownFor; if (!em) return;
+            const err = document.getElementById('modal-password-error');
+            getRec(em).then(rec => {
+                if (!rec) throw new Error('none');
+                return navigator.credentials.get({ publicKey: { challenge: rand(32), allowCredentials: [{ type: 'public-key', id: rec.id }], userVerification: 'required', timeout: 60000 } })
+                    .then(() => crypto.subtle.decrypt({ name: 'AES-GCM', iv: rec.iv }, rec.key, rec.ct));
+            }).then(buf => {
+                const inp = document.getElementById('modal-password-input');
+                inp.value = new TextDecoder().decode(buf);
+                window.__bioTry = true;
+                verifyPassword();
+            }).catch(() => {
+                if (auto === true) return;   // otomatik denemede sessiz kal, şifre yazılabilir
+                if (err) { err.innerHTML = '<i class="fa-solid fa-fingerprint mr-1"></i> Parmak izi doğrulanamadı. Şifrenizi yazarak girebilirsiniz.'; err.classList.remove('hidden'); }
+            });
+        };
+        window.bioForgetHere = function () {
+            if (!shownFor) return;
+            if (!confirm('Bu cihazdaki parmak izi / yüz girişi kaldırılsın mı? Sonraki girişte şifre yazarsınız.')) return;
+            bioForget(shownFor);
+            ['modal-bio-btn', 'modal-bio-forget'].forEach(i => { const x = document.getElementById(i); if (x) x.classList.add('hidden'); });
+        };
+        window.bioOffer = function (email, pass) {
+            try {
+                if (!email || !pass || skip(email) || !settingOn() || !supported()) return;
+                let no = []; try { no = JSON.parse(localStorage.getItem('bb_bio_no') || '[]'); } catch (e) {}
+                if (no.indexOf(email) >= 0) return;
+                getRec(email).then(rec => {
+                    if (rec) return;
+                    if (!confirm('Bir sonraki girişte şifre yerine parmak izi / yüz tanıma kullanılsın mı?\n\nŞifre bu cihazda şifrelenmiş saklanır. Girişte cihazınızın parmak izi veya yüz doğrulaması istenir.')) {
+                        no.push(email); try { localStorage.setItem('bb_bio_no', JSON.stringify(no)); } catch (e) {}
+                        return;
+                    }
+                    return navigator.credentials.create({ publicKey: {
+                        challenge: rand(32), rp: { name: 'W•EGE' },
+                        user: { id: rand(16), name: email, displayName: 'W•EGE giriş' },
+                        pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+                        authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'discouraged' },
+                        timeout: 60000, attestation: 'none'
+                    } }).then(cred => crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']).then(key => {
+                        const iv = rand(12);
+                        return crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(pass)).then(ct => putRec(email, { id: cred.rawId, key, iv, ct }).then(() => statSet(email)));
+                    })).then(() => alert('Tamam! Bir sonraki girişte parmak izi / yüz sorulacak.'));
+                }).catch(() => {});
+            } catch (e) {}
+        };
+        // Sistem Merkezi ayarı
+        window.setBio = function () {
+            if (!window.__DEMO && currentRole !== 'central') return alert('Bu ayar için Sistem Merkezi girişi gerekir.');
+            const next = !settingOn();
+            if (!confirm(next ? 'Parmak izi / yüz ile giriş herkes için açılsın mı?' : 'Parmak izi / yüz ile giriş kapatılsın mı? Şifre yazarak girilir.')) return;
+            try { const pr = dbRoot.child('settings').update({ bio: next }); if (pr && pr.catch) pr.catch(() => alert('Kaydedilemedi. database.rules.json dosyasının son halini Firebase Rules bölümünde yayınladınız mı?')); } catch (e) { alert('Kaydedilemedi.'); }
+        };
+        window.bioPaint = function () {
+            const b = document.getElementById('bio-btn'); if (!b) return;
+            const on = settingOn();
+            b.className = 'shrink-0 px-4 py-2 rounded-xl border font-black text-xs transition ' + (on ? 'bg-emerald-500 text-white border-emerald-300 shadow-lg' : 'bg-slate-800 text-slate-300 border-slate-600 hover:bg-slate-700');
+            b.textContent = on ? '🔐 Parmak izi AÇIK' : '🔓 Parmak izi KAPALI';
+            try {
+                const g = (globalData && globalData.bio_devices) || {};
+                const n = k => Object.keys(g[k] || {}).length;
+                const set = (id, v) => { const x = document.getElementById(id); if (x) x.textContent = v; };
+                set('bio-n-region', n('region')); set('bio-n-general', n('general')); set('bio-n-kpi', n('kpi'));
+                set('bio-n-total', n('region') + n('general') + n('kpi'));
+            } catch (e) {}
+        };
+        setInterval(() => { try { bioPaint(); } catch (e) {} }, 1500);
+    })();
 
     window.closePasswordModal = function() {
         document.getElementById('password-modal').classList.add('hidden');
@@ -3329,7 +3455,8 @@
                 const flipped = (f0 === f0.toUpperCase() ? f0.toLowerCase() : f0.toUpperCase()) + trimmed.slice(1);
                 if (variants.indexOf(flipped) < 0) variants.push(flipped);
             }
-            const tryLogin = i => auth.signInWithEmailAndPassword(authModalEmail, variants[i]).catch(err => {
+            const em = authModalEmail; let usedIdx = 0;
+            const tryLogin = i => auth.signInWithEmailAndPassword(authModalEmail, variants[i]).then(r => { usedIdx = i; return r; }).catch(err => {
                 const c = (err && err.code) || '';
                 if (i + 1 < variants.length && /^auth\/(wrong-password|invalid-credential|invalid-login-credentials)$/.test(c)) return tryLogin(i + 1);
                 throw err;
@@ -3355,14 +3482,17 @@
                 loginDone = true; clearTimeout(loginTimer);
                 window.loginLockReset();
                 const cb = passwordSuccessCallback;
+                const viaBio = !!window.__bioTry; window.__bioTry = false;
                 closePasswordModal();
                 if (cb) cb();
+                if (!viaBio) { try { setTimeout(() => window.bioOffer && bioOffer(em, variants[usedIdx]), 700); } catch (e) {} }
             }).catch(err => {
                 if (loginDone && !(err && err.code)) return;
                 loginDone = true; clearTimeout(loginTimer);
                 btn.disabled = false; btn.innerText = 'Giriş Yap';
                 const code = (err && err.code) || '';
-                if (/^auth\/(wrong-password|invalid-credential|invalid-login-credentials)$/.test(code)) window.loginLockFail();
+                if (/^auth\/(wrong-password|invalid-credential|invalid-login-credentials)$/.test(code)) { window.loginLockFail(); if (window.__bioTry && window.bioForget) bioForget(em); }
+                window.__bioTry = false;
                 let msg = MODAL_ERR_DEFAULT;
                 if (code === 'auth/too-many-requests') msg = '<i class="fa-solid fa-hourglass-half mr-1"></i> Çok fazla hatalı deneme. Lütfen birkaç dakika bekleyin.';
                 else if (code === 'auth/network-request-failed') msg = '<i class="fa-solid fa-wifi mr-1"></i> Bağlantı hatası. İnternetinizi kontrol edin.';
@@ -8227,6 +8357,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.27</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.29</div>
 </body>
 </html>
