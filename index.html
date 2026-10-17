@@ -2973,15 +2973,17 @@
         const isMerkez = () => window.__DEMO || currentRole === 'central';
         const norm = s => String(s == null ? '' : s).toLocaleLowerCase('tr').replace(/ı/g, 'i').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
         const numOf = s => { let t = String(s == null ? '' : s).trim().replace(/\s/g, ''); if (!t) return null; if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, ''); t = t.replace(',', '.'); if (!/^-?\d+(\.\d+)?$/.test(t)) return null; const v = Math.round(parseFloat(t)); return v >= 0 ? v : null; };
-        const parseDate = c => { c = String(c || '').trim(); let m = c.match(/^(20\d\d)[-./](\d{1,2})[-./](\d{1,2})(?:[ T].*)?$/); if (m) return m[1] + '-' + pad(m[2]) + '-' + pad(m[3]); m = c.match(/^(\d{1,2})[./-](\d{1,2})(?:[./-](\d{2,4}))?(?:\s.*)?$/); if (m) { const y = m[3] ? (m[3].length === 2 ? '20' + m[3] : m[3]) : HIST_START.slice(0, 4); return y + '-' + pad(m[2]) + '-' + pad(m[1]); } return null; };
+        const MON = { oca: 1, sub: 2, mar: 3, nis: 4, may: 5, haz: 6, tem: 7, agu: 8, eyl: 9, eki: 10, kas: 11, ara: 12 };
+        const parseDate = c => { c = String(c || '').trim(); { const mm = c.match(/^(\d{1,2})\s*[.\-\/ ]\s*([^\d\s.\-\/]{3,})\.?(?:\s*[.\-\/ ]\s*(\d{2,4}))?$/); if (mm) { const mo = MON[norm(mm[2]).slice(0, 3)]; if (mo) { const y = mm[3] ? (mm[3].length === 2 ? '20' + mm[3] : mm[3]) : HIST_START.slice(0, 4); return y + '-' + pad(mo) + '-' + pad(mm[1]); } } } let m = c.match(/^(20\d\d)[-./](\d{1,2})[-./](\d{1,2})(?:[ T].*)?$/); if (m) return m[1] + '-' + pad(m[2]) + '-' + pad(m[3]); m = c.match(/^(\d{1,2})[./-](\d{1,2})(?:[./-](\d{2,4}))?(?:\s.*)?$/); if (m) { const y = m[3] ? (m[3].length === 2 ? '20' + m[3] : m[3]) : HIST_START.slice(0, 4); return y + '-' + pad(m[2]) + '-' + pad(m[1]); } return null; };
         const storeIdx = () => allStoresList.map(s => { const i = s.name.indexOf('-'); return { name: s.name, full: norm(s.name), only: norm(i >= 0 ? s.name.slice(i + 1) : s.name), code: i >= 0 ? s.name.slice(0, i).trim() : '' }; });
-        function matchStore(cells, idx) {
-            for (let k = 0; k < Math.min(3, cells.length); k++) {
+        function matchStore(cells, idx, skip) {
+            const cand = []; for (let k = 0; k < Math.min(8, cells.length); k++) if (!(skip && skip[k])) cand.push(k);
+            for (const k of cand) {
                 const c = String(cells[k] || '').trim(); if (!c) continue; const n = norm(c);
                 const hit = idx.find(s => s.full === n || (n.length > 2 && s.only === n) || (/^\d+$/.test(c) && s.code === c));
                 if (hit) return { s: hit.name, col: k };
             }
-            for (let k = 0; k < Math.min(3, cells.length); k++) {
+            for (const k of cand) {
                 const n = norm(cells[k]); if (n.length < 5 || numOf(cells[k]) != null) continue;
                 const hits = idx.filter(s => s.only.includes(n) || n.includes(s.only)); if (hits.length === 1) return { s: hits[0].name, col: k };
             }
@@ -2994,8 +2996,8 @@
             for (let i = 0; i < Math.min(rows.length, 5); i++) { const ds = rows[i].map(parseDate); if (ds.filter(Boolean).length >= 2) { colDate = ds; start = i + 1; break; } }
             const hd = histDates();
             for (let r = start; r < rows.length; r++) {
-                const cells = rows[r], mt = matchStore(cells, idx);
-                if (!mt) { const nm = String(cells[0] || cells[1] || '').trim(); if (nm && numOf(nm) == null) out.unmatched.push(nm); continue; }
+                const cells = rows[r], skip = colDate ? colDate.map(Boolean) : null, mt = matchStore(cells, idx, skip);
+                if (!mt) { const nm = cells.slice(0, 8).map((c, ci) => (skip && skip[ci]) ? '' : String(c || '').trim()).filter(Boolean).join(' ').slice(0, 40); if (nm) out.unmatched.push(nm); continue; }
                 const put = (d, v) => { if (v == null) return; if (!d || d < HIST_START || d > HIST_END) { out.badDates++; return; } out.cells.push({ store: mt.s, date: d, v }); out.stores.add(mt.s); };
                 if (colDate) cells.forEach((c, ci) => { if (ci !== mt.col && colDate[ci]) put(colDate[ci], numOf(c)); });
                 else { const nums = cells.slice(mt.col + 1).map(numOf); nums.forEach((v, i) => put(hd[i], v)); }
@@ -8656,6 +8658,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.36</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.37</div>
 </body>
 </html>
