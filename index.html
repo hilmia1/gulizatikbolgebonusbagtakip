@@ -4367,6 +4367,7 @@
             if (!t) return alert('Şu an yağışlı lokasyon yok.');
             window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank');
         };
+        window.wxToggle = function () { try { lsSet('bb_wx_open', lsGet('bb_wx_open') === '1' ? '0' : '1'); } catch (e) {} wxPaint(); };
         window.wxPaint = function () {
             const hosts = document.querySelectorAll ? document.querySelectorAll('.wx-host') : [];
             Array.prototype.forEach.call(hosts, h => {
@@ -4387,9 +4388,14 @@
                         r.map(x => x.stores.map(s => escHtml(s.replace(/^\d+-/, ''))).join(', ')).join(', ') + '</div>';
                 } else {
                     const n = r.reduce((a, x) => a + x.stores.length, 0);
-                    html = '<div class="bg-sky-50 border border-sky-200 rounded-2xl p-3"><div class="flex flex-wrap items-center justify-between gap-2 mb-1"><div class="font-black text-sky-900 text-sm">🌧️ YAĞIŞ RAPORU: ' + r.length + ' lokasyon, ' + n + ' mağaza</div>' +
-                        '<button type="button" onclick="wxRainShare()" class="px-3 py-1 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-lg text-xs"><i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp</button></div>' +
-                        r.map(x => '<div class="text-xs text-slate-700 mt-1"><span class="font-black text-sky-900">' + escHtml(x.city) + '</span> <span class="text-sky-700 font-bold">(' + escHtml(x.kind) + ', ' + Math.round(x.w.t) + '°)</span>: ' + x.stores.map(s => escHtml(s)).join(', ') + '</div>').join('') + '</div>';
+                    const open = lsGet('bb_wx_open') === '1';
+                    html = '<div class="bg-sky-50 border border-sky-200 rounded-2xl p-3"><div class="flex items-center justify-between gap-2">' +
+                        '<button type="button" onclick="wxToggle()" aria-expanded="' + open + '" class="flex-1 min-w-0 flex items-center gap-2 text-left">' +
+                        '<i class="fa-solid fa-chevron-down text-sky-700 text-xs shrink-0 transition-transform" style="transform:rotate(' + (open ? 180 : 0) + 'deg)"></i>' +
+                        '<span class="min-w-0"><span class="block font-black text-sky-900 text-sm">🌧️ YAĞIŞ RAPORU: ' + r.length + ' lokasyon, ' + n + ' mağaza</span>' +
+                        (open ? '' : '<span class="block text-[11px] font-bold text-sky-700/80 truncate">' + r.map(x => escHtml(x.city)).join(', ') + ' · görmek için dokun</span>') + '</span></button>' +
+                        '<button type="button" onclick="wxRainShare()" class="shrink-0 px-3 py-1 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-lg text-xs"><i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp</button></div>' +
+                        (open ? '<div class="mt-1">' + r.map(x => '<div class="text-xs text-slate-700 mt-1"><span class="font-black text-sky-900">' + escHtml(x.city) + '</span> <span class="text-sky-700 font-bold">(' + escHtml(x.kind) + ', ' + Math.round(x.w.t) + '°)</span>: ' + x.stores.map(s => escHtml(s)).join(', ') + '</div>').join('') + '</div>' : '') + '</div>';
                 }
                 h.innerHTML = html;
             });
@@ -9013,6 +9019,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.49</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.50</div>
 </body>
 </html>
