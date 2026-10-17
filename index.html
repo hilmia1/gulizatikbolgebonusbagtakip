@@ -827,6 +827,24 @@
                 <button type="button" id="wegi-btn" onclick="setWegi()" class="shrink-0 px-4 py-2 rounded-xl border font-black text-xs transition"></button>
             </div>
 
+            <!-- SATIŞ BANDI / REKOR KUTLAMASI AÇ/KAPAT -->
+            <div class="bg-gradient-to-r from-cyan-950 to-slate-800 p-4 rounded-2xl border border-cyan-700/50 shadow-lg space-y-3">
+                <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+                    <div class="min-w-0">
+                        <div class="text-cyan-100 font-black text-sm"><i class="fa-solid fa-bullhorn mr-2"></i>SON SATIŞ BANDI</div>
+                        <div class="text-[11px] text-slate-300 mt-0.5">Her Bonus Pack girişinden sonra üstte 15 dakika "kim girdi" bandı gösterilir. Varsayılan olarak <b>kapalıdır</b>.</div>
+                    </div>
+                    <button type="button" id="opt-saleBand-btn" onclick="setCelebOpt('saleBand')" class="shrink-0 px-4 py-2 rounded-xl border font-black text-xs transition"></button>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between border-t border-cyan-800/50 pt-3">
+                    <div class="min-w-0">
+                        <div class="text-cyan-100 font-black text-sm"><i class="fa-solid fa-trophy mr-2"></i>REKOR KUTLAMASI</div>
+                        <div class="text-[11px] text-slate-300 mt-0.5">Rekor kırılınca çıkan kutlama kartı, WatKo şeridi, rekor şeridi, altın ışık ve ses. Kapalıyken yalnızca rekor sayacı kartı görünür.</div>
+                    </div>
+                    <button type="button" id="opt-recParty-btn" onclick="setCelebOpt('recParty')" class="shrink-0 px-4 py-2 rounded-xl border font-black text-xs transition"></button>
+                </div>
+            </div>
+
             <!-- ODAK ÜRÜN YÖNETİMİ -->
             <div class="bg-purple-900/80 p-4 rounded-2xl border border-purple-700/50 flex flex-col sm:flex-row gap-3 items-center shadow-lg mt-2">
                 <div class="flex items-center gap-2 text-purple-300 font-black whitespace-nowrap">
@@ -2059,6 +2077,7 @@
                 const bar = document.getElementById('sale-bar'), tx = document.getElementById('sale-bar-text');
                 if (!bar || !tx) return;
                 clearTimeout(saleTimer);
+                if (!window.saleBandOn || !saleBandOn()) { bar.classList.add('hidden'); return; }
                 const l = globalData && globalData.records && globalData.records.last;
                 const t = l ? Number(l.time) : 0;
                 const age = Math.max(0, Date.now() + srvOff - t);
@@ -2076,6 +2095,7 @@
         }
         window.saleBarWrite = function (staffId, change) {
             try {
+                if (!window.saleBandOn || !saleBandOn()) return;      // band kapalıyken kayıt da yazılmaz
                 if (typeof isStoreHistorical !== 'undefined' && isStoreHistorical) return;
                 const last = globalData.records && globalData.records.last;
                 const ref = dbRoot.child('records').child('last');
@@ -2099,6 +2119,12 @@
                     if (ev) events.push({ track: tr, ev });
                     html += cardHtml(tr, st);
                 });
+                if (window.recPartyOn && !recPartyOn()) {          // kutlama kapalı: kart, şerit, ışık, ses çıkmaz; sadece sayaç kartı kalır
+                    events.length = 0; partyUntil = 0;
+                    const ov = document.querySelector('.rp-ov'); if (ov) ov.remove();
+                    const sp = document.querySelector('.rp-strip'); if (sp) sp.remove();
+                    clearInterval(stripRot); clearTimeout(stripTimer);
+                }
                 paintBar(events);
                 saleBarPaint();
                 let minRem = Infinity;
@@ -2803,6 +2829,25 @@
         setTimeout(() => { try { mascotPaint(); } catch (e) {} }, 300);
         setInterval(() => { try { mascotPaint(); } catch (e) {} }, 600000);
     } catch (e) { console.error('Maskot kurulamadı', e); } })();
+
+    // === Son satış bandı ve rekor kutlaması: Sistem Merkezi'nden aç/kapat (settings.saleBand: varsayılan KAPALI, settings.recParty: varsayılan AÇIK) ===
+    window.saleBandOn = function () { try { return !!(globalData && globalData.settings && globalData.settings.saleBand === true); } catch (e) { return false; } };
+    window.recPartyOn = function () { try { return !(globalData && globalData.settings && globalData.settings.recParty === false); } catch (e) { return true; } };
+    window.setCelebOpt = function (key) {
+        if (!window.__DEMO && currentRole !== 'central') return alert('Bu ayar için Sistem Merkezi girişi gerekir.');
+        const cur = key === 'saleBand' ? saleBandOn() : recPartyOn();
+        const name = key === 'saleBand' ? 'Son satış bandı' : 'Rekor kutlaması';
+        if (!confirm(name + (cur ? ' herkes için kapatılsın mı?' : ' herkes için açılsın mı?'))) return;
+        try {
+            const o = {}; o[key] = !cur;
+            const pr = dbRoot.child('settings').update(o);
+            if (pr && pr.catch) pr.catch(() => alert('Kaydedilemedi. database.rules.json dosyasının son halini Firebase Rules bölümünde yayınladınız mı?'));
+        } catch (e) { alert('Kaydedilemedi.'); }
+    };
+    (function () {
+        const paintOpt = (key, on, onTxt, offTxt) => { const b = document.getElementById('opt-' + key + '-btn'); if (!b) return; b.className = 'shrink-0 px-4 py-2 rounded-xl border font-black text-xs transition ' + (on ? 'bg-emerald-500 text-white border-emerald-300 shadow-lg' : 'bg-slate-800 text-slate-300 border-slate-600 hover:bg-slate-700'); b.textContent = on ? onTxt : offTxt; };
+        setInterval(() => { try { paintOpt('saleBand', saleBandOn(), '🛍️ Band AÇIK', '🚫 Band KAPALI'); paintOpt('recParty', recPartyOn(), '🏆 Kutlama AÇIK', '🚫 Kutlama KAPALI'); } catch (e) {} }, 1500);
+    })();
 
     // === Wegi'yi Sistem Merkezi'nden aç/kapat (ayar: settings.wegi, yoksa açık) ===
     window.wegiOn = function () { try { return !(globalData && globalData.settings && globalData.settings.wegi === false); } catch (e) { return true; } };
@@ -9109,6 +9154,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.57</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.58</div>
 </body>
 </html>
