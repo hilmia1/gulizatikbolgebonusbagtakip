@@ -77,7 +77,10 @@
     #rec-theme[data-s="4"] { box-shadow: inset 0 0 160px 32px rgba(220,38,38,.62); animation: rtGlow .56s ease-in-out infinite; }
     #rec-theme[data-s="g"] { box-shadow: inset 0 0 130px 18px rgba(250,204,21,.55); animation: rtGlow 2.4s ease-in-out infinite; }
     @keyframes rtGlow { 0%,100% { opacity: .55; } 12% { opacity: 1; } 24% { opacity: .6; } 38% { opacity: .92; } 55% { opacity: .55; } }
-    body.kpi-mode #rec-theme, body.kpi-mode .rp-strip { display: none !important; }
+    body.kpi-mode #rec-theme, body.kpi-mode .rp-strip, body.kpi-mode #sale-bar { display: none !important; }
+    @keyframes sbPop { 0% { transform: translateY(-100%); opacity: 0; } 60% { transform: translateY(4%); opacity: 1; } 100% { transform: none; } }
+    #sale-bar.sb-pop { animation: sbPop .5s ease-out both; }
+    @media (prefers-reduced-motion: reduce) { #sale-bar.sb-pop { animation: none; } }
     /* kutlamadan sonra 5 dakika ekranın altında kalan WatKo'lar (tıklamayı engellemez) */
     .rp-strip { position: fixed; left: 0; right: 0; bottom: 0; z-index: 99950; display: flex; justify-content: space-around; align-items: flex-end; padding: 0 4px 2px; pointer-events: none; background: linear-gradient(to top, rgba(88,28,135,.35), transparent); animation: rpIn .6s ease-out both; }
     .rp-strip .rp-sc { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; min-width: 0; flex: 1 1 0; }
@@ -324,6 +327,11 @@
             <span id="record-bar-text"></span>
             <i class="fa-solid fa-trophy text-yellow-300 animate-pulse"></i>
         </div>
+    </div>
+
+    <!-- 🛍️ SON BONUS PACK ŞERİDİ (15 dakika) -->
+    <div id="sale-bar" class="hidden bg-gradient-to-r from-teal-500 to-cyan-600 text-white py-1.5 px-3 text-xs sm:text-sm font-black tracking-wide text-center shadow-md sticky z-[57]" style="top:0" role="status">
+        <span id="sale-bar-text"></span>
     </div>
 
     <!-- ÖZEL ŞİFRE MODALI -->
@@ -1867,14 +1875,14 @@
             } catch (e) { console.error(e); }
         };
         const MSGS = [
-            (n, s, v) => `🎉 YENİ BÖLGE REKORU! Günlük ${v} satışa ulaştık! Rekoru kıran satışı giren: ${n} (${s}). Tüm Güliz Atik bölgemizi kutluyoruz, hepinizle gurur duyuyoruz! 👏🏆`,
-            (n, s, v) => `🏆 REKOR KIRILDI! ${v} satışla bölge tarihinin en iyi günü yaşanıyor. Rekor satışı ${n} (${s}) girdi. Tüm ekibimize teşekkürler, bu başarı hepimizin! 🚀🎊`,
-            (n, s, v) => `🥳 BÖLGE REKORU YENİLENDİ: ${v}! Rekoru getiren satış ${n} (${s}) tarafından girildi. Güliz Atik bölgesinin her mağazasına, her arkadaşımıza sonsuz teşekkürler! 💜👏`
+            (n, s, v) => `🛍️ ${n} (${s}) girdiği son Bonus Pack ile tüm zamanların Güliz Atik bölge rekorunu kırdık! 🏆🎉 Bu hepimizin başarısı! 👏🩵`,
+            (n, s, v) => `🏆🛍️ ${n} (${s}) girdiği son Bonus Pack ile Güliz Atik bölgesi tüm zamanların rekorunu kırdı: günlük ${v} satış! 🚀✨ Bu başarı hepimizin, hepinize teşekkürler! 🥳🩵`,
+            (n, s, v) => `🥳🛍️ ${n} (${s}) girdiği son Bonus Pack ile tüm zamanların bölge rekoruna imza attık! 🎊 Bu hepimizin ortak başarısı, her mağazaya, her arkadaşımıza sonsuz teşekkürler! 🩵👏🔥`
         ];
         const OMSGS = [
-            (b, n, s, v) => `⭐ ${b} REKORU KIRILDI! Günlük ${v} adetle bölge rekoru yenilendi. Rekoru getiren satış: ${n} (${s}). ${b} satan tüm arkadaşlarımızı kutluyoruz! 👏🔥`,
-            (b, n, s, v) => `🎯 ${b} İÇİN YENİ REKOR: ${v} adet! Rekor satışı ${n} (${s}) girdi. Odak ürün ekibimize, tüm bölgeye teşekkürler! 🚀`,
-            (b, n, s, v) => `🥳 ${b} SATIŞINDA REKOR! Bugün ${v} adede ulaştık, rekoru ${n} (${s}) getirdi. Hepinizi tebrik ederiz, harikasınız! 💜🏆`
+            (b, n, s, v) => `⭐🛍️ ${n} (${s}) girdiği son ${b} ile tüm zamanların ${b} rekorunu kırdık! 🏆🎉 Bu hepimizin başarısı, ${b} satan tüm arkadaşlarımıza teşekkürler! 👏🩵`,
+            (b, n, s, v) => `🎯🛍️ ${n} (${s}) girdiği son ${b} ile ${b} satışında tüm zamanların rekoru kırıldı: günlük ${v} adet! 🚀✨ Bu başarı hepimizin, tebrikler Güliz Atik! 🥳🩵`,
+            (b, n, s, v) => `🥳⭐ ${n} (${s}) girdiği son ${b} ile ${b} için tüm zamanların rekoruna ulaştık! 🎊 Bu hepimizin ortak başarısı, hepinize sonsuz teşekkürler! 🩵👏🔥`
         ];
         let lastTicks = {}, lastCeleb = 0;
         function activeEvent(track, st) {
@@ -1889,7 +1897,7 @@
             return isOdak(track) ? OMSGS[v % OMSGS.length](brandOf(track).toLocaleUpperCase('tr'), n, s, v) : MSGS[v % MSGS.length](n, s, v);
         }
         // Rekor kırılınca ekranda tüm WatKo'lar kutlama mesajlarıyla çıkar (her ekranda, ana ekran dahil)
-        const PARTY = ['REKOR! 🏆', 'Harikasınız! 👏', 'Tarih yazdık! 🚀', 'Gurur duyuyoruz 💜', 'Hepimizin başarısı! 🙌', 'Güliz Atik bir numara! 🥇', 'Şampiyonlar! 🏅', 'Bravo ekip! 🎉', 'Efsane gün! 🔥', 'Teşekkürler herkese 💚', 'Alkışlar! 👏👏', 'Rekor kapıdan girdi! ✨'];
+        const PARTY = ['REKOR! 🏆', 'Harikasınız! 👏', 'Tarih yazdık! 🚀', 'Bravo Güliz Atik! 🩵', 'Hepimizin başarısı! 🙌', 'Güliz Atik bir numara! 🥇', 'Şampiyonlar! 🏅', 'Bravo ekip! 🎉', 'Efsane gün! 🔥', 'Teşekkürler herkese 🩵', 'Alkışlar! 👏👏', 'Rekor kapıdan girdi! ✨'];
         const PMOODS = ['cheer', 'love', 'wink', 'surprised', 'cheer', 'happy'];
         window.recParty = function (title, sub, who) {
             try {
@@ -1982,7 +1990,7 @@
                     try {
                         const tr1 = events[0].track, v1 = Number(top1.value) || 0;
                         const nm1 = isOdak(tr1) ? brandOf(tr1).toLocaleUpperCase('tr') + ' REKORU!' : 'YENİ BÖLGE REKORU!';
-                        recParty(nm1, 'Günlük ' + v1 + ' ' + (isOdak(tr1) ? 'adet' : 'satış') + (top1.staffName ? ' • Rekoru getiren: ' + cleanText(top1.staffName) : ''), top1.staffName);
+                        recParty(nm1, evText(tr1, top1), top1.staffName);
                     } catch (e) {}
                 }
             }
@@ -2019,6 +2027,44 @@
                         <div class="text-[10px] font-bold text-fuchsia-200 mt-1">${remaining <= 1 ? 'Son 1 ' + unit + ', rekor kapıda! 🚀' : (remaining <= 10 ? 'Çok az kaldı, hadi bölge! 💪' : 'Her ' + unit + ' rekora bir adım daha yaklaştırıyor.')}</div>
                     </div></div>`;
         }
+        // ===== Son Bonus Pack şeridi: satışı giren personelin adı 2 dakika üst bantta görünür =====
+        const SALE_MS = 15 * 60 * 1000;
+        let srvOff = 0, saleTimer = 0, saleSeenT = 0;
+        try { db.ref('.info/serverTimeOffset').on('value', sn => { srvOff = Number(sn.val()) || 0; saleBarPaint(); }); } catch (e) {}
+        function saleBarPaint() {
+            try {
+                const bar = document.getElementById('sale-bar'), tx = document.getElementById('sale-bar-text');
+                if (!bar || !tx) return;
+                clearTimeout(saleTimer);
+                const l = globalData && globalData.records && globalData.records.last;
+                const t = l ? Number(l.time) : 0;
+                const age = Math.max(0, Date.now() + srvOff - t);
+                if (!l || !(t > 0) || age >= SALE_MS || !l.name) { bar.classList.add('hidden'); return; }
+                try {   // bu satış rekoru kırdıysa rekor şeridi zaten anlatıyor, aynı şeyi iki kez yazma
+                    const rb = document.getElementById('record-bar'), ev = evGet('region');
+                    if (rb && !rb.classList.contains('hidden') && ev && String(ev.staffId) === String(l.staffId) && ev.store === l.store && Math.abs((Number(ev.time) || 0) - t) < 60000) { bar.classList.add('hidden'); return; }
+                } catch (e) {}
+                const nm = cleanText(l.name), st = String(l.store || '').replace(/^\d+-/, '');
+                tx.textContent = '🛍️ ' + nm + (st ? ' (' + st + ')' : '') + ' az önce Bonus Pack girdi! 🩵';
+                bar.classList.remove('hidden');
+                if (t !== saleSeenT) { saleSeenT = t; bar.classList.remove('sb-pop'); void bar.offsetWidth; bar.classList.add('sb-pop'); }
+                saleTimer = setTimeout(saleBarPaint, SALE_MS - age + 400);
+            } catch (e) { console.error(e); }
+        }
+        window.saleBarWrite = function (staffId, change) {
+            try {
+                if (typeof isStoreHistorical !== 'undefined' && isStoreHistorical) return;
+                const last = globalData.records && globalData.records.last;
+                const ref = dbRoot.child('records').child('last');
+                if (change > 0) {
+                    let nm = '';
+                    try { nm = (globalData.master_staff && globalData.master_staff[currentId] && globalData.master_staff[currentId][staffId] && globalData.master_staff[currentId][staffId].name) || findStaffNameGlobal(staffId) || ''; } catch (e) {}
+                    ref.set({ name: cleanText(nm).slice(0, 60) || 'Bir arkadaşımız', store: currentId, staffId: String(staffId), date: ACTIVE_DATE, time: firebase.database.ServerValue.TIMESTAMP }).catch(() => {});
+                } else if (last && last.store === currentId && String(last.staffId) === String(staffId)) {
+                    ref.remove().catch(() => {});      // satış geri alındıysa şerit kalksın
+                }
+            } catch (e) { console.error(e); }
+        };
         window.recPaint = function () {
             try {
                 const hosts = document.querySelectorAll('.rec-host');
@@ -2031,6 +2077,7 @@
                     html += cardHtml(tr, st);
                 });
                 paintBar(events);
+                saleBarPaint();
                 let minRem = Infinity;
                 tracks().forEach(tr => { const st = recState(tr); if (st.prior > 0 && st.today <= st.prior && st.today >= st.prior * SHOW_AT) minRem = Math.min(minRem, st.prior - st.today + 1); });
                 curStage = minRem === Infinity ? 0 : stageOf(minRem);
@@ -3342,7 +3389,7 @@
     // ===== Duyuru şeritleri ve üst başlık: yapışma mesafelerini görünen şeritlere göre hesapla =====
     // (Eskiden Güliz Atik şeridi sabit 42px'e yapışıyordu; Merkez şeridi yokken başlığın üstüne biniyordu.)
     ;(function barLayoutInit() { try {
-        const ids = ['central-announcement-bar', 'global-announcement-bar', 'record-bar'];
+        const ids = ['central-announcement-bar', 'global-announcement-bar', 'record-bar', 'sale-bar'];
         const run = () => {
             let y = 0;
             ids.forEach(id => {
@@ -5233,6 +5280,7 @@
         const recBefore = window.recState ? recState().today : 0;
         dbRoot.child('daily').child(ACTIVE_DATE).child(currentId).child('staff').child(id).update({ sales: next });
         if (change > 0 && window.recOnSale) recOnSale('region', id, recBefore, next - current);
+        try { if (window.saleBarWrite) saleBarWrite(id, next - current); } catch (e) {}
 
         if (!isStoreHistorical) {
             let h = new Date().getHours();
@@ -8965,6 +9013,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.45</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.49</div>
 </body>
 </html>
