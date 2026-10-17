@@ -1819,6 +1819,7 @@
         const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
         const CELEB_MS = 3 * 3600 * 1000;      // kutlama şeridi bu süre boyunca görünür
         const SHOW_AT = 0.8;                   // rekorun %80'ine gelince sayaç belirir
+        const PARTY_MAX = 10;                  // rekor kırıldıktan sonra kutlama + şerit, kırılıştan itibaren bu kadar satış için çıkar; sonra sadece sayaç (+N) devam eder
         // iz (track): 'region' = bölge toplamı, 'odak:MARKA' = odak ürün
         const isOdak = t => t.indexOf('odak:') === 0;
         const brandOf = t => t.slice(5);
@@ -1868,8 +1869,8 @@
                 const first = !(cur && cur.date === ACTIVE_DATE && Number(cur.value) > p.best);
                 let nm = '';
                 try { nm = (globalData.master_staff && globalData.master_staff[currentId] && globalData.master_staff[currentId][staffId] && globalData.master_staff[currentId][staffId].name) || findStaffNameGlobal(staffId) || ''; } catch (e) {}
-                if (!first) {
-                    // Rekor bugün zaten kırıldı: kutlamayı tekrarlama, sadece güncel değeri yükselt (zaman ve rekoru getiren aynı kalır)
+                if (!first && total - p.best > PARTY_MAX) {
+                    // Kutlama hakkı (ilk PARTY_MAX satış) bitti: sadece güncel değeri yükselt, kutlama/şerit tekrarlanmaz
                     evRef(track).update({ value: total });
                     return;
                 }
@@ -1894,6 +1895,7 @@
             const ev = evGet(track);
             if (!ev || ev.date !== ACTIVE_DATE) return null;
             if (!(Number(ev.value) > 0) || st.today < Number(ev.value)) return null;   // satış geri alındıysa kutlama kalkar
+            if (st.today - st.prior > PARTY_MAX) return null;                          // ilk PARTY_MAX satıştan sonra kutlama ve şerit kapanır, sadece sayaç kalır
             if (Date.now() - (Number(ev.time) || 0) > CELEB_MS) return null;
             return ev;
         }
@@ -1988,12 +1990,8 @@
             } catch (e) {}
             // yeni kırılan rekor için bir kez kutla
             const top1 = events[0].ev, t = Number(top1.time) || 0;
-            // Kutlama her cihazda her rekor günü/izi için SADECE BİR KEZ çıkar (eski sürümdeki cihazlar kaydı yeniden yazsa bile tekrarlamaz)
-            const dayKey = ACTIVE_DATE + '~' + events[0].track;
-            const doneKeys = (lsGet('bb_rec_done') || '').split('^').filter(Boolean);
-            if (t > lastCeleb && Date.now() - t < 90000 && Number(lsGet('bb_rec_seen')) !== t && doneKeys.indexOf(dayKey) === -1) {
+            if (t > lastCeleb && Date.now() - t < 90000 && Number(lsGet('bb_rec_seen')) !== t) {
                 lsSet('bb_rec_seen', String(t));
-                doneKeys.push(dayKey); lsSet('bb_rec_done', doneKeys.slice(-30).join('^'));
                 if (!document.hidden && !(document.body && document.body.classList.contains('kpi-mode'))) {
                     try { Snd.play(top1.first ? 'goal150' : 'goal'); } catch (e) {}
                     try {
@@ -9028,6 +9026,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.53</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.54</div>
 </body>
 </html>
