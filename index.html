@@ -704,6 +704,31 @@
                     <select id="hist-store" onchange="histPaintCentral(true)" class="w-full sm:w-80 p-2 rounded-xl bg-white text-slate-800 font-bold text-xs border border-slate-300 mb-2"></select>
                     <div id="hist-grid"></div>
                 </div>
+                <div class="mt-4 pt-3 border-t border-indigo-800/60">
+                    <div class="text-[11px] font-black text-slate-300 mb-1">3) Yanlış girişi düzelt</div>
+                    <div class="text-[10px] text-slate-500 mb-2">Yukarıda seçili <b>metrik</b> ve <b>tarih aralığındaki</b> tüm mağazaların değerleri için çalışır. Örnek: Odak'ı yanlışlıkla Bonus Pack'e girdiyseniz Bonus Pack'i seçin, aralığı ayarlayın, "Diğerine taşı"ya basın.</div>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="histMove()" class="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs">Seçili metriği diğerine taşı</button>
+                        <button type="button" onclick="histClear()" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs">Seçili aralığı sil</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PERSONEL LİSTESİ (A-Z) -->
+            <div id="staff-arch-card" class="bg-gradient-to-r from-slate-900 to-slate-800 p-4 rounded-2xl border border-slate-600/60 shadow-lg">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="min-w-0">
+                        <div class="text-slate-100 font-black text-sm"><i class="fa-solid fa-users-rectangle mr-2"></i>PERSONEL LİSTESİ · A'dan Z'ye <span id="staff-arch-count" class="text-slate-400 font-bold text-xs ml-1"></span></div>
+                        <div class="text-[11px] text-slate-400 mt-0.5">Her personelin gün gün satışı. Adına tıklayınca karnesi, rozetleri ve aldığı alkışlar açılır. 🔥 = hedefin %150'sini aştığı gün, 👏 = aldığı alkış.</div>
+                    </div>
+                    <button type="button" id="staff-arch-toggle" onclick="archToggle()" class="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-black text-xs">Listeyi aç</button>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 mt-3">
+                    <input id="staff-arch-q" type="search" placeholder="İsim veya mağaza ara…" oninput="archSearch(this.value)" class="flex-1 min-w-[160px] p-2 rounded-xl bg-white text-slate-800 font-bold text-xs border border-slate-300">
+                    <button type="button" id="arch-m-b" onclick="archMetric('b')">Bonus Pack</button>
+                    <button type="button" id="arch-m-o" onclick="archMetric('o')">Odak</button>
+                </div>
+                <div id="staff-arch-body" class="hidden mt-3 rounded-xl border border-slate-700 bg-slate-900" style="max-height:520px;overflow:auto"></div>
             </div>
 
             <!-- PARMAK İZİ / YÜZ İLE GİRİŞ AÇ/KAPAT -->
@@ -3049,6 +3074,30 @@
             if (!cells.length) return alert('Kaydedilecek sayı yok.');
             saveCells(cells, () => { const o = el('hist-msg'); if (o) o.innerHTML = '<span class="text-emerald-300">✓ ' + esc(s) + ' kaydedildi.</span>'; });
         };
+        // Yanlış metriğe girilen verileri taşı / sil (seçili tarih aralığı)
+        function collectRange() {
+            const ds = selDates(), cells = [];
+            Object.keys(globalData.history || {}).forEach(store => ds.forEach(d => { const h = globalData.history[store] && globalData.history[store][d]; if (h && typeof h[hm] === 'number') cells.push({ store, d, v: h[hm] }); }));
+            return { ds, cells };
+        }
+        function runUpd(upd, okMsg) {
+            if (!isMerkez()) return alert('Bu işlem için Sistem Merkezi girişi gerekir.');
+            try { const pr = dbRoot.child('history').update(upd); if (pr && pr.then) pr.then(() => { const o = el('hist-msg'); if (o) o.innerHTML = '<span class="text-emerald-300">✓ ' + okMsg + '</span>'; }).catch(() => alert('Kaydedilemedi. database.rules.json dosyasının son halini Firebase Rules bölümünde yayınladınız mı?')); } catch (e) { alert('Kaydedilemedi.'); }
+        }
+        window.histMove = function () {
+            const other = hm === 'b' ? 'o' : 'b', r = collectRange();
+            if (!r.cells.length) return alert(MET[hm].name + ' için ' + lbl(r.ds[0]) + ' – ' + lbl(r.ds[r.ds.length - 1]) + ' aralığında girilmiş veri yok.');
+            if (!confirm(lbl(r.ds[0]) + ' – ' + lbl(r.ds[r.ds.length - 1]) + ' arasındaki ' + r.cells.length + ' ' + MET[hm].name + ' değeri ' + MET[other].name + '\'a taşınsın mı? (' + MET[other].name + ' için aynı günlerde girilmiş değer varsa üzerine yazılır, ' + MET[hm].name + ' değerleri silinir.)')) return;
+            const upd = {}; r.cells.forEach(c => { upd[c.store + '/' + c.d + '/' + other] = c.v; upd[c.store + '/' + c.d + '/' + hm] = null; });
+            runUpd(upd, r.cells.length + ' değer ' + MET[other].name + '\'a taşındı.');
+        };
+        window.histClear = function () {
+            const r = collectRange();
+            if (!r.cells.length) return alert(MET[hm].name + ' için seçili aralıkta girilmiş veri yok.');
+            if (!confirm(lbl(r.ds[0]) + ' – ' + lbl(r.ds[r.ds.length - 1]) + ' arasındaki ' + r.cells.length + ' ' + MET[hm].name + ' değeri SİLİNSİN mi? (Silinen günler 9 Ekim ve sonrası için canlı veriye döner.)')) return;
+            const upd = {}; r.cells.forEach(c => { upd[c.store + '/' + c.d + '/' + hm] = null; });
+            runUpd(upd, r.cells.length + ' ' + MET[hm].name + ' değeri silindi.');
+        };
         let lastSig = '';
         window.histPaintCentral = function (force) {
             const box = el('hist-card'); if (!box) return;
@@ -3066,6 +3115,95 @@
         setTimeout(() => { try { histPaintCentral(true); } catch (e) {} }, 800);
         setInterval(() => { try { histPaintCentral(); } catch (e) {} }, 2000);
     } catch (e) { console.error('Aylık gidişat kurulamadı', e); } })();
+
+    // === Sistem Merkezi: personel listesi (A–Z), gün gün satış, karne ve aldığı emojiler ===
+    ;(function archInit() { try {
+        const esc = v => String(v == null ? '' : v).replace(/[<>&"']/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' }[c]));
+        const jsq = v => String(v == null ? '' : v).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const norm = s => String(s == null ? '' : s).toLocaleLowerCase('tr').replace(/ı/g, 'i').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const lbl = s => s.slice(8) + '.' + s.slice(5, 7);
+        const dateKeys = () => Object.keys(globalData.daily || {}).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
+        let open = false, m = 'b', q = '', timer = 0;
+        function collect() {
+            const dates = dateKeys().slice(-45), set = new Set(dates);
+            const people = {};
+            Object.keys(globalData.master_staff || {}).forEach(store => Object.keys(globalData.master_staff[store] || {}).forEach(id => {
+                const nm = globalData.master_staff[store][id] && globalData.master_staff[store][id].name; if (nm) people[id] = { id, name: nm, store, d: {} };
+            }));
+            dates.forEach(dk => {
+                const day = globalData.daily[dk] || {};
+                Object.keys(day).forEach(store => {
+                    const sf = day[store] && day[store].staff; if (!sf) return;
+                    Object.keys(sf).forEach(id => {
+                        const p = people[id]; if (!p) return;
+                        const r = sf[id] || {}, t = Number(r.target) || 0, s = Number(r.sales) || 0;
+                        p.d[dk] = { s, f: focusOf(r).total, a: Number(r.applause) || 0, fire: t > 0 && s / t >= 1.5 };
+                    });
+                });
+            });
+            return { dates, people: Object.values(people) };
+        }
+        window.archPaint = function () {
+            const box = document.getElementById('staff-arch-body'); if (!box || !open) return;
+            const { dates, people } = collect();
+            const qq = norm(q.trim());
+            let list = people.filter(p => !qq || norm(p.name).includes(qq) || norm(p.store).includes(qq));
+            list.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
+            const cnt = document.getElementById('staff-arch-count'); if (cnt) cnt.textContent = list.length + ' personel';
+            ['b', 'o'].forEach(k => { const b = document.getElementById('arch-m-' + k); if (b) { b.className = 'px-3 py-1.5 rounded-lg border font-black text-xs ' + (m === k ? 'text-white border-transparent' : 'bg-slate-800 text-slate-300 border-slate-600'); b.style.background = m === k ? (k === 'b' ? '#ec4899' : '#8b5cf6') : ''; } });
+            if (!dates.length) { box.innerHTML = '<div class="text-xs text-slate-400 p-3">Henüz günlük satış verisi yok.</div>'; return; }
+            const th = 'style="position:sticky;top:0;background:#1e293b;z-index:2"';
+            let h = '<table class="w-full text-[11px] border-collapse"><thead><tr><th ' + th + ' class="text-left px-2 py-1.5 text-slate-300" style="position:sticky;top:0;left:0;z-index:3;background:#1e293b">Personel</th><th ' + th + ' class="text-left px-2 text-slate-400">Mağaza</th>' + dates.map(d => '<th ' + th + ' class="px-1.5 text-slate-300 whitespace-nowrap">' + lbl(d) + '</th>').join('') + '<th ' + th + ' class="px-2 text-teal-300">Toplam</th><th ' + th + ' class="px-1.5">🔥</th><th ' + th + ' class="px-1.5">👏</th></tr></thead><tbody>';
+            list.forEach(p => {
+                let tot = 0, fire = 0, app = 0;
+                const cells = dates.map(d => {
+                    const x = p.d[d]; if (!x) return '<td class="text-center text-slate-600">·</td>';
+                    const v = m === 'b' ? x.s : x.f; tot += v; if (x.fire) fire++; app += x.a;
+                    return v > 0 ? '<td class="text-center font-black px-1" style="color:' + (m === 'b' ? '#f9a8d4' : '#c4b5fd') + '">' + v + '</td>' : '<td class="text-center text-slate-600">·</td>';
+                }).join('');
+                h += '<tr class="border-t border-slate-700/60 hover:bg-slate-800/60 cursor-pointer" onclick="openStaffProfile(\'' + jsq(p.id) + '\')"><td class="px-2 py-1 font-black text-slate-100 whitespace-nowrap" style="position:sticky;left:0;background:#0f172a">' + esc(p.name) + '</td><td class="px-2 text-slate-400 whitespace-nowrap">' + esc(p.store) + '</td>' + cells + '<td class="text-center font-black text-teal-300 px-2">' + tot + '</td><td class="text-center text-slate-300">' + (fire || '') + '</td><td class="text-center text-slate-300">' + (app || '') + '</td></tr>';
+            });
+            box.innerHTML = h + '</tbody></table>';
+        };
+        window.archToggle = function () {
+            open = !open;
+            const b = document.getElementById('staff-arch-body'), t = document.getElementById('staff-arch-toggle');
+            if (b) b.classList.toggle('hidden', !open);
+            if (t) t.textContent = open ? 'Listeyi kapat' : 'Listeyi aç';
+            if (open) archPaint();
+        };
+        window.archMetric = function (k) { m = k; archPaint(); };
+        window.archSearch = function (v) { q = v || ''; clearTimeout(timer); timer = setTimeout(archPaint, 200); };
+        // Karne penceresine "gün gün" bölümü (yönetici rolleri)
+        function profileDays(id) {
+            const modal = document.getElementById('staff-profile-modal'); if (!modal) return;
+            let box = document.getElementById('profile-days');
+            const show = ['central', 'general', 'region'].indexOf(currentRole) >= 0;
+            if (!box) {
+                const anchor = document.getElementById('profile-applause-btn-container'); if (!anchor || !anchor.parentNode) return;
+                box = document.createElement('div'); box.id = 'profile-days'; anchor.parentNode.insertBefore(box, anchor);
+            }
+            if (!show) { box.innerHTML = ''; box.className = 'hidden'; return; }
+            box.className = '';
+            const rows = [];
+            dateKeys().slice().reverse().forEach(dk => {
+                const day = globalData.daily[dk] || {};
+                Object.keys(day).forEach(store => {
+                    const r = day[store] && day[store].staff && day[store].staff[id]; if (!r) return;
+                    const s = Number(r.sales) || 0, f = focusOf(r).total, a = Number(r.applause) || 0, t = Number(r.target) || 0;
+                    if (s || f || a) rows.push({ dk, store, s, f, a, fire: t > 0 && s / t >= 1.5 });
+                });
+            });
+            const totA = rows.reduce((x, r) => x + r.a, 0), totF = rows.filter(r => r.fire).length;
+            box.innerHTML = '<div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 shadow-sm"><div class="flex items-center justify-between mb-1"><div class="text-[10px] font-bold text-slate-500 uppercase">Gün gün</div><div class="text-[11px] font-black text-slate-600">👏 ' + totA + ' · 🔥 ' + totF + '</div></div>'
+                + (rows.length ? '<div style="max-height:180px;overflow:auto"><table class="w-full text-[11px]">' + rows.map(r => '<tr class="border-t border-slate-200"><td class="py-1 font-black text-slate-700">' + lbl(r.dk) + '</td><td class="text-slate-400 truncate" style="max-width:90px">' + esc(r.store.replace(/^\d+-/, '')) + '</td><td class="text-right font-black text-pink-600">' + r.s + '</td><td class="text-right font-black text-purple-600">' + (r.f ? '⭐' + r.f : '') + '</td><td class="text-right">' + (r.a ? '👏' + r.a : '') + (r.fire ? ' 🔥' : '') + '</td></tr>').join('') + '</table></div>' : '<div class="text-xs text-slate-400 py-1">Bu personel için günlük kayıt yok.</div>')
+                + '<div class="text-[9px] text-slate-400 mt-1">Satış · ⭐ odak · 👏 aldığı alkış · 🔥 hedefin %150\'si</div></div>';
+        }
+        setTimeout(() => {
+            try { const orig = window.openStaffProfile; if (typeof orig !== 'function') return; window.openStaffProfile = function (id) { const r = orig.apply(this, arguments); try { profileDays(id); } catch (e) { console.error(e); } return r; }; } catch (e) {}
+        }, 0);
+        setInterval(() => { try { if (open && !(document.activeElement && document.activeElement.id === 'staff-arch-q')) archPaint(); } catch (e) {} }, 15000);
+    } catch (e) { console.error('Personel arşivi kurulamadı', e); } })();
 
     // ===== Duyuru şeritleri ve üst başlık: yapışma mesafelerini görünen şeritlere göre hesapla =====
     // (Eskiden Güliz Atik şeridi sabit 42px'e yapışıyordu; Merkez şeridi yokken başlığın üstüne biniyordu.)
@@ -8673,6 +8811,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.38</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.40</div>
 </body>
 </html>
