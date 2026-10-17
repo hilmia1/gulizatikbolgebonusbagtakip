@@ -1868,6 +1868,11 @@
                 const first = !(cur && cur.date === ACTIVE_DATE && Number(cur.value) > p.best);
                 let nm = '';
                 try { nm = (globalData.master_staff && globalData.master_staff[currentId] && globalData.master_staff[currentId][staffId] && globalData.master_staff[currentId][staffId].name) || findStaffNameGlobal(staffId) || ''; } catch (e) {}
+                if (!first) {
+                    // Rekor bugün zaten kırıldı: kutlamayı tekrarlama, sadece güncel değeri yükselt (zaman ve rekoru getiren aynı kalır)
+                    evRef(track).update({ value: total });
+                    return;
+                }
                 evRef(track).set({
                     value: total, date: ACTIVE_DATE, staffId: String(staffId), staffName: cleanText(nm).slice(0, 60) || 'Bir arkadaşımız',
                     store: currentId, time: Date.now(), first: first, prev: p.best
@@ -9019,6 +9024,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.50</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.51</div>
 </body>
 </html>
