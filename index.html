@@ -2440,6 +2440,7 @@
 
         const kb = window.kpiStaffBrands ? window.kpiStaffBrands() : [];
         if (kb.length) {
+            try { const gt = window.kpiGoalTotal && kpiGoalTotal(stfId); if (gt) container.innerHTML += `<div class="text-center text-sm font-black ${gt.done >= gt.goal ? 'text-emerald-600' : 'text-cyan-600'} mb-1">🎯 Bugünkü KPI görevin: ${gt.done}/${gt.goal} adet${gt.done >= gt.goal ? ' ✅' : ''}</div>`; } catch (e) {}
             container.innerHTML += `<div class="pt-2 mt-1 border-t border-dashed border-slate-300 dark:border-slate-600"><div class="text-[10px] font-black text-cyan-600 uppercase tracking-wider mb-2"><i class="fa-solid fa-trophy mr-1"></i>KPI Ürünleri (ayrı rapor)</div></div>`;
             kb.forEach(b => {
                 const n = window.kpiStaffGet(stfId, b.key);
@@ -2457,7 +2458,7 @@
                 }
                 container.innerHTML += `
                 <div class="flex justify-between items-center bg-cyan-50 dark:bg-slate-700 p-3 rounded-xl border border-cyan-200 dark:border-slate-600">
-                    <span class="font-bold text-slate-700 dark:text-slate-200">${escHtml(b.name)}${(() => { try { const kg = window.kpiGoalsFor && kpiGoalsFor(); const ge = kg && kg.byId[stfId] && kg.byId[stfId][b.key]; return ge && ge.goal > 0 ? '<span class="block text-[10px] font-bold text-cyan-600">🎯 bugünkü görev: ' + ge.goal + ' adet</span>' : ''; } catch (e) { return ''; } })()}</span>
+                    <span class="font-bold text-slate-700 dark:text-slate-200">${escHtml(b.name)}</span>
                     <div class="flex items-center gap-3">
                         <button onclick="kpiStaffAdd('${stfId}', '${b.key}', -1)" class="w-8 h-8 bg-white dark:bg-slate-600 border border-slate-300 dark:border-slate-500 rounded-lg font-bold text-slate-600 dark:text-slate-300 shadow-sm">-</button>
                         <span class="font-black text-lg text-cyan-600 dark:text-cyan-300 w-6 text-center">${n}</span>
@@ -9369,15 +9370,17 @@
             } catch (e) { return null; }
         };
         const shortB = n => String(n || '').split(/\s+/)[0].slice(0, 9);
+        window.kpiGoalTotal = function (id) {
+            try { const g = kpiGoalsFor(); if (!g || !g.byId[id]) return null; let G = 0, D = 0; g.brands.forEach(b => { const e = g.byId[id][b.key]; if (e) { G += e.goal; D += kpiStaffGet(id, b.key); } }); return G > 0 ? { goal: G, done: D } : null; } catch (e) { return null; }
+        };
         window.kpiGoalChips = function (id, name, goals) {
             try {
                 if (!goals || !goals.byId[id]) return '';
-                const parts = goals.brands.map(b => {
-                    const e = goals.byId[id][b.key]; if (!e || (!e.goal && e.manual === null)) return '';
-                    const done = kpiStaffGet(id, b.key), ok = done >= e.goal && e.goal > 0;
-                    return `<span class="${ok ? 'text-emerald-700' : 'text-cyan-700'}">${esc(shortB(b.name))} <b>${Math.min(done, e.goal)}/${e.goal}</b>${e.manual !== null ? '✎' : ''}${ok ? '✅' : ''}</span>`;
-                }).filter(Boolean);
-                if (!parts.length) return '';
+                let G = 0, D = 0, man = false;
+                goals.brands.forEach(b => { const e = goals.byId[id][b.key]; if (!e || (!e.goal && e.manual === null)) return; G += e.goal; D += kpiStaffGet(id, b.key); if (e.manual !== null) man = true; });
+                if (!(G > 0)) return '';
+                const ok = D >= G;
+                const parts = [`<span class="${ok ? 'text-emerald-700' : 'text-cyan-700'}">KPI <b>${D}/${G}</b>${man ? '✎' : ''}${ok ? '✅' : ''}</span>`];
                 return `<button type="button" onclick="openKpiGoalModal('${esc(id)}','${String(name || '').replace(/'/g, "\\'")}')" class="mt-1 inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 px-1.5 py-0.5 rounded-lg bg-cyan-50 border border-cyan-200 text-[10px] font-bold leading-tight" title="Bugünkü KPI görevi (yapay zeka önerisi). Değiştirmek için dokun">🎯 ${parts.join(' · ')}</button>`;
             } catch (e) { return ''; }
         };
@@ -10456,6 +10459,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.83</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.84</div>
 </body>
 </html>
