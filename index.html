@@ -8000,10 +8000,10 @@
             top(staffAll, p => p.sales).map(p => Object.assign(sRow(p), { val: p.sales })),
             top(storesAll, s => s.sales).map(s => Object.assign(stRow(s), { val: s.sales }))));
         const pc = (a, t) => t > 0 ? a / t * 100 : 0;
-        const over = (arr, aKey) => arr.filter(x => x.target > 0 && x[aKey] > x.target).sort((a, b) => ((b[aKey] - b.target) - (a[aKey] - a.target)) || (pc(b[aKey], b.target) - pc(a[aKey], a.target))).slice(0, 3);
-        blocks.push(block('Bonus Pack · Hedefi En Çok Aşan (adet)', '🎯', 'border-emerald-200 bg-emerald-50/40', 'text-emerald-600',
-            over(staffAll, 'sales').map(p => Object.assign(sRow(p), { val: '+' + (p.sales - p.target), sub: p.store + ' · ' + p.sales + '/' + p.target + ' · %' + Math.round(pc(p.sales, p.target)) })),
-            over(storesAll, 'sales').map(s => Object.assign(stRow(s), { val: '+' + (s.sales - s.target), sub: s.bm + ' · ' + s.sales + '/' + s.target + ' · %' + Math.round(pc(s.sales, s.target)) })),
+        const over = (arr, aKey) => arr.filter(x => x.target > 0 && x[aKey] > x.target).sort((a, b) => (pc(b[aKey], b.target) - pc(a[aKey], a.target)) || ((b[aKey] - b.target) - (a[aKey] - a.target))).slice(0, 3);
+        blocks.push(block('Bonus Pack · Hedefi En Çok Aşan (oran)', '🎯', 'border-emerald-200 bg-emerald-50/40', 'text-emerald-600',
+            over(staffAll, 'sales').map(p => Object.assign(sRow(p), { val: '+%' + Math.round(pc(p.sales, p.target) - 100), sub: p.store + ' · ' + p.sales + '/' + p.target + ' · +' + (p.sales - p.target) + ' adet' })),
+            over(storesAll, 'sales').map(s => Object.assign(stRow(s), { val: '+%' + Math.round(pc(s.sales, s.target) - 100), sub: s.bm + ' · ' + s.sales + '/' + s.target + ' · +' + (s.sales - s.target) + ' adet' })),
             'Hedefi aşan yok'));
         if ((window.activeContestBrands || []).length > 0) {
             const fsf = o.fStaff || Object.values(window.lastFocusStaff || {}), fst = o.fStores || Object.values(window.lastFocusStores || {});
@@ -10096,6 +10096,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.72</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.73</div>
 </body>
 </html>
