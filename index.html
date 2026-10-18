@@ -7199,7 +7199,7 @@
                     </td>
                     <td class="py-2.5 px-1 sm:px-4 text-center">${targetEl}</td>
                     <td class="py-2.5 px-1 sm:px-4 text-center"><span class="inline-block font-black text-xs sm:text-sm text-pink-600 bg-white px-1.5 sm:px-2 py-0.5 rounded border border-pink-200 shadow-sm">${p.sales}</span> ${focusSalesBadge}${kpiBadge}${window.kpiGoalChips && !p.isTransfer ? '<div>' + kpiGoalChips(p.id, p.name, kgoals) + '</div>' : ''}</td>
-                    <td class="py-2.5 px-1 sm:px-4 text-center">${window.ringHtml ? window.ringHtml(p.id, p.sales, p.target, isStoreHistorical) : '%' + pPerc}</td>
+                    <td class="py-2.5 px-1 sm:px-4 text-center">${window.ringHtml ? window.ringHtml(p.id, p.sales, p.target, isStoreHistorical) : '%' + pPerc}${window.kpiRingHtml && !p.isTransfer ? kpiRingHtml(p.id, kgoals) : ''}</td>
                     ${actions}
                 </tr>`;
             });
@@ -9351,14 +9351,22 @@
                 const plan = coachPlan(c, currentId);
                 const man = (c.comp.staffgoal && c.comp.staffgoal[ACTIVE_DATE] && c.comp.staffgoal[ACTIVE_DATE][currentId]) || {};
                 const byId = {};
+                const big = (G, ws) => {   // en büyük kalan yöntemiyle G'yi ağırlıklara göre dağıt
+                    const tw = ws.reduce((a, x) => a + x, 0); if (!(G > 0) || !(tw > 0)) return ws.map(() => 0);
+                    const raw = ws.map(w => G * w / tw), base = raw.map(Math.floor);
+                    let left = G - base.reduce((a, x) => a + x, 0);
+                    const order = raw.map((v, k) => ({ k, f: v - base[k] })).sort((x, y) => y.f - x.f);
+                    for (let k = 0; k < left; k++) base[order[k % order.length].k]++;
+                    return base;
+                };
                 brands.forEach(b => {
                     const it = plan.items.find(i => i.b.key === b.key);
                     const G = it && !it.complete ? it.goal : 0;
-                    const raw = active.map(q => G * Number(q.target) / totalW), base = raw.map(Math.floor);
-                    let left = G - base.reduce((a, x) => a + x, 0);
-                    const order = raw.map((v, i) => ({ i, f: v - base[i] })).sort((x, y) => y.f - x.f);
-                    for (let k = 0; k < left; k++) base[order[k % order.length].i]++;
-                    active.forEach((q, i) => { (byId[q.id] = byId[q.id] || {})[b.key] = { auto: base[i] }; });
+                    const mOf = q => { const mv = man[q.id] && man[q.id][b.key]; return (mv !== undefined && mv !== null && !isNaN(Number(mv))) ? Number(mv) : null; };
+                    const fixed = active.filter(q => mOf(q) !== null), free = active.filter(q => mOf(q) === null);
+                    const R = Math.max(0, G - fixed.reduce((a, q) => a + mOf(q), 0));   // elle değiştirilenlerden kalan, diğerlerine dağılır
+                    const eff = big(R, free.map(q => Number(q.target))), hyp = big(G, active.map(q => Number(q.target)));
+                    active.forEach((q, k) => { const fi = free.indexOf(q); (byId[q.id] = byId[q.id] || {})[b.key] = { auto: fi >= 0 ? eff[fi] : hyp[k] }; });
                 });
                 staff.forEach(q => brands.forEach(b => {
                     const o = (byId[q.id] = byId[q.id] || {}), e = o[b.key] || (o[b.key] = { auto: 0 });
@@ -9372,6 +9380,17 @@
         const shortB = n => String(n || '').split(/\s+/)[0].slice(0, 9);
         window.kpiGoalTotal = function (id) {
             try { const g = kpiGoalsFor(); if (!g || !g.byId[id]) return null; let G = 0, D = 0; g.brands.forEach(b => { const e = g.byId[id][b.key]; if (e) { G += e.goal; D += kpiStaffGet(id, b.key); } }); return G > 0 ? { goal: G, done: D } : null; } catch (e) { return null; }
+        };
+        window.kpiRingHtml = function (id, goals) {
+            try {
+                if (!goals || !goals.byId[id]) return '';
+                let G = 0, D = 0;
+                goals.brands.forEach(b => { const e = goals.byId[id][b.key]; if (e) { G += e.goal; D += kpiStaffGet(id, b.key); } });
+                if (!(G > 0)) return '';
+                const C = 2 * Math.PI * 13, pct = Math.min(100, D / G * 100), col = pct >= 100 ? '#10b981' : pct >= 60 ? '#0891b2' : '#f59e0b';
+                const off = v => (C * (1 - v / 100)).toFixed(1);
+                return '<div class="mt-1.5 flex items-center justify-center gap-1.5" title="Bugünkü KPI görevi"><div style="position:relative;display:inline-block;width:34px;height:34px"><svg viewBox="0 0 32 32" width="34" height="34"><circle cx="16" cy="16" r="13" fill="none" stroke="#e2e8f0" stroke-width="4"/><circle class="rg" data-to="' + off(pct) + '" cx="16" cy="16" r="13" fill="none" stroke="' + col + '" stroke-width="4" stroke-linecap="round" stroke-dasharray="' + C.toFixed(1) + '" style="stroke-dashoffset:' + off(0) + '" transform="rotate(-90 16 16)"/></svg><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:' + col + '">' + (pct >= 100 ? '✓' : Math.round(pct)) + '</span></div><div class="text-[10px] font-black leading-tight text-left" style="color:' + col + '">KPI<br><span class="text-slate-500 font-bold">' + D + '/' + G + '</span></div></div>';
+            } catch (e) { return ''; }
         };
         window.kpiGoalChips = function (id, name, goals) {
             try {
@@ -10459,6 +10478,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.84</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.86</div>
 </body>
 </html>
