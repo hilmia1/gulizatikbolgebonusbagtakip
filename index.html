@@ -951,6 +951,13 @@
                     </div>
                     <button type="button" id="opt-kpiEntry-btn" onclick="setKpiOpt('kpiEntry')" class="shrink-0 px-4 py-2 rounded-xl border font-black text-xs transition"></button>
                 </div>
+                <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between border-t border-violet-800/50 pt-3">
+                    <div class="min-w-0">
+                        <div class="text-violet-100 font-black text-sm"><i class="fa-solid fa-robot mr-2"></i>WATKO KPI KOÇU (GÜNLÜK ADET GÖREVİ)</div>
+                        <div class="text-[11px] text-slate-300 mt-0.5">Mağaza ekranında WatKo, ayın sonunda hedefin %100'ünü yakalamak için bugün yapılması gereken adedi söyler (hafta içi/sonu düzenini ve mağazanın kendi son günlerdeki hızını öğrenerek her gün daha isabetli hesaplar). Ciro tutarı göstermez, adet markalarında adet, TL markalarında yalnızca yüzde yönlendirmesi verir. Varsayılan <b>açık</b>.</div>
+                    </div>
+                    <button type="button" id="opt-kpiCoach-btn" onclick="setKpiOpt('kpiCoach')" class="shrink-0 px-4 py-2 rounded-xl border font-black text-xs transition"></button>
+                </div>
                 <div class="border-t border-violet-800/50 pt-3">
                     <div class="text-violet-100 font-black text-xs mb-1"><i class="fa-solid fa-tags mr-2"></i>MAĞAZALARA GÖSTERİLECEK KPI MARKALARI</div>
                     <div class="text-[10px] text-slate-400 mb-2">Markalar aktif KPI yarışmasından gelir. Boş bırakırsanız hepsi gösterilir. Her marka için personelin <b>adet</b> mi yoksa <b>tutar (₺)</b> mı gireceğini seçebilirsiniz. Mağaza ekranındaki gidişat şeridinde TL markaları sadece % görünür.</div>
@@ -8574,7 +8581,7 @@
         const COLORS = ['#8b5cf6', '#06b6d4', '#f59e0b', '#ec4899', '#10b981', '#3b82f6'];
         const MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
         const charts = {};
-        const kState = { tab: 'comp', gBrand: 'overall', sBrand: 'all', lastSend: {} };
+        const kState = { tab: 'comp', gBrand: 'overall', sBrand: 'all', lastSend: {}, prevSend: {}, rBrand: 'all', tSort: { k: 'a', col: 'total', dir: -1 } };
         const kBusy = {};
         window.kpiMode = false;
 
@@ -9043,14 +9050,15 @@
         const stg = () => (globalData && globalData.settings) || {};
         window.kpiShowOn = () => stg().kpiShow === true;
         window.kpiEntryOn = () => stg().kpiEntry === true;
+        window.kpiCoachOn = () => stg().kpiCoach !== false;
         const selKeys = c => {
             const arr = String(stg().kpiBrands || '').split(',').filter(x => c.brands.some(b => b.key === x));
             return arr.length ? arr : c.brands.map(b => b.key);
         };
         window.setKpiOpt = function (key) {
             if (!window.__DEMO && currentRole !== 'central') return alert('Bu ayar için Sistem Merkezi girişi gerekir.');
-            const cur = key === 'kpiShow' ? kpiShowOn() : kpiEntryOn();
-            const name = key === 'kpiShow' ? 'KPI gidişatının mağaza ekranlarına yansıması' : 'Mağazalarda KPI ürün girişi';
+            const cur = key === 'kpiShow' ? kpiShowOn() : key === 'kpiCoach' ? kpiCoachOn() : kpiEntryOn();
+            const name = key === 'kpiShow' ? 'KPI gidişatının mağaza ekranlarına yansıması' : key === 'kpiCoach' ? 'WatKo günlük KPI görev önerisi' : 'Mağazalarda KPI ürün girişi';
             if (!confirm(name + (cur ? ' herkes için kapatılsın mı?' : ' herkes için açılsın mı?'))) return;
             try {
                 const o = {}; o[key] = !cur;
@@ -9073,7 +9081,7 @@
         };
         setInterval(() => {
             try {
-                [['kpiShow', kpiShowOn(), '📈 Yansıt AÇIK', '🚫 Yansıt KAPALI'], ['kpiEntry', kpiEntryOn(), '🎯 Giriş AÇIK', '🚫 Giriş KAPALI']].forEach(a => {
+                [['kpiShow', kpiShowOn(), '📈 Yansıt AÇIK', '🚫 Yansıt KAPALI'], ['kpiEntry', kpiEntryOn(), '🎯 Giriş AÇIK', '🚫 Giriş KAPALI'], ['kpiCoach', kpiCoachOn(), '🤖 Koç AÇIK', '🚫 Koç KAPALI']].forEach(a => {
                     const b = document.getElementById('opt-' + a[0] + '-btn'); if (!b) return;
                     b.className = 'shrink-0 px-4 py-2 rounded-xl border font-black text-xs transition ' + (a[1] ? 'bg-emerald-500 text-white border-emerald-300 shadow-lg' : 'bg-slate-800 text-slate-300 border-slate-600 hover:bg-slate-700');
                     b.textContent = a[1] ? a[2] : a[3];
@@ -9208,6 +9216,93 @@
             return { staff, stores, fv: v => tl ? '₺' + nf(v) : v };
         };
 
+        // ------------------------------------------------------------------
+        // WATKO KPI KOÇU: ayın sonunda %100 için bugünkü günlük görev (adet)
+        // ------------------------------------------------------------------
+        function coachWeights(c, bk) {
+            // Geçmiş günlerdeki (tüm mağazalar) hafta günü satış düzeninden 0.6-1.6 arası ağırlık çıkarır; veri azsa düz dağıtır.
+            const byDow = [0, 0, 0, 0, 0, 0, 0], cnt = [0, 0, 0, 0, 0, 0, 0]; let days = 0, tot = 0;
+            Object.keys(c.daily || {}).forEach(d => {
+                if (d >= c.today) return;
+                let v = 0; const sts = c.daily[d] || {}; Object.keys(sts).forEach(st => { v += Number(sts[st] && sts[st][bk]) || 0; });
+                const w = new Date(toUTC(d)).getUTCDay(); byDow[w] += v; cnt[w]++; days++; tot += v;
+            });
+            const flat = [1, 1, 1, 1, 1, 1, 1];
+            if (days < 7 || tot <= 0) return flat;
+            const avg = tot / days;
+            return byDow.map((s, i) => cnt[i] ? Math.max(0.6, Math.min(1.6, (s / cnt[i]) / avg)) : 1);
+        }
+        // Mağazanın kendi geçmiş günleri: {d, dow, v}; adet markalarında mağaza girişi ile personel girişinden büyük olan alınır.
+        function coachHist(c, st, bk, isTl) {
+            const out = [];
+            for (let d = c.start; d < c.today && d <= c.end; d = addDays(d, 1)) {
+                let v = Number(c.daily && c.daily[d] && c.daily[d][st] && c.daily[d][st][bk]) || 0;
+                if (!isTl) {
+                    const sd = c.comp.staff && c.comp.staff[d] && c.comp.staff[d][st];
+                    if (sd) { let t = 0; Object.keys(sd).forEach(id => { t += Number(sd[id] && sd[id][bk]) || 0; }); if (t > v) v = t; }
+                }
+                out.push({ d, dow: new Date(toUTC(d)).getUTCDay(), v });
+            }
+            return out;
+        }
+        function coachPlan(c, st) {
+            const sel = selKeys(c), W = {}, items = [], tl = [];
+            const todayDow = new Date(toUTC(c.today)).getUTCDay();
+            const left = []; for (let d = c.today; d <= c.end; d = addDays(d, 1)) left.push(new Date(toUTC(d)).getUTCDay());
+            let maxSeen = 0;
+            c.brands.filter(b => sel.includes(b.key)).forEach(b => {
+                const T = c.tStore(st, b.key); if (!(T > 0)) return;
+                const isTl = b.unit === 'TL';
+                const reg = W[b.key] || (W[b.key] = coachWeights(c, b.key));
+                // Mağazanın kendi geçmişi: son günlerin hızı + kendi hafta günü düzeni
+                const hist = coachHist(c, st, b.key, isTl), seen = hist.filter(x => x.v > 0).length;
+                maxSeen = Math.max(maxSeen, seen);
+                const recent = hist.slice(-7), V = recent.length ? recent.reduce((x, y) => x + y.v, 0) / recent.length : 0;
+                let w = reg;
+                if (seen >= 5) {
+                    const sum = [0, 0, 0, 0, 0, 0, 0], cn = [0, 0, 0, 0, 0, 0, 0]; hist.forEach(x => { sum[x.dow] += x.v; cn[x.dow]++; });
+                    const avg = hist.reduce((x, y) => x + y.v, 0) / hist.length || 1, alpha = Math.min(1, seen / 14);
+                    w = reg.map((rw, i) => { const ow = cn[i] ? Math.max(0.5, Math.min(1.8, (sum[i] / cn[i]) / avg)) : rw; return alpha * ow + (1 - alpha) * rw; });
+                }
+                const sumW = left.reduce((x, dw) => x + w[dw], 0) || 1, share = w[todayDow] / sumW;
+                const A = c.aStore(st, b.key), tv = (c.todayVal[st] && c.todayVal[st][b.key]) || 0;
+                const before = Math.max(0, T - (A - tv));
+                const m = metrics(A, T, c);
+                const proj = seen > 0 ? ((A - tv) + V * left.length) / T * 100 : null;   // bu hızla ay sonu %
+                if (isTl) {
+                    tl.push({ b, pct: m.pct, goalPct: Math.round(Math.max(0, 100 - (T - before) / T * 100) * share), sent: tv > 0, done: m.pct >= 100, st: m.st.key, proj });
+                } else {
+                    const goal = before > 0 ? Math.max(1, Math.ceil(before * share)) : 0;
+                    const step = (goal > 0 && V > 0 && goal > V * 1.5) ? Math.max(1, Math.ceil(V * 1.3)) : 0;   // çok yüksekse ara hedef
+                    items.push({ b, goal, done: tv, rem: Math.max(0, T - A), complete: m.pct >= 100, st: m.st.key, proj, step });
+                }
+            });
+            const allDone = items.every(i => i.complete || i.done >= i.goal) && tl.every(t => t.done || t.sent);
+            const lvl = maxSeen < 1 ? 0 : maxSeen < 4 ? 1 : maxSeen < 8 ? 2 : 3;
+            return { items, tl, allDone, lvl, behind: items.some(i => i.st === 'behind') || tl.some(t => t.st === 'behind') };
+        }
+        function coachHtml(c, st) {
+            try {
+                if (!kpiCoachOn() || !c || !c.live || !st) return '';
+                const p = coachPlan(c, st); if (!p.items.length && !p.tl.length) return '';
+                const h = new Date().getHours(), hi = h < 12 ? 'Günaydın!' : h < 18 ? 'Selam!' : 'İyi akşamlar!';
+                const wOn = window.mascotSvg && (!window.wegiOn || wegiOn());
+                const face = wOn ? mascotSvg(p.allDone ? 'cheer' : 'happy', 58) : '<span style="font-size:40px">🤖</span>';
+                const chip = (txt, ok) => `<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-black border ${ok ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-white text-slate-700 border-teal-200'}">${txt}</span>`;
+                const chips = p.items.map(i => i.complete ? chip('✅ ' + esc(i.b.name) + ' hedefi tamam', true)
+                    : i.goal === 0 ? '' : chip('🎯 ' + esc(i.b.name) + ' <b>' + i.goal + ' adet</b> <span class="text-slate-400 font-bold">(' + Math.min(i.done, i.goal) + '/' + i.goal + ')</span>' + (i.done >= i.goal ? ' ✅' : '') + (i.step && i.done < i.goal ? ' <span class="text-amber-600 font-bold">· ara hedef ' + i.step + '</span>' : ''), i.done >= i.goal)).join('')
+                    + p.tl.map(t => t.done ? chip('✅ ' + esc(t.b.name) + ' hedefi tamam', true) : chip('💜 ' + esc(t.b.name) + (t.goalPct >= 1 ? ': bugün hedefin <b>≈%' + t.goalPct + '</b>\'ini tamamla' : ': cironu güncel tut'), t.sent && t.goalPct < 1)).join('');
+                const projs = p.items.concat(p.tl).filter(x => x.proj !== null && x.proj !== undefined && !x.complete && !x.done);
+                const projTxt = projs.length ? '<div class="mt-1 text-[10px] font-bold text-slate-500">Bu hızla ay sonu: ' + projs.map(x => esc(x.b.name) + ' ≈%' + Math.round(x.proj)).join(' · ') + '</div>' : '';
+                const LV = ['İlk tahmin · henüz veri yok', 'Öğreniyor · birkaç günlük veri', 'Orta · satış düzenini tanıyor', 'Güçlü · kendi geçmişine göre'];
+                const lvTxt = '<div class="mt-1 text-[10px] font-bold text-teal-600">🧠 Tahmin gücü: ' + '●'.repeat(p.lvl + 1) + '○'.repeat(3 - p.lvl) + ' ' + LV[p.lvl] + '</div>';
+                const tail = p.allDone ? 'Bugünkü görevlerin tamam, harikasın! 🎉' : p.behind ? 'Çizginin biraz gerisindesin; bu görevler seni toparlar, hadi başlayalım! 💪' : 'Tempon iyi, bu görevlerle ay sonunda hedefi %100 yakalarsın 🚀';
+                const tlNote = p.tl.some(t => !t.done && !t.sent) ? '<div class="mt-1 text-[10px] font-bold text-slate-500">TL markaları için günün cirosunu göndermeyi unutma (son girdiğin rakam geçerli).</div>' : '';
+                return `<div class="mt-2 flex items-start gap-3 bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-100 rounded-2xl px-3 py-2.5"><div class="shrink-0 mc-bob">${face}</div><div class="min-w-0 flex-1"><span class="block text-[10px] font-black text-teal-600 uppercase tracking-wider mb-0.5">WatKo · bugünkü KPI görevin</span><div class="text-[12px] font-bold text-slate-700 leading-snug">${hi} Ay sonunda hedefin %100'ünü yakalamak için bugün:</div><div class="flex flex-wrap gap-1.5 mt-1.5">${chips}</div>${tlNote}${projTxt}${lvTxt}<div class="mt-1.5 text-[11px] font-bold text-teal-700">${tail}</div></div></div>`;
+            } catch (e) { return ''; }
+        }
+        window.kpiCoachHtml = coachHtml;
+
         window.storeBoardPaint = function (historical) {
             const strip = $('store-kpi-strip'), card = $('store-leaders-card'), kp = $('store-kpi-top3-banner');
             if (!strip || !card) return;
@@ -9221,12 +9316,12 @@
                     const m = metrics(c.aStore(currentId, b.key), c.tStore(currentId, b.key), c);
                     const pct = m.pct;
                     const w = Math.min(100, pct || 0);
-                    return `<div class="min-w-0"><div class="flex justify-between items-baseline gap-1"><span class="truncate text-[10px] font-black text-slate-700">${esc(b.name)}</span><span class="text-[10px] font-black ${m.st.txt}">${pct === null ? 'hedef yok' : '%' + Math.round(pct)}</span></div><div class="w-full bg-slate-200 rounded-full h-1.5"><div class="h-1.5 rounded-full" style="width:${w}%;background:${m.st.bar}"></div></div></div>`;
+                    return `<div class="min-w-0"><div class="flex justify-between items-baseline gap-1"><span class="truncate text-[10px] font-black text-slate-700">${esc(b.name)}</span><span class="text-[10px] font-black ${m.st.txt}">${pct === null ? 'hedef yok' : '%' + Math.round(pct)}</span></div><div class="relative w-full bg-slate-200 rounded-full h-1.5"><div class="h-1.5 rounded-full" style="width:${w}%;background:${m.st.bar}"></div><div class="absolute top-[-3px] bottom-[-3px] w-[2px] bg-slate-700/70" style="left:${Math.min(100, c.pace * 100)}%" title="Bugün olması gereken seviye: %${Math.round(c.pace * 100)}"></div></div></div>`;
                 }).join('');
                 const rk = rankOf(c.rows, currentId, 'overall');
                 const rkTxt = rk.rank > 0 ? `<span class="px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 text-[9px] font-black">KPI ${rk.rank}/${rk.total}</span>` : '';
                 strip.className = 'bg-white rounded-xl border border-violet-200 px-3 py-2 shadow-sm';
-                strip.innerHTML = `<div class="flex items-center justify-between gap-2 mb-1.5"><div class="text-[10px] font-black text-violet-700 uppercase tracking-wider truncate"><i class="fa-solid fa-chart-line mr-1"></i>KPI gidişatı · ${esc(c.name)}</div><div class="flex items-center gap-1.5 shrink-0">${rkTxt}<span class="text-[9px] font-bold text-slate-400">${c.daysLeft} gün kaldı</span></div></div><div class="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-1.5">${items}</div>`;
+                strip.innerHTML = `<div class="flex items-center justify-between gap-2 mb-1.5"><div class="text-[10px] font-black text-violet-700 uppercase tracking-wider truncate"><i class="fa-solid fa-chart-line mr-1"></i>KPI gidişatı · ${esc(c.name)}</div><div class="flex items-center gap-1.5 shrink-0">${rkTxt}<span class="text-[9px] font-bold text-slate-400">çizgi: olması gereken %${Math.round(c.pace * 100)} · ${c.daysLeft} gün kaldı</span></div></div><div class="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-1.5">${items}</div>${coachHtml(c, currentId)}`;
             } else { strip.classList.add('hidden'); strip.innerHTML = ''; }
 
             // --- Sağ kart: ilk 3 mağaza (Bonus Pack · Odak · KPI)
@@ -9333,12 +9428,13 @@
                 } else if (b.unit === 'TL') {
                     const ls = kState.lastSend[b.key];
                     entry = `<div class="pl-2 mt-3 bg-violet-50 border border-violet-100 rounded-xl p-2.5">
-                        <div class="text-[10px] font-bold text-violet-700 uppercase mb-2"><i class="fa-solid fa-paper-plane mr-1"></i>Hedefe satış gönder</div>
-                        <div class="flex gap-2"><input type="number" min="0" inputmode="numeric" id="kpi-amt-${b.key}" placeholder="Tutar (TL)" class="flex-1 min-w-0 p-2 border border-violet-200 rounded-lg text-sm font-bold focus:outline-none focus:border-violet-500">
+                        <div class="text-[10px] font-bold text-violet-700 uppercase mb-2"><i class="fa-solid fa-paper-plane mr-1"></i>Bugünkü cironuzu gönderin</div>
+                        <div class="text-[10px] font-bold text-slate-500 mb-2 leading-snug">Her gönderim bugünkü toplam cironuzu günceller, <b>son girdiğiniz rakam geçerlidir</b> (ör. 14:00'te 2.000, 18:00'te 10.000 yazarsanız bugünkü ciro 10.000 olur).</div>
+                        <div class="flex gap-2"><input type="number" min="0" inputmode="numeric" id="kpi-amt-${b.key}" placeholder="Bugünkü toplam (TL)" class="flex-1 min-w-0 p-2 border border-violet-200 rounded-lg text-sm font-bold focus:outline-none focus:border-violet-500">
                         <button type="button" onclick="kpiAdd('${b.key}', 1)" class="px-4 h-10 bg-violet-600 hover:bg-violet-700 rounded-lg font-black text-white shadow whitespace-nowrap">Gönder</button></div>
                         <div class="mt-1.5 flex items-center justify-between gap-2 text-[10px] font-bold">
-                            <span class="text-emerald-600">${ls ? '✓ Son gönderim iletildi' : ''}</span>
-                            ${ls ? `<button type="button" onclick="kpiAdd('${b.key}', -1)" class="text-rose-600 underline">Son gönderimi geri al</button>` : ''}
+                            <span class="text-emerald-600">${tv > 0 ? '✓ Bugün iletilen: ₺' + nf(tv) : (ls ? '✓ Son gönderim iletildi' : '')}</span>
+                            ${kState.prevSend[b.key] !== undefined ? `<button type="button" onclick="kpiAdd('${b.key}', -1)" class="text-rose-600 underline">Son gönderimi geri al</button>` : ''}
                         </div></div>`;
                 } else {
                     entry = `<div class="pl-2 mt-3 bg-violet-50 border border-violet-100 rounded-xl p-2.5 flex items-center justify-between gap-2">
@@ -9363,7 +9459,7 @@
                 statBox('Genel Başarı', ov === null ? '—' : '%' + Math.round(ov)) +
                 statBox('Genel Sıra', ovRank.rank > 0 ? '#' + ovRank.rank + ' <span class="text-sm text-cyan-100">/ ' + ovRank.total + '</span>' : '—')) +
                 (hasTarget ? '' : `<div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 text-sm font-bold"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Mağazanız için bu yarışmada henüz hedef girilmemiş. Hedef Sistem Merkezi tarafından girilir.</div>`) +
-                podiumHost() +
+                podiumHost() + coachHtml(c, st) +
                 `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">${cards}</div>
                 ${staffReport(c, c.staff.filter(r => r.store === st), 'Mağazamın Personel Raporu (KPI adet markaları)')}
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4"><h3 class="font-bold text-slate-700 text-sm mb-2"><i class="fa-solid fa-ranking-star text-amber-500 mr-2"></i>Sıralamam (tüm mağazalar arasında)</h3><div class="flex flex-wrap gap-2">${rankChips}</div></div>
@@ -9382,26 +9478,34 @@
             const c = ctxGet(); if (!c || currentRole !== 'kstore') return;
             if (!c.live) return alert('Yarışma şu an aktif tarih aralığında değil.');
             const b = c.brands.find(x => x.key === bk); if (!b) return;
-            let n = 1;
+            const ref = dbRoot.child('kpi').child('comps').child(c.cid).child('daily').child(ACTIVE_DATE).child(currentId).child(bk);
             if (b.unit === 'TL') {
-                if (hideAmt(b) && sign < 0) {
-                    n = kState.lastSend[bk];
-                    if (!(n > 0)) return alert('Geri alınacak bir gönderim yok.');
-                    if (!confirm('Son gönderdiğiniz satış geri alınsın mı?')) return;
-                } else {
-                    n = Math.round(Number(($('kpi-amt-' + bk) || {}).value));
-                    if (!(n > 0)) return alert('Lütfen geçerli bir tutar girin.');
-                    if (n > 5000000) return alert('Tek seferde en fazla 5.000.000 TL girilebilir.');
+                // TL markalarında SON GİRİLEN RAKAM geçerlidir: bugünkü toplam ciro bu rakamla değiştirilir (toplanmaz).
+                if (kBusy[bk] && Date.now() - kBusy[bk] < 400) return;
+                if (sign < 0) {
+                    const pv = kState.prevSend[bk];
+                    if (pv === undefined) return alert('Geri alınacak bir gönderim yok.');
+                    if (!confirm('Son gönderdiğiniz rakam geri alınsın mı? (Önceki rakamınız geri gelir)')) return;
+                    kBusy[bk] = Date.now(); Snd.play('saleUndo');
+                    ref.transaction(() => Math.max(0, Number(pv) || 0));
+                    delete kState.prevSend[bk]; delete kState.lastSend[bk];
+                    return;
                 }
+                const n = Math.round(Number(($('kpi-amt-' + bk) || {}).value));
+                if (!(n > 0)) return alert('Lütfen geçerli bir tutar girin.');
+                if (n > 5000000) return alert('En fazla 5.000.000 TL girilebilir.');
+                const cur = (c.todayVal[currentId] && c.todayVal[currentId][bk]) || 0;
+                kBusy[bk] = Date.now(); Snd.play('sale');
+                ref.transaction(() => n);
+                kState.prevSend[bk] = cur; kState.lastSend[bk] = n;
+                if ($('kpi-amt-' + bk)) $('kpi-amt-' + bk).value = '';
+                return;
             }
             if (kBusy[bk] && Date.now() - kBusy[bk] < 400) return;
             kBusy[bk] = Date.now();
-            const delta = sign * n;
+            const delta = sign;
             Snd.play(sign > 0 ? 'sale' : 'saleUndo');
-            dbRoot.child('kpi').child('comps').child(c.cid).child('daily').child(ACTIVE_DATE).child(currentId).child(bk)
-                .transaction(v => { const x = (Number(v) || 0) + delta; return x < 0 ? 0 : x; });
-            if (b.unit === 'TL' && hideAmt(b)) { if (sign > 0) kState.lastSend[bk] = n; else delete kState.lastSend[bk]; }
-            if (b.unit === 'TL' && $('kpi-amt-' + bk)) $('kpi-amt-' + bk).value = '';
+            ref.transaction(v => { const x = (Number(v) || 0) + delta; return x < 0 ? 0 : x; });
         };
 
         window.kpiShareStore = function () {
@@ -9439,6 +9543,145 @@
 
         const sortRows = rows => rows.slice().sort((a, b) => (b.overall === null ? -1 : b.overall) - (a.overall === null ? -1 : a.overall));
 
+        // ------------------------------------------------------------------
+        // CİRO RAPORLARI (TL markaları): bölge müdürü ve genel ekran
+        // ------------------------------------------------------------------
+        const revBrands = c => c.brands.filter(b => b.unit === 'TL');
+        const revSel = c => { const tl = revBrands(c); return kState.rBrand === 'all' ? tl : tl.filter(b => b.key === kState.rBrand); };
+        function revRows(c, names, sel) {
+            return names.map(n => {
+                let a = 0, t = 0, td = 0;
+                sel.forEach(b => { a += c.aStore(n, b.key); t += c.tStore(n, b.key); td += (c.todayVal[n] && c.todayVal[n][b.key]) || 0; });
+                return { name: n, bm: bmOf(n), a, t, td, pct: t > 0 ? a / t * 100 : null, rem: Math.max(0, t - a) };
+            });
+        }
+        function revData(c, names) {
+            const sel = revSel(c); if (!sel.length) return null;
+            const rows = revRows(c, names, sel);
+            const sum = k => rows.reduce((x, r) => x + r[k], 0);
+            const A = sum('a'), T = sum('t');
+            return {
+                sel, rows, A, T, TD: sum('td'), pct: T > 0 ? A / T * 100 : null,
+                top: rows.filter(r => r.a > 0).sort((x, y) => y.a - x.a).slice(0, 5),
+                near: rows.filter(r => r.pct !== null && r.pct < 100 && r.a > 0).sort((x, y) => y.pct - x.pct).slice(0, 5),
+                far: rows.filter(r => r.pct !== null && r.pct < 100).sort((x, y) => x.pct - y.pct).slice(0, 5),
+                done: rows.filter(r => r.pct !== null && r.pct >= 100).sort((x, y) => y.pct - x.pct),
+                today: rows.filter(r => r.td > 0).sort((x, y) => y.td - x.td).slice(0, 5),
+                missing: rows.filter(r => !(r.td > 0))
+            };
+        }
+        const REV_MEDAL = ['🥇', '🥈', '🥉', '4.', '5.'];
+        function revList(title, color, arr, right, empty, plain) {
+            const body = arr.length ? arr.map((r, i) => `<div class="flex items-center justify-between gap-2 py-1.5 border-b border-slate-100 last:border-0"><div class="min-w-0"><span class="font-black text-slate-400 mr-1.5 text-xs">${plain ? (i + 1) + '.' : REV_MEDAL[i]}</span><span class="clickable-store text-xs font-bold text-slate-800" onclick="kpiOpen('kstore','${esc(r.name)}')">${esc(r.name)}</span><div class="text-[10px] text-slate-400 font-bold pl-6">${esc(r.bm || '')}</div></div><div class="text-right shrink-0">${right(r)}</div></div>`).join('') : `<div class="text-[11px] text-slate-400 py-2">${empty}</div>`;
+            return `<div><h4 class="text-xs font-black ${color} uppercase tracking-wider mb-1.5">${title}</h4>${body}</div>`;
+        }
+        function revRegionTable(c, sel) {
+            const rows = Object.keys(effectiveHierarchy).map(bm => {
+                const list = c.storesOf(bm); let a = 0, t = 0, td = 0;
+                sel.forEach(b => { a += c.sumA(list, b.key); t += c.tRegion(bm, b.key).val; list.forEach(n => { td += (c.todayVal[n] && c.todayVal[n][b.key]) || 0; }); });
+                const sent = list.filter(n => sel.some(b => (c.todayVal[n] && c.todayVal[n][b.key]) > 0)).length;
+                return { bm, a, t, td, sent, n: list.length, pct: t > 0 ? a / t * 100 : null };
+            }).sort((x, y) => y.a - x.a);
+            if (!rows.length) return '';
+            return `<div class="mt-4 overflow-x-auto"><table class="w-full text-left text-xs"><thead><tr class="text-[10px] uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-200"><th class="py-2 px-2 w-8 text-center">#</th><th class="py-2 px-2 font-bold">Bölge Müdürü</th><th class="py-2 px-2 font-bold text-right">Ciro</th><th class="py-2 px-2 font-bold text-right">Hedef</th><th class="py-2 px-2 font-bold text-center">%</th><th class="py-2 px-2 font-bold text-right">Bugün</th><th class="py-2 px-2 font-bold text-center">Bugün giren</th></tr></thead><tbody>${rows.map((r, i) => `<tr class="border-b border-slate-100"><td class="py-2 px-2 text-center font-black text-slate-400">${['🥇', '🥈', '🥉'][i] || i + 1}</td><td class="py-2 px-2 font-bold text-slate-800 whitespace-nowrap"><span class="clickable-store" onclick="kpiOpen('kregion','${esc(r.bm)}')">${esc(r.bm)}</span></td><td class="py-2 px-2 text-right font-black text-slate-800">₺${nf(r.a)}</td><td class="py-2 px-2 text-right text-slate-500 font-bold">${r.t > 0 ? '₺' + nf(r.t) : '—'}</td><td class="py-2 px-2 text-center">${pillPct(r.pct)}</td><td class="py-2 px-2 text-right font-bold text-slate-600">₺${nf(r.td)}</td><td class="py-2 px-2 text-center font-bold text-slate-500">${r.sent}/${r.n}</td></tr>`).join('')}</tbody></table></div>`;
+        }
+        function revCard(c, names, scope) {
+            const tl = revBrands(c); if (!tl.length) return '';
+            const d = revData(c, names); if (!d) return '';
+            const chips = [{ k: 'all', n: 'Tüm TL markaları', color: '#7c3aed' }].concat(tl.map(b => ({ k: b.key, n: b.name, color: b.color }))).map(x => `<button type="button" onclick="kpiSetRBrand('${x.k}')" class="px-3 py-1.5 rounded-lg text-xs font-black border" style="${kState.rBrand === x.k ? `background:${x.color};color:#fff;border-color:${x.color}` : 'background:#fff;color:#475569;border-color:#e2e8f0'}">${esc(x.n)}</button>`).join('');
+            const sentN = d.rows.length - d.missing.length;
+            const miss = d.missing.length ? `<div class="mt-3 text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-2.5"><i class="fa-solid fa-hourglass-half mr-1"></i>Bugün henüz ciro girmeyen <b>${d.missing.length}</b> mağaza: ${d.missing.slice(0, 12).map(r => `<span class="clickable-store" onclick="kpiOpen('kstore','${esc(r.name)}')">${esc(r.name.replace(/^\d+-/, ''))}</span>`).join(', ')}${d.missing.length > 12 ? ' +' + (d.missing.length - 12) : ''}</div>` : '';
+            return `<div class="bg-white rounded-2xl border border-violet-200 shadow-sm p-4">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-3"><h3 class="font-bold text-slate-800"><i class="fa-solid fa-coins text-violet-500 mr-2"></i>Ciro Raporları <span class="text-[10px] font-bold text-slate-400">· mağazaların son girdiği rakamlara göre</span></h3><button type="button" onclick="kpiShareRev('${scope}')" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-lg text-[11px] flex items-center gap-1.5"><i class="fa-brands fa-whatsapp"></i>Paylaş</button></div>
+                <div class="flex flex-wrap gap-1.5 mb-3">${chips}</div>
+                <div class="flex flex-wrap gap-2 mb-3 text-[11px] font-black"><span class="px-2.5 py-1 rounded-lg bg-violet-50 text-violet-700 border border-violet-100">Toplam ciro ₺${nf(d.A)}${d.T > 0 ? ' / ₺' + nf(d.T) : ''}</span>${d.pct !== null ? `<span>${pillPct(d.pct)}</span>` : ''}<span class="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200">Bugün ₺${nf(d.TD)}</span><span class="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200">Bugün giren ${sentN}/${d.rows.length} mağaza</span></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                    ${revList('💰 En çok ciro giren', 'text-violet-600', d.top, r => `<div class="text-xs font-black text-slate-800">₺${nf(r.a)}</div>${r.pct !== null ? `<div>${pillPct(r.pct)}</div>` : ''}`, 'Henüz ciro girilmedi')}
+                    ${revList('🎯 Hedefine en çok yaklaşan', 'text-emerald-600', d.near, r => `<div>${pillPct(r.pct)}</div><div class="text-[10px] text-slate-400 font-bold">kalan ₺${nf(r.rem)}</div>`, 'Hedefi olan mağaza yok')}
+                    ${revList('📅 Bugün en çok giren', 'text-sky-600', d.today, r => `<div class="text-xs font-black text-slate-800">₺${nf(r.td)}</div>`, 'Bugün ciro girilmedi')}
+                    ${revList('⚠️ Hedefe en uzak', 'text-rose-600', d.far, r => `<div>${pillPct(r.pct)}</div><div class="text-[10px] text-slate-400 font-bold">kalan ₺${nf(r.rem)}</div>`, 'Hedefi olan mağaza yok', true)}
+                </div>
+                ${d.done.length ? `<div class="mt-3 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl p-2.5"><i class="fa-solid fa-circle-check mr-1"></i>Hedefini tamamlayan <b>${d.done.length}</b> mağaza: ${d.done.slice(0, 10).map(r => esc(r.name.replace(/^\d+-/, '')) + ' (%' + Math.round(r.pct) + ')').join(', ')}${d.done.length > 10 ? ' +' + (d.done.length - 10) : ''}</div>` : ''}
+                ${miss}
+                ${scope === 'general' ? revRegionTable(c, d.sel) : ''}
+            </div>`;
+        }
+        window.kpiSetRBrand = function (k) { kState.rBrand = k; render(); };
+        window.kpiShareRev = function (scope) {
+            const c = ctxGet(); if (!c) return;
+            const names = scope === 'general' ? ALL : c.storesOf(currentId);
+            const d = revData(c, names); if (!d) return alert('Bu yarışmada TL (ciro) markası yok.');
+            const sn = x => x.replace(/^\d+-/, '');
+            let t = `💰 *${c.name} - CİRO RAPORU* 💰\n📅 ${dmy(c.start)} - ${dmy(c.end)} | Gün ${c.elapsed}/${c.totalDays}\n🏷️ ${kState.rBrand === 'all' ? 'Tüm TL markaları' : d.sel.map(b => b.name).join(', ')}\n`;
+            t += `\n📊 Toplam: ₺${nf(d.A)}${d.T > 0 ? ' / ₺' + nf(d.T) + ' (%' + Math.round(d.pct) + ')' : ''} · Bugün: ₺${nf(d.TD)}\n`;
+            const sec = (h, arr, f) => { if (arr.length) { t += `\n${h}\n`; arr.forEach((r, i) => { t += `${['🥇', '🥈', '🥉', '4️⃣', '5️⃣'][i]} ${sn(r.name)}: ${f(r)}\n`; }); } };
+            sec('💰 *En çok ciro giren*', d.top, r => '₺' + nf(r.a) + (r.pct !== null ? ' (%' + Math.round(r.pct) + ')' : ''));
+            sec('🎯 *Hedefine en çok yaklaşan*', d.near, r => '%' + Math.round(r.pct) + ' · kalan ₺' + nf(r.rem));
+            sec('📅 *Bugün en çok giren*', d.today, r => '₺' + nf(r.td));
+            if (d.done.length) t += `\n✅ Hedefini tamamlayan: ${d.done.map(r => sn(r.name)).join(', ')}\n`;
+            if (d.missing.length) t += `\n⏳ Bugün ciro girmeyen: ${d.missing.length} mağaza\n`;
+            wa(t);
+        };
+
+        // ------------------------------------------------------------------
+        // TÜM CİRO GİRİŞLERİ: sıralanabilir mağaza listesi (toplam + marka marka)
+        // ------------------------------------------------------------------
+        function tblRows(c, names) {
+            const tl = revBrands(c), S = kState.tSort;
+            const rows = names.map(n => {
+                const per = {}; let A = 0, T = 0, TD = 0;
+                tl.forEach(b => {
+                    const a = c.aStore(n, b.key), t = c.tStore(n, b.key), td = (c.todayVal[n] && c.todayVal[n][b.key]) || 0;
+                    per[b.key] = { a, t, td, pct: t > 0 ? a / t * 100 : null }; A += a; T += t; TD += td;
+                });
+                return { name: n, bm: bmOf(n), per, tot: { a: A, t: T, td: TD, pct: T > 0 ? A / T * 100 : null } };
+            });
+            const colOf = r => S.col === 'total' ? r.tot : (r.per[S.col] || r.tot);
+            const val = r => { const o = colOf(r); return S.k === 'name' ? r.name : S.k === 'pct' ? (o.pct === null ? -1 : o.pct) : S.k === 'td' ? o.td : o.a; };
+            rows.sort((x, y) => S.k === 'name' ? S.dir * -1 * x.name.localeCompare(y.name, 'tr') : S.dir * (val(x) - val(y)) || x.name.localeCompare(y.name, 'tr'));
+            return { tl, rows };
+        }
+        window.kpiTblSet = function (what, v) {
+            const S = kState.tSort;
+            if (what === 'k') { if (S.k === v) S.dir = -S.dir; else { S.k = v; S.dir = v === 'name' ? -1 : -1; } }
+            else if (what === 'col') S.col = v;
+            else if (what === 'dir') S.dir = -S.dir;
+            else if (what === 'hdr') { if (S.col === v[0] && S.k === v[1]) S.dir = -S.dir; else { S.col = v[0]; S.k = v[1]; S.dir = -1; } }
+            render();
+        };
+        function revTable(c, names, scope) {
+            const { tl, rows } = tblRows(c, names); if (!tl.length) return '';
+            const S = kState.tSort;
+            const btn = (k, t) => `<button type="button" onclick="kpiTblSet('k','${k}')" class="px-3 py-1.5 rounded-lg text-xs font-black border ${S.k === k ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-600 border-slate-200'}">${t}${S.k === k ? (S.dir < 0 ? ' ↓' : ' ↑') : ''}</button>`;
+            const cell = o => `<div class="text-[11px] font-black text-slate-800 whitespace-nowrap">₺${nf(o.a)}</div><div class="text-[9px] text-slate-400 font-bold whitespace-nowrap">${o.t > 0 ? '/ ₺' + nf(o.t) : 'hedef yok'}</div><div class="mt-0.5">${pillPct(o.pct)}</div>`;
+            const th = (col, label, color) => `<th class="py-2 px-2 font-bold text-center cursor-pointer select-none" style="color:${color || '#475569'}" onclick="kpiTblSet('hdr',['${col}','a'])">${esc(label)}${S.col === col && S.k !== 'name' ? (S.dir < 0 ? ' ↓' : ' ↑') : ''}</th>`;
+            const tot = rows.reduce((o, r) => { o.a += r.tot.a; o.t += r.tot.t; o.td += r.tot.td; return o; }, { a: 0, t: 0, td: 0 }); tot.pct = tot.t > 0 ? tot.a / tot.t * 100 : null;
+            const brandTot = {}; tl.forEach(b => { const o = { a: 0, t: 0, td: 0 }; rows.forEach(r => { o.a += r.per[b.key].a; o.t += r.per[b.key].t; o.td += r.per[b.key].td; }); o.pct = o.t > 0 ? o.a / o.t * 100 : null; brandTot[b.key] = o; });
+            return `<div class="bg-white rounded-2xl border border-violet-200 shadow-sm overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b border-slate-200 space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-3"><h3 class="font-bold text-slate-800"><i class="fa-solid fa-table-list text-violet-500 mr-2"></i>Tüm Ciro Girişleri <span class="text-[10px] font-bold text-slate-400">· ${rows.length} mağaza · son girilen rakamlar</span></h3>
+                    <button type="button" onclick="kpiTblExport('${scope}')" class="px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-lg text-[11px] flex items-center gap-1.5"><i class="fa-solid fa-file-excel"></i>Excel</button></div>
+                    <div class="flex flex-wrap items-center gap-1.5"><span class="text-[10px] font-black text-slate-400 uppercase mr-1">Sırala</span>${btn('name', 'Mağaza adı')}${btn('a', 'Ciro')}${btn('pct', 'Hedef %')}${btn('td', 'Bugün')}
+                    <select onchange="kpiTblSet('col', this.value)" class="ml-1 px-2 py-1.5 rounded-lg border border-slate-200 text-xs font-black text-slate-600 bg-white"><option value="total"${S.col === 'total' ? ' selected' : ''}>Toplam</option>${tl.map(b => `<option value="${b.key}"${S.col === b.key ? ' selected' : ''}>${esc(b.name)}</option>`).join('')}</select></div>
+                </div>
+                <div class="overflow-x-auto max-h-[32rem] overflow-y-auto"><table class="w-full text-left text-xs"><thead class="sticky top-0 bg-slate-50 z-10"><tr class="text-[10px] uppercase tracking-wider text-slate-500 border-b border-slate-200"><th class="py-2 px-2 text-center w-8">#</th><th class="py-2 px-2 font-bold cursor-pointer select-none" onclick="kpiTblSet('k','name')">Mağaza${S.k === 'name' ? (S.dir < 0 ? ' ↑' : ' ↓') : ''}</th>${th('total', 'TOPLAM', '#7c3aed')}${tl.map(b => th(b.key, b.name, b.color)).join('')}</tr>
+                    <tr class="bg-violet-50 border-b border-violet-100"><td></td><td class="py-2 px-2 font-black text-violet-700 text-[11px]">GENEL TOPLAM</td><td class="py-2 px-2 text-center">${cell(tot)}</td>${tl.map(b => `<td class="py-2 px-2 text-center">${cell(brandTot[b.key])}</td>`).join('')}</tr></thead>
+                    <tbody>${rows.map((r, i) => `<tr class="border-b border-slate-100 hover:bg-violet-50/40"><td class="py-2 px-2 text-center font-black text-slate-400">${i + 1}</td><td class="py-2 px-2 whitespace-nowrap"><span class="clickable-store font-bold text-slate-800" onclick="kpiOpen('kstore','${esc(r.name)}')">${esc(r.name)}</span><div class="text-[9px] text-slate-400 font-bold">${esc(r.bm || '')}${r.tot.td > 0 ? ' · bugün ₺' + nf(r.tot.td) : ''}</div></td><td class="py-2 px-2 text-center">${cell(r.tot)}</td>${tl.map(b => `<td class="py-2 px-2 text-center">${cell(r.per[b.key])}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`;
+        }
+        window.kpiTblExport = function (scope) {
+            const c = ctxGet(); if (!c) return;
+            const names = scope === 'general' ? ALL : c.storesOf(currentId);
+            const { tl, rows } = tblRows(c, names); if (!tl.length) return alert('Bu yarışmada TL (ciro) markası yok.');
+            const q = v => { let t = String(v == null ? '' : v).replace(/[\r\n]+/g, ' '); if (/^[=+\-@]/.test(t)) t = "'" + t; return /[";]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+            const head = ['Sıra', 'Bölge Müdürü', 'Mağaza', 'Toplam Ciro', 'Toplam Hedef', 'Toplam %', 'Bugün'];
+            tl.forEach(b => head.push(b.name + ' Ciro', b.name + ' Hedef', b.name + ' %', b.name + ' Bugün'));
+            const out = [head];
+            rows.forEach((r, i) => { const l = [i + 1, r.bm, r.name, Math.round(r.tot.a), Math.round(r.tot.t), r.tot.pct === null ? '' : Math.round(r.tot.pct), Math.round(r.tot.td)]; tl.forEach(b => { const o = r.per[b.key]; l.push(Math.round(o.a), Math.round(o.t), o.pct === null ? '' : Math.round(o.pct), Math.round(o.td)); }); out.push(l); });
+            const csv = '\ufeff' + out.map(l => l.map(q).join(';')).join('\r\n');
+            const bl = new Blob([csv], { type: 'text/csv;charset=utf-8' }), u = URL.createObjectURL(bl), a = document.createElement('a');
+            a.href = u; a.download = 'wege-ciro-girisleri-' + new Date().toISOString().slice(0, 10) + '.csv'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000);
+        };
+
         function renderRegion() {
             const body = $('kregion-body');
             const c = ctxGet();
@@ -9460,6 +9703,8 @@
                 `<button type="button" onclick="kpiSwitchRegion()" class="w-full sm:w-auto bg-white hover:bg-indigo-50 border border-indigo-200 rounded-2xl px-4 py-2.5 flex items-center gap-2 text-sm font-black text-slate-700 shadow-sm"><i class="fa-solid fa-right-left text-indigo-500"></i><span class="truncate">${esc(bm)}</span><span class="text-indigo-600 text-xs whitespace-nowrap">· Bölge Müdürü Değiştir</span></button>` +
                 podiumHost() +
                 `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">${totalCards(regionMs, c)}${regionMs.map(x => brandCard(x.b, x.m, c, { derived: x.derived })).join('')}</div>
+                ${revCard(c, list, 'region')}
+                ${revTable(c, list, 'region')}
                 ${staffReport(c, c.staff.filter(r => list.includes(r.store)), 'Bölge Personel Raporu (KPI adet markaları)')}
                 ${weakHtml}
                 ${chartCard('kchart-region', 'Bölgenin Gidişatı')}
@@ -9601,6 +9846,8 @@
                 statBox('Bölge Genel Başarı', ov === null ? '—' : '%' + Math.round(ov)) + statBox('Hedefsiz Mağaza', noTarget)) +
                 trajectoryPanel(c, genMs) + podiumHost() +
                 `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">${totalCards(genMs, c)}${genMs.map(x => brandCard(x.b, x.m, c, { derived: x.derived })).join('')}</div>
+                ${revCard(c, ALL, 'general')}
+                ${revTable(c, ALL, 'general')}
                 ${staffReport(c, c.staff, 'Personel Raporu (KPI adet markaları)')}
                 ${chartCard('kchart-general', 'Bölgenin Gidişatı')}
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"><div class="p-4 bg-slate-50 border-b border-slate-200"><h3 class="font-bold text-slate-800"><i class="fa-solid fa-ranking-star text-amber-500 mr-2"></i>Bölge Müdürleri Sıralaması</h3><p class="text-[10px] text-slate-400 mt-0.5">Her bölge, kendi hedefine göre değerlendirilir. İsme tıklayınca bölge detayı açılır.</p></div>${bmTable}</div>
@@ -10096,6 +10343,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.75</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.80</div>
 </body>
 </html>
