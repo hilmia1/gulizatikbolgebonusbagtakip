@@ -7110,13 +7110,15 @@
         }
 
         staffArray.sort((a, b) => b.sales - a.sales);
+        const ambIds = window.kpiAmbIds ? kpiAmbIds() : new Set();
+        if (ambIds.size) staffArray = staffArray.filter(p => ambIds.has(p.id)).concat(staffArray.filter(p => !ambIds.has(p.id)));   // KPI elçileri üstte toplanır
 
         if (staffArray.length === 0) {
             document.getElementById('empty-staff-msg').classList.remove('hidden');
         } else {
             document.getElementById('empty-staff-msg').classList.add('hidden');
             const kgoals = (!isStoreHistorical && window.kpiGoalsFor) ? kpiGoalsFor() : null;
-            staffArray.forEach(p => {
+            staffArray.forEach((p, idxOfP) => {
                 let pPerc = p.target > 0 ? Math.round((p.sales / p.target) * 100) : 0;
                 let fireBadge = pPerc >= 150 ? `<span class="ml-1 inline-block animate-pulse text-[12px] drop-shadow-md" title="%150 Üzeri Başarı! Mükemmel!">🔥</span>` : '';
                 
@@ -7191,8 +7193,11 @@
                     }
                 }
 
+                const isAmb = ambIds.has(p.id);
+                if (ambIds.size && isAmb && !staffArray.slice(0, idxOfP).some(q => ambIds.has(q.id))) tbody.innerHTML += '<tr><td colspan="10" class="px-3 py-1 text-[10px] font-black text-amber-700 bg-amber-100 border-b border-amber-300">🌟 KPI ELÇİLERİ (bugünkü KPI görevinin %' + (kgoals && kgoals.ambPct ? Math.round(kgoals.ambPct * 100) : (ambIds.size === 1 ? 50 : ambIds.size === 2 ? 60 : 70)) + '\'i)</td></tr>';
+                if (ambIds.size && !isAmb && idxOfP > 0 && ambIds.has(staffArray[idxOfP - 1].id)) tbody.innerHTML += '<tr><td colspan="10" class="px-3 py-1 text-[10px] font-black text-slate-500 bg-slate-100 border-b border-slate-200">Diğer personel</td></tr>';
                 tbody.innerHTML += `
-                <tr class="${rowClass}" data-pid="${p.id}">
+                <tr class="${rowClass}" ${isAmb ? 'style="outline:2px solid #facc15;outline-offset:-2px;background:#fffbeb"' : ''} data-pid="${p.id}">
                     <td class="py-2.5 px-2 sm:px-4 font-bold text-[10px] sm:text-sm text-slate-700 max-w-[65px] sm:max-w-none break-words leading-tight">
                         ${window.avatarHtml ? (p.isTransfer ? avatarHtml(currentId, p.id, p.name, 30, false) : avatarHtml(currentId, p.id, p.name, 30, !isStoreHistorical)) : ''} <span class="clickable-name" onclick="openStaffProfile('${p.id}')" title="Performans Karnesini Gör">${safePName}</span> 
                         ${fireBadge} 
@@ -9389,6 +9394,13 @@
         // KPI ELÇİSİ: mağaza seçer, tik kalkana kadar devam eder
         function ambNode(id) { const k = (globalData && globalData.kpi) || {}; return dbRoot.child('kpi').child('comps').child(k.active).child('ambassador').child(currentId).child(id); }
         function ambList() { const c = ctxGet(); const o = (c && c.comp.ambassador && c.comp.ambassador[currentId]) || {}; return Object.keys(o).filter(x => o[x]); }
+        window.kpiAmbIds = function () {
+            try {
+                if (currentRole !== 'store' || !currentId || !kpiEntryOn() || !kpiCoachOn()) return new Set();
+                const c = ctxGet(); if (!(c && c.live)) return new Set();
+                return new Set(ambList());
+            } catch (e) { return new Set(); }
+        };
         window.kpiAmbPaint = function (id) {
             try {
                 const box = document.getElementById('profile-kpi-amb'); if (!box) return;
@@ -10511,6 +10523,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.87</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.88</div>
 </body>
 </html>
