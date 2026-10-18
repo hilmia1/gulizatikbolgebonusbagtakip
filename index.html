@@ -5866,6 +5866,39 @@
         return { isLocked: sData.isLocked || false, storeTarget: sData.target || 0, targetBy: sData.targetBy || '', staff: staffObj, hourly: sData.hourly || {} };
     }
 
+    // ===== OTOMATİK SÜRÜM KONTROLÜ: yeni sürüm yayınlandıysa açık uygulamada "Güncelle" çubuğu çıkar =====
+    (function () {
+        if (window.__DEMO || !/^https?:$/.test(location.protocol)) return;
+        const parse = t => { const m = /v(\d+)\.(\d+)\.(\d+)/.exec(String(t || '')); return m ? [+m[1], +m[2], +m[3]] : null; };
+        const newer = (a, b) => { for (let i = 0; i < 3; i++) { if (a[i] !== b[i]) return a[i] > b[i]; } return false; };
+        const mine = () => { const el = document.getElementById('build-stamp'); return el ? parse(el.textContent) : null; };
+        let shown = false, hiddenAt = 0, busy = false;
+        window.wegeApplyUpdate = function () {
+            try { if (window.caches) caches.keys().then(ks => ks.forEach(k => caches.delete(k))).catch(() => {}); } catch (e) {}
+            const u = new URL(location.href); u.searchParams.set('_v', Date.now()); location.replace(u.toString());
+        };
+        function bar() {
+            if (shown) return; shown = true;
+            const d = document.createElement('div');
+            d.style.cssText = 'position:fixed;left:12px;right:12px;bottom:14px;z-index:99999;background:#0f766e;color:#fff;border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.35);font:800 13px Inter,Arial,sans-serif';
+            d.innerHTML = '<span style="font-size:20px">🔄</span><span style="flex:1;line-height:1.25">Yeni sürüm yayında. Yeni özellikleri görmek için güncelleyin.</span><button type="button" onclick="wegeApplyUpdate()" style="background:#fff;color:#0f766e;border:0;border-radius:10px;padding:8px 14px;font:900 12px Inter,Arial,sans-serif">Güncelle</button>';
+            document.body.appendChild(d);
+        }
+        function check(fromBg) {
+            if (busy) return; const m = mine(); if (!m) return; busy = true;
+            fetch(location.pathname + '?_c=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(t => {
+                const mm = /id="build-stamp"[^>]*>([^<]*)</.exec(t || ''); const v = mm && parse(mm[1]);
+                if (v && newer(v, m)) { if (fromBg) window.wegeApplyUpdate(); else bar(); }
+            }).catch(() => {}).finally(() => { busy = false; });
+        }
+        setTimeout(() => check(false), 8000);
+        setInterval(() => check(false), 180000);
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) { hiddenAt = Date.now(); return; }
+            check(hiddenAt && Date.now() - hiddenAt > 20000);   // uzun süre arka plandaysa sessizce yenile
+        });
+    })();
+
     // ===== TELEFONA UYGULAMA GİBİ EKLE (PWA) =====
     (function () {
         let deferred = null;
@@ -9567,6 +9600,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.61</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.62</div>
 </body>
 </html>
