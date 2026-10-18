@@ -8582,7 +8582,7 @@
         const COLORS = ['#8b5cf6', '#06b6d4', '#f59e0b', '#ec4899', '#10b981', '#3b82f6'];
         const MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
         const charts = {};
-        const kState = { tab: 'comp', gBrand: 'overall', sBrand: 'all', lastSend: {}, prevSend: {}, rBrand: 'all', tSort: { k: 'a', col: 'total', dir: -1 } };
+        const kState = { tab: 'comp', gBrand: 'overall', sBrand: 'all', lastSend: {}, prevSend: {}, prevTs: {}, rBrand: 'all', tSort: { k: 'a', col: 'total', dir: -1 } };
         const kBusy = {};
         window.kpiMode = false;
 
@@ -9509,7 +9509,7 @@
                         <div class="flex gap-2"><input type="number" min="0" inputmode="numeric" id="kpi-amt-${b.key}" placeholder="Bugünkü toplam (TL)" class="flex-1 min-w-0 p-2 border border-violet-200 rounded-lg text-sm font-bold focus:outline-none focus:border-violet-500">
                         <button type="button" onclick="kpiAdd('${b.key}', 1)" class="px-4 h-10 bg-violet-600 hover:bg-violet-700 rounded-lg font-black text-white shadow whitespace-nowrap">Gönder</button></div>
                         <div class="mt-1.5 flex items-center justify-between gap-2 text-[10px] font-bold">
-                            <span class="text-emerald-600">${tv > 0 ? '✓ Bugün iletilen: ₺' + nf(tv) : (ls ? '✓ Son gönderim iletildi' : '')}</span>
+                            <span class="text-emerald-600">${lastTs(c, st, b.key) ? '✓ Son giriş: ' + hhmm(lastTs(c, st, b.key)) : (tv > 0 ? '✓ Bugün giriş yapıldı' : (ls ? '✓ Son gönderim iletildi' : ''))}</span>
                             ${kState.prevSend[b.key] !== undefined ? `<button type="button" onclick="kpiAdd('${b.key}', -1)" class="text-rose-600 underline">Son gönderimi geri al</button>` : ''}
                         </div></div>`;
                 } else {
@@ -9550,6 +9550,9 @@
             drawPodiums(c, c.staff, c.rows, 'Tüm mağazalar arası');
         }
 
+        const hhmm = ts => { const d = new Date(Number(ts)); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+        const sameDay = ts => { const d = new Date(Number(ts)), n = new Date(); return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate(); };
+        const lastTs = (c, st, bk) => { const v = Number(c.comp.lastsend && c.comp.lastsend[st] && c.comp.lastsend[st][bk]) || 0; return v > 0 && sameDay(v) ? v : 0; };
         window.kpiAdd = function (bk, sign) {
             const c = ctxGet(); if (!c || currentRole !== 'kstore') return;
             if (!c.live) return alert('Yarışma şu an aktif tarih aralığında değil.');
@@ -9564,7 +9567,8 @@
                     if (!confirm('Son gönderdiğiniz rakam geri alınsın mı? (Önceki rakamınız geri gelir)')) return;
                     kBusy[bk] = Date.now(); Snd.play('saleUndo');
                     ref.transaction(() => Math.max(0, Number(pv) || 0));
-                    delete kState.prevSend[bk]; delete kState.lastSend[bk];
+                    try { const tr = dbRoot.child('kpi').child('comps').child(c.cid).child('lastsend').child(currentId).child(bk); const pt = kState.prevTs[bk]; if (pt) tr.set(pt); else tr.remove(); } catch (e) {}
+                    delete kState.prevSend[bk]; delete kState.lastSend[bk]; delete kState.prevTs[bk];
                     return;
                 }
                 const n = Math.round(Number(($('kpi-amt-' + bk) || {}).value));
@@ -9573,6 +9577,7 @@
                 const cur = (c.todayVal[currentId] && c.todayVal[currentId][bk]) || 0;
                 kBusy[bk] = Date.now(); Snd.play('sale');
                 ref.transaction(() => n);
+                try { kState.prevTs[bk] = lastTs(c, currentId, bk) || 0; dbRoot.child('kpi').child('comps').child(c.cid).child('lastsend').child(currentId).child(bk).set(Date.now()); } catch (e) {}
                 kState.prevSend[bk] = cur; kState.lastSend[bk] = n;
                 if ($('kpi-amt-' + bk)) $('kpi-amt-' + bk).value = '';
                 return;
@@ -9705,12 +9710,13 @@
         function tblRows(c, names) {
             const tl = revBrands(c), S = kState.tSort;
             const rows = names.map(n => {
-                const per = {}; let A = 0, T = 0, TD = 0;
+                const per = {}; let A = 0, T = 0, TD = 0, LT = 0;
                 tl.forEach(b => {
+                    LT = Math.max(LT, lastTs(c, n, b.key));
                     const a = c.aStore(n, b.key), t = c.tStore(n, b.key), td = (c.todayVal[n] && c.todayVal[n][b.key]) || 0;
                     per[b.key] = { a, t, td, pct: t > 0 ? a / t * 100 : null }; A += a; T += t; TD += td;
                 });
-                return { name: n, bm: bmOf(n), per, tot: { a: A, t: T, td: TD, pct: T > 0 ? A / T * 100 : null } };
+                return { name: n, bm: bmOf(n), per, lt: LT, tot: { a: A, t: T, td: TD, pct: T > 0 ? A / T * 100 : null } };
             });
             const colOf = r => S.col === 'total' ? r.tot : (r.per[S.col] || r.tot);
             const val = r => { const o = colOf(r); return S.k === 'name' ? r.name : S.k === 'pct' ? (o.pct === null ? -1 : o.pct) : S.k === 'td' ? o.td : o.a; };
@@ -9742,7 +9748,7 @@
                 </div>
                 <div class="overflow-x-auto max-h-[32rem] overflow-y-auto"><table class="w-full text-left text-xs"><thead class="sticky top-0 bg-slate-50 z-10"><tr class="text-[10px] uppercase tracking-wider text-slate-500 border-b border-slate-200"><th class="py-2 px-2 text-center w-8">#</th><th class="py-2 px-2 font-bold cursor-pointer select-none" onclick="kpiTblSet('k','name')">Mağaza${S.k === 'name' ? (S.dir < 0 ? ' ↑' : ' ↓') : ''}</th>${th('total', 'TOPLAM', '#7c3aed')}${tl.map(b => th(b.key, b.name, b.color)).join('')}</tr>
                     <tr class="bg-violet-50 border-b border-violet-100"><td></td><td class="py-2 px-2 font-black text-violet-700 text-[11px]">GENEL TOPLAM</td><td class="py-2 px-2 text-center">${cell(tot)}</td>${tl.map(b => `<td class="py-2 px-2 text-center">${cell(brandTot[b.key])}</td>`).join('')}</tr></thead>
-                    <tbody>${rows.map((r, i) => `<tr class="border-b border-slate-100 hover:bg-violet-50/40"><td class="py-2 px-2 text-center font-black text-slate-400">${i + 1}</td><td class="py-2 px-2 whitespace-nowrap"><span class="clickable-store font-bold text-slate-800" onclick="kpiOpen('kstore','${esc(r.name)}')">${esc(r.name)}</span><div class="text-[9px] text-slate-400 font-bold">${esc(r.bm || '')}${r.tot.td > 0 ? ' · bugün ₺' + nf(r.tot.td) : ''}</div></td><td class="py-2 px-2 text-center">${cell(r.tot)}</td>${tl.map(b => `<td class="py-2 px-2 text-center">${cell(r.per[b.key])}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`;
+                    <tbody>${rows.map((r, i) => `<tr class="border-b border-slate-100 hover:bg-violet-50/40"><td class="py-2 px-2 text-center font-black text-slate-400">${i + 1}</td><td class="py-2 px-2 whitespace-nowrap"><span class="clickable-store font-bold text-slate-800" onclick="kpiOpen('kstore','${esc(r.name)}')">${esc(r.name)}</span><div class="text-[9px] text-slate-400 font-bold">${esc(r.bm || '')}${r.tot.td > 0 ? ' · bugün ₺' + nf(r.tot.td) : ''}${r.lt ? ' · son giriş ' + hhmm(r.lt) : ''}</div></td><td class="py-2 px-2 text-center">${cell(r.tot)}</td>${tl.map(b => `<td class="py-2 px-2 text-center">${cell(r.per[b.key])}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`;
         }
         window.kpiTblExport = function (scope) {
             const c = ctxGet(); if (!c) return;
@@ -10419,6 +10425,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.81</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.82</div>
 </body>
 </html>
