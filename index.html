@@ -905,6 +905,20 @@
                 <div id="sl-list" class="max-h-96 overflow-y-auto rounded-xl bg-white/95 divide-y divide-slate-100"></div>
             </div>
 
+                    <!-- CİHAZ RAPORU: cihaz bazında özet + engelle -->
+                    <div class="bg-gradient-to-r from-slate-900 to-zinc-800 p-4 rounded-2xl border border-zinc-600/60 shadow-lg space-y-3">
+                        <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+                            <div class="min-w-0">
+                                <div class="text-zinc-100 font-black text-sm"><i class="fa-solid fa-mobile-screen mr-2"></i>CİHAZ RAPORU</div>
+                                <div class="text-[11px] text-slate-300 mt-0.5">Her cihazın yaptığı silme, personel silme/transfer/isim değiştirme/ekleme ve giriş sayısı. "Engelle" ile o cihazın uygulamaya erişimi kapatılır. Cihaz tarayıcı verisini silerse yeni kod alır, bu yüzden kalıcı çözüm için mağaza şifresini de değiştir.</div>
+                            </div>
+                            <div class="flex flex-wrap gap-2 shrink-0">
+                                <select id="dv-range" onchange="dvPaint(true)" class="bg-zinc-700 text-zinc-50 border border-zinc-500 rounded-lg px-2 py-1.5 text-xs font-black"><option value="0">Bugün</option><option value="1">Dün</option><option value="7">Son 7 gün</option><option value="30">Son 30 gün</option></select>
+                                <button type="button" onclick="dvExcel()" class="px-3 py-1.5 bg-green-700 hover:bg-green-600 text-white font-black rounded-lg text-xs"><i class="fa-solid fa-file-excel mr-1"></i>Excel</button>
+                            </div>
+                        </div>
+                        <div id="dv-list" class="max-h-96 overflow-y-auto rounded-xl bg-white/95 divide-y divide-slate-100"></div>
+                    </div>
                 </div>
             </details>
 
@@ -3232,6 +3246,68 @@
             a.href = u; a.download = 'wege-personel-degisiklik-' + new Date().toISOString().slice(0, 10) + '.csv'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000);
         };
         setInterval(() => { try { slPaint(false); } catch (e) {} }, 3000);
+    })();
+
+    // === Cihaz raporu + cihaz engeli (blocked/<kod>) ===
+    (function () {
+        const pad = n => String(n).padStart(2, '0');
+        const dstr = off => { const d = new Date(); d.setDate(d.getDate() - off); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+        const esc = v => String(v == null ? '' : v).replace(/[<>&"']/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' }[c]));
+        const sn = x => String(x || '').replace(/^\d+-/, '');
+        const myCode = () => { try { let c = localStorage.getItem('bb_dev'); if (!c) { c = Math.random().toString(36).slice(2, 8); localStorage.setItem('bb_dev', c); } return c; } catch (e) { return ''; } };
+        myCode();
+        const codeOf = x => { if (x && x.dv) return String(x.dv); const m = /#([A-Za-z0-9]+)$/.exec((x && x.dn) || ''); return m ? m[1] : ''; };
+        function days() { const r = Number((document.getElementById('dv-range') || {}).value || 0); const n = r === 7 ? 7 : r === 30 ? 30 : 1, st = r === 1 ? 1 : 0; const o = []; for (let i = st; i < st + n; i++) o.push(dstr(i)); if (r === 0) { try { o[0] = ACTIVE_DATE || o[0]; } catch (e) {} } return o; }
+        function rows() {
+            const g = {}, D = days();
+            const get = (c, dn) => { const o = g[c] || (g[c] = { c, n: dn || '', st: new Set(), del: 0, delA: 0, pdel: 0, trf: 0, ren: 0, add: 0, ent: 0, t: 0 }); if (dn) o.n = dn; return o; };
+            D.forEach(d => {
+                const dl = (globalData.deletions || {})[d] || {}; Object.keys(dl).forEach(k => { const x = dl[k], c = codeOf(x); if (!c) return; const o = get(c, x.dn); o.del++; o.delA += x.a || 0; if (x.s) o.st.add(sn(x.s)); o.t = Math.max(o.t, x.t || 0); });
+                const sl = (globalData.stafflog || {})[d] || {}; Object.keys(sl).forEach(k => { const x = sl[k], c = codeOf(x); if (!c) return; const o = get(c, x.dn); if (x.a === 'del') o.pdel++; else if (x.a === 'trf') o.trf++; else if (x.a === 'ren') o.ren++; else if (x.a === 'add') o.add++; if (x.s) o.st.add(sn(x.s)); o.t = Math.max(o.t, x.t || 0); });
+                const sh = (globalData.staffhour || {})[d] || {}; Object.keys(sh).forEach(k => { const r = sh[k] || {}, c = codeOf(r); if (!c) return; const o = get(c, r.dn); Object.keys(r).forEach(q => { if (/^[bok]_\d\d$/.test(q)) o.ent += Number(r[q]) || 0; }); if (r.s) o.st.add(sn(r.s)); });
+            });
+            return Object.keys(g).map(k => g[k]).sort((a, b) => (b.delA + b.pdel * 5 + b.trf * 5 + b.ren * 3) - (a.delA + a.pdel * 5 + a.trf * 5 + a.ren * 3) || b.ent - a.ent);
+        }
+        const bl = () => (globalData && globalData.blocked) || {};
+        window.dvPaint = function (force) {
+            const list = document.getElementById('dv-list'); if (!list) return;
+            if (!force && list.offsetParent === null) return;
+            const r = rows(), B = bl(), seen = new Set(r.map(x => x.c)), me = myCode();
+            const extra = Object.keys(B).filter(c => !seen.has(c)).map(c => ({ c, n: (B[c] && B[c].n) || '', st: new Set(), del: 0, delA: 0, pdel: 0, trf: 0, ren: 0, add: 0, ent: 0, t: 0 }));
+            const all = extra.concat(r);
+            list.innerHTML = all.length ? all.map(x => { const bk = !!B[x.c]; return `<div class="px-3 py-2 flex items-start gap-2 ${bk ? 'bg-rose-50' : ''}"><div class="min-w-0 flex-1"><div class="text-xs font-black text-slate-800">${esc(String(x.n || 'Cihaz').replace(/\s*#[A-Za-z0-9]+$/, ''))} <span class="text-slate-400 font-bold">#${esc(x.c)}${x.c === me ? ' · bu cihaz' : ''}</span>${bk ? ' <span class="px-1.5 py-0.5 rounded bg-rose-600 text-white text-[10px]">ENGELLİ</span>' : ''}</div><div class="text-[10px] font-bold text-slate-500">${x.st.size ? esc(Array.from(x.st).slice(0, 4).join(', ')) + (x.st.size > 4 ? ' +' + (x.st.size - 4) : '') + '<br>' : ''}Silme <b class="text-rose-600">${x.del}</b> (−${x.delA}) · Personel sildi <b>${x.pdel}</b> · Transfer <b>${x.trf}</b> · İsim değiştirdi <b>${x.ren}</b> · Personel ekledi <b>${x.add}</b> · Giriş <b>${x.ent}</b></div></div><button type="button" onclick="dvBlock('${esc(x.c)}', ${bk ? 'false' : 'true'})" class="shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-black ${bk ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}">${bk ? 'Engeli kaldır' : 'Engelle'}</button></div>`; }).join('') : '<div class="p-4 text-center text-xs text-slate-400 font-bold">Bu aralıkta cihaz kaydı yok.</div>';
+        };
+        window.dvBlock = function (c, on) {
+            if (currentRole !== 'central') return alert('Bu işlem yalnızca merkez içindir.');
+            if (!/^[A-Za-z0-9]{3,12}$/.test(c)) return;
+            if (on) {
+                if (c === myCode() && !confirm('Bu SİZİN cihazınız. Yine de engellensin mi?')) return;
+                if (!confirm('#' + c + ' kodlu cihaz engellensin mi? Uygulamaya erişimi kapanır.')) return;
+                const r = rows().find(x => x.c === c);
+                dbRoot.child('blocked').child(c).set({ t: Date.now(), n: String((r && r.n) || '').slice(0, 60) }).catch(e => alert('Engellenemedi (kurallar yayınlandı mı?): ' + (e && e.message)));
+            } else dbRoot.child('blocked').child(c).remove().catch(e => alert('Kaldırılamadı: ' + (e && e.message)));
+            setTimeout(() => dvPaint(true), 400);
+        };
+        window.dvExcel = function () {
+            const r = rows(); if (!r.length) return alert('Dışa aktarılacak kayıt yok.');
+            const cell = v => { let t = String(v == null ? '' : v).replace(/[\r\n]+/g, ' '); if (/^[=+\-@]/.test(t)) t = "'" + t; return /[";]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+            const B = bl(), t = [['Cihaz', 'Kod', 'Mağazalar', 'Silme sayısı', 'Silinen adet', 'Personel silme', 'Transfer', 'İsim değiştirme', 'Personel ekleme', 'Giriş', 'Durum']];
+            r.forEach(x => t.push([x.n, x.c, Array.from(x.st).join(' / '), x.del, x.delA, x.pdel, x.trf, x.ren, x.add, x.ent, B[x.c] ? 'Engelli' : '']));
+            const csv = '\ufeff' + t.map(q => q.map(cell).join(';')).join('\r\n');
+            const b = new Blob([csv], { type: 'text/csv;charset=utf-8' }), u = URL.createObjectURL(b), a = document.createElement('a');
+            a.href = u; a.download = 'wege-cihaz-raporu-' + new Date().toISOString().slice(0, 10) + '.csv'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000);
+        };
+        // Engelli cihaz: tam ekran kapatma
+        function guard() {
+            try {
+                const c = myCode(), blocked = currentRole !== 'central' && c && globalData && globalData.blocked && globalData.blocked[c];
+                let el = document.getElementById('bb-blocked');
+                if (blocked && !el) { el = document.createElement('div'); el.id = 'bb-blocked'; el.style.cssText = 'position:fixed;inset:0;z-index:2147483000;background:#0f172a;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;font-family:system-ui,sans-serif'; el.innerHTML = '<div style="font-size:56px">⛔</div><div style="font-size:20px;font-weight:900;margin-top:12px">Bu cihazın erişimi kapatıldı</div><div style="font-size:13px;opacity:.7;margin-top:8px">Bir hata olduğunu düşünüyorsan bölge müdürünle iletişime geç.</div>'; document.body.appendChild(el); }
+                else if (!blocked && el) el.remove();
+            } catch (e) {}
+        }
+        setInterval(guard, 1500);
+        setInterval(() => { try { dvPaint(false); } catch (e) {} }, 3000);
     })();
 
     // === Wegi'yi Sistem Merkezi'nden aç/kapat (ayar: settings.wegi, yoksa açık) ===
@@ -9996,6 +10072,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.70</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.71</div>
 </body>
 </html>
