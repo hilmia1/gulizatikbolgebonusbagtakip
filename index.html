@@ -397,6 +397,7 @@
                 <h3 class="font-black text-2xl text-slate-800 uppercase" id="profile-name">Yükleniyor...</h3>
                 <p class="text-xs text-slate-500 mt-1 font-bold tracking-wider uppercase"><i class="fa-solid fa-ranking-star text-amber-500 mr-1"></i> Performans Karnesi</p>
             </div>
+            <div id="profile-kpi-amb" class="mb-3"></div>
             
             <div class="space-y-3">
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm">
@@ -4380,6 +4381,7 @@
 
     window.openStaffProfile = function(stfId) {
         if (!stfId || stfId === 'undefined') return;
+        try { window.kpiAmbPaint && kpiAmbPaint(stfId); } catch (e) {}
         
         let name = findStaffNameGlobal(stfId);
         let pStore = findStaffCurrentStore(stfId);
@@ -9349,6 +9351,11 @@
                 const active = staff.filter(q => (Number(q.target) || 0) > 0); if (!active.length) return null;
                 const totalW = active.reduce((a, q) => a + Number(q.target), 0);
                 const plan = coachPlan(c, currentId);
+                // KPI Elçileri: Bonus Pack hedefi olan (izinli olmayan) elçiler görevin %50/60/70'ini paylaşır
+                const ambRaw = (c.comp.ambassador && c.comp.ambassador[currentId]) || {};
+                const ambIds = new Set(active.filter(q => ambRaw[q.id]).map(q => q.id));
+                const ambPct = ambIds.size === 0 ? 0 : ambIds.size === 1 ? 0.5 : ambIds.size === 2 ? 0.6 : 0.7;
+                const ambSum = active.filter(q => ambIds.has(q.id)).reduce((a, q) => a + Number(q.target), 0), othSum = active.filter(q => !ambIds.has(q.id)).reduce((a, q) => a + Number(q.target), 0);
                 const man = (c.comp.staffgoal && c.comp.staffgoal[ACTIVE_DATE] && c.comp.staffgoal[ACTIVE_DATE][currentId]) || {};
                 const byId = {};
                 const big = (G, ws) => {   // en büyük kalan yöntemiyle G'yi ağırlıklara göre dağıt
@@ -9365,7 +9372,8 @@
                     const mOf = q => { const mv = man[q.id] && man[q.id][b.key]; return (mv !== undefined && mv !== null && !isNaN(Number(mv))) ? Number(mv) : null; };
                     const fixed = active.filter(q => mOf(q) !== null), free = active.filter(q => mOf(q) === null);
                     const R = Math.max(0, G - fixed.reduce((a, q) => a + mOf(q), 0));   // elle değiştirilenlerden kalan, diğerlerine dağılır
-                    const eff = big(R, free.map(q => Number(q.target))), hyp = big(G, active.map(q => Number(q.target)));
+                    const wOf = q => { const t = Number(q.target); return ambIds.has(q.id) ? ambPct * t / ambSum : (ambIds.size && othSum > 0 ? (1 - ambPct) * t / othSum : (ambIds.size ? 0 : t)); };
+                    const eff = big(R, free.map(wOf)), hyp = big(G, active.map(wOf));
                     active.forEach((q, k) => { const fi = free.indexOf(q); (byId[q.id] = byId[q.id] || {})[b.key] = { auto: fi >= 0 ? eff[fi] : hyp[k] }; });
                 });
                 staff.forEach(q => brands.forEach(b => {
@@ -9374,10 +9382,35 @@
                     e.manual = (mv !== undefined && mv !== null && !isNaN(Number(mv))) ? Number(mv) : null;
                     e.goal = e.manual !== null ? e.manual : e.auto;
                 }));
-                return { byId, brands };
+                return { byId, brands, amb: ambIds, ambPct };
             } catch (e) { return null; }
         };
         const shortB = n => String(n || '').split(/\s+/)[0].slice(0, 9);
+        // KPI ELÇİSİ: mağaza seçer, tik kalkana kadar devam eder
+        function ambNode(id) { const k = (globalData && globalData.kpi) || {}; return dbRoot.child('kpi').child('comps').child(k.active).child('ambassador').child(currentId).child(id); }
+        function ambList() { const c = ctxGet(); const o = (c && c.comp.ambassador && c.comp.ambassador[currentId]) || {}; return Object.keys(o).filter(x => o[x]); }
+        window.kpiAmbPaint = function (id) {
+            try {
+                const box = document.getElementById('profile-kpi-amb'); if (!box) return;
+                box.innerHTML = '';
+                const c = ctxGet();
+                if (currentRole !== 'store' || !currentId || !(c && c.live) || !kpiEntryOn() || !kpiCoachOn() || !id) return;
+                if (!kpiStaffBrands().length && !(c.brands || []).length) return;
+                const list = ambList(), on = list.indexOf(id) >= 0, n = list.length;
+                const pct = n <= 1 ? 50 : n === 2 ? 60 : 70;
+                box.innerHTML = '<button type="button" onclick="kpiAmbToggle(\'' + String(id).replace(/'/g, "\\'") + '\')" class="w-full py-2.5 rounded-2xl font-black text-sm shadow-sm border ' + (on ? 'bg-amber-400 text-white border-amber-500' : 'bg-white text-amber-600 border-amber-300 hover:bg-amber-50') + '">🌟 ' + (on ? 'KPI Elçisi (seçili) — kaldır' : 'KPI Elçisi yap') + '</button>' +
+                    '<div class="text-[10px] font-bold text-slate-500 text-center mt-1.5 leading-snug">' + (n ? 'Seçili elçi: ' + n + ' kişi → bugünkü KPI görevinin <b>%' + pct + '</b>\'i elçilere gider. ' : 'Elçi seçilirse bugünkü KPI görevinin %50\'si (2 kişide %60, 3 kişide %70) elçilere verilir. ') + 'Bonus Pack hedefi olmayan (izinli) elçiye o gün görev düşmez. Tik kalkana kadar her gün devam eder.</div>';
+            } catch (e) {}
+        };
+        window.kpiAmbToggle = function (id) {
+            try {
+                const list = ambList(), on = list.indexOf(id) >= 0;
+                if (!on && list.length >= 3) return alert('En fazla 3 KPI elçisi seçilebilir. Önce birini kaldırın.');
+                const pr = on ? ambNode(id).remove() : ambNode(id).set(true);
+                if (pr && pr.catch) pr.catch(() => alert('Kaydedilemedi. database.rules.json dosyasının son halini yayınladınız mı?'));
+                setTimeout(() => kpiAmbPaint(id), 400); setTimeout(() => kpiAmbPaint(id), 1500);
+            } catch (e) {}
+        };
         window.kpiGoalTotal = function (id) {
             try { const g = kpiGoalsFor(); if (!g || !g.byId[id]) return null; let G = 0, D = 0; g.brands.forEach(b => { const e = g.byId[id][b.key]; if (e) { G += e.goal; D += kpiStaffGet(id, b.key); } }); return G > 0 ? { goal: G, done: D } : null; } catch (e) { return null; }
         };
@@ -9399,7 +9432,7 @@
                 goals.brands.forEach(b => { const e = goals.byId[id][b.key]; if (!e || (!e.goal && e.manual === null)) return; G += e.goal; D += kpiStaffGet(id, b.key); if (e.manual !== null) man = true; });
                 if (!(G > 0)) return '';
                 const ok = D >= G;
-                const parts = [`<span class="${ok ? 'text-emerald-700' : 'text-cyan-700'}">KPI <b>${D}/${G}</b>${man ? '✎' : ''}${ok ? '✅' : ''}</span>`];
+                const parts = [`<span class="${ok ? 'text-emerald-700' : 'text-cyan-700'}">${goals.amb && goals.amb.has(id) ? '🌟 ' : ''}KPI <b>${D}/${G}</b>${man ? '✎' : ''}${ok ? '✅' : ''}</span>`];
                 return `<button type="button" onclick="openKpiGoalModal('${esc(id)}','${String(name || '').replace(/'/g, "\\'")}')" class="mt-1 inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 px-1.5 py-0.5 rounded-lg bg-cyan-50 border border-cyan-200 text-[10px] font-bold leading-tight" title="Bugünkü KPI görevi (yapay zeka önerisi). Değiştirmek için dokun">🎯 ${parts.join(' · ')}</button>`;
             } catch (e) { return ''; }
         };
@@ -10478,6 +10511,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.86</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.87</div>
 </body>
 </html>
