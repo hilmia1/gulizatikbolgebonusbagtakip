@@ -854,12 +854,32 @@
                     </div>
                     <div class="flex flex-wrap gap-2 shrink-0">
                         <select id="del-range" onchange="delPaint(true)" class="bg-rose-900 text-rose-50 border border-rose-600 rounded-lg px-2 py-1.5 text-xs font-black"><option value="0">Bugün</option><option value="1">Dün</option><option value="7">Son 7 gün</option></select>
+                        <select id="del-view" onchange="delPaint(true)" class="bg-rose-900 text-rose-50 border border-rose-600 rounded-lg px-2 py-1.5 text-xs font-black"><option value="p">Personel</option><option value="s">Mağaza</option></select>
                         <select id="del-kind" onchange="delPaint(true)" class="bg-rose-900 text-rose-50 border border-rose-600 rounded-lg px-2 py-1.5 text-xs font-black"><option value="">Hepsi</option><option value="b">Bonus Pack</option><option value="o">Odak</option><option value="k">KPI</option></select>
                         <button type="button" onclick="delShare()" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-lg text-xs"><i class="fa-brands fa-whatsapp mr-1"></i>Paylaş</button>
                     </div>
                 </div>
                 <div id="del-summary" class="flex flex-wrap gap-1.5"></div>
                 <div id="del-list" class="max-h-96 overflow-y-auto rounded-xl bg-white/95 divide-y divide-slate-100"></div>
+            </div>
+
+            <!-- ANORMAL HIZ RAPORU: 1 saatte olağandışı çok giriş yapan personeller -->
+            <div class="bg-gradient-to-r from-amber-950 to-slate-800 p-4 rounded-2xl border border-amber-700/50 shadow-lg space-y-3">
+                <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+                    <div class="min-w-0">
+                        <div class="text-amber-100 font-black text-sm"><i class="fa-solid fa-gauge-high mr-2"></i>AŞIRI HIZLI GİRİŞ RAPORU</div>
+                        <div class="text-[11px] text-slate-300 mt-0.5">Bir personelin aynı saat diliminde (örn. 14:00-15:00) eşikten fazla giriş yaptığı durumları listeler. Hatalı, toplu ya da şüpheli girişleri yakalamak içindir. Kayıt bu sürümden itibaren tutulur.</div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 shrink-0">
+                        <select id="hr-range" onchange="hrPaint(true)" class="bg-amber-900 text-amber-50 border border-amber-600 rounded-lg px-2 py-1.5 text-xs font-black"><option value="0">Bugün</option><option value="1">Dün</option><option value="7">Son 7 gün</option></select>
+                        <select id="hr-view" onchange="hrPaint(true)" class="bg-amber-900 text-amber-50 border border-amber-600 rounded-lg px-2 py-1.5 text-xs font-black"><option value="p">Personel</option><option value="s">Mağaza</option></select>
+                        <select id="hr-kind" onchange="hrPaint(true)" class="bg-amber-900 text-amber-50 border border-amber-600 rounded-lg px-2 py-1.5 text-xs font-black"><option value="">Hepsi</option><option value="b">Bonus Pack</option><option value="o">Odak</option><option value="k">KPI</option></select>
+                        <label class="flex items-center gap-1 text-[11px] font-black text-amber-100">Eşik<input id="hr-th" type="number" min="2" value="6" onchange="hrPaint(true)" class="w-14 bg-amber-900 text-amber-50 border border-amber-600 rounded-lg px-2 py-1.5 text-xs font-black text-center">/saat</label>
+                        <label id="hr-th2-wrap" class="hidden flex items-center gap-1 text-[11px] font-black text-amber-100">Mağaza eşiği<input id="hr-th2" type="number" min="3" value="20" onchange="hrPaint(true)" class="w-14 bg-amber-900 text-amber-50 border border-amber-600 rounded-lg px-2 py-1.5 text-xs font-black text-center">/saat</label>
+                        <button type="button" onclick="hrShare()" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-lg text-xs"><i class="fa-brands fa-whatsapp mr-1"></i>Paylaş</button>
+                    </div>
+                </div>
+                <div id="hr-list" class="max-h-96 overflow-y-auto rounded-xl bg-white/95 divide-y divide-slate-100"></div>
             </div>
 
             <!-- KPI: MAĞAZA EKRANLARINA YANSIT + KPI GİRİŞİ -->
@@ -2387,6 +2407,7 @@
         if(change < 0 && current === 0) return;
         let next = current + change;
         if (change < 0) { try { delLog('o', stfId, brand, current, next); } catch (e) {} }
+        try { hrLog('o', stfId, next - current); } catch (e) {}
         const recBefore = window.recState ? recState('odak:' + brand).today : 0;
         dbRoot.child('daily').child(ACTIVE_DATE).child(currentId).child('staff').child(stfId).child('contest').child(brand).set(next);
         if (change > 0 && window.recOnSale) recOnSale('odak:' + brand, stfId, recBefore, change);
@@ -2981,16 +3002,104 @@
             r.forEach(x => { sum[x.s] = (sum[x.s] || 0) + (x.a || 0); });
             const top = Object.keys(sum).sort((a, b) => sum[b] - sum[a]).slice(0, 8);
             document.getElementById('del-summary').innerHTML = `<span class="px-2 py-1 rounded-lg bg-rose-900 text-rose-100 text-[11px] font-black">${r.length} silme · ${r.reduce((a, x) => a + (x.a || 0), 0)} adet/tutar</span>` + top.map(s => `<span class="px-2 py-1 rounded-lg bg-slate-700 text-slate-100 text-[10px] font-bold">${esc(String(s).replace(/^\d+-/, ''))}: ${sum[s]}</span>`).join('');
+            if (((document.getElementById('del-view') || {}).value) === 's') {
+                const g = {};
+                r.forEach(x => { const o = g[x.s] || (g[x.s] = { s: x.s, n: 0, a: 0, k: {}, p: new Set(), t: 0 }); o.n++; o.a += x.a || 0; o.k[x.k] = (o.k[x.k] || 0) + (x.a || 0); o.p.add(x.i); o.t = Math.max(o.t, x.t || 0); });
+                const arr = Object.keys(g).map(k => g[k]).sort((a, b) => b.a - a.a || b.n - a.n);
+                list.innerHTML = arr.length ? arr.map((o, i) => `<div class="px-3 py-2 flex items-start gap-2"><span class="w-5 text-center text-xs font-black text-slate-400 shrink-0 mt-0.5">${i + 1}</span><div class="min-w-0 flex-1"><div class="text-xs font-black text-slate-800 truncate">${esc(String(o.s).replace(/^\d+-/, ''))}</div><div class="text-[10px] font-bold text-slate-500">${o.n} silme · ${o.p.size} personel · ${Object.keys(o.k).map(k => (KN[k] || k) + ' ' + o.k[k]).join(', ')} · son ${hm(o.t)}</div></div><div class="text-right shrink-0"><div class="text-sm font-black text-rose-600">−${o.a}</div></div></div>`).join('') : '<div class="p-4 text-center text-xs text-slate-400 font-bold">Bu aralıkta silme kaydı yok.</div>';
+                return;
+            }
             list.innerHTML = r.length ? r.slice(0, 200).map(x => `<div class="px-3 py-2 flex items-start gap-2"><span class="shrink-0 mt-0.5 px-1.5 py-0.5 rounded text-[10px] font-black ${KC[x.k] || 'bg-slate-100 text-slate-600'}">${KN[x.k] || x.k}</span><div class="min-w-0 flex-1"><div class="text-xs font-black text-slate-800 truncate">${esc(x.n || 'Personel')} <span class="text-slate-400 font-bold">· ${esc(String(x.s).replace(/^\d+-/, ''))}</span></div><div class="text-[10px] font-bold text-slate-500">${x.p && x.k !== 'b' ? esc(x.p) + ' · ' : ''}${x.f} → ${x.to} <span class="text-slate-400">· cihaz ${esc(x.dv || '-')} · ${esc(x.r || '')}</span></div></div><div class="text-right shrink-0"><div class="text-sm font-black text-rose-600">−${x.a}</div><div class="text-[10px] font-bold text-slate-400">${(x.d || '').slice(5).split('-').reverse().join('.')} ${hm(x.t)}</div></div></div>`).join('') : '<div class="p-4 text-center text-xs text-slate-400 font-bold">Bu aralıkta silme kaydı yok.</div>';
         };
         window.delShare = function () {
             const r = rows(); if (!r.length) return alert('Paylaşılacak silme kaydı yok.');
             const L = ['🧹 *SİLME RAPORU*', ''];
+            if (((document.getElementById('del-view') || {}).value) === 's') {
+                const g = {}; r.forEach(x => { g[x.s] = (g[x.s] || 0) + (x.a || 0); });
+                Object.keys(g).sort((a, b) => g[b] - g[a]).slice(0, 25).forEach(s => L.push('• ' + String(s).replace(/^\d+-/, '') + ': −' + g[s]));
+                return window.open('https://wa.me/?text=' + encodeURIComponent(L.join('\n')), '_blank');
+            }
             r.slice(0, 25).forEach(x => L.push('• ' + hm(x.t) + ' ' + (KN[x.k] || x.k) + ': ' + (x.n || 'Personel') + ' (' + String(x.s).replace(/^\d+-/, '') + ') −' + x.a + (x.p && x.k !== 'b' ? ' ' + x.p : '')));
             if (r.length > 25) L.push('… ve ' + (r.length - 25) + ' kayıt daha');
             window.open('https://wa.me/?text=' + encodeURIComponent(L.join('\n')), '_blank');
         };
         setInterval(() => { try { delPaint(false); } catch (e) {} }, 2500);
+    })();
+
+    // === Saatlik giriş sayacı (staffhour/<tarih>/<personel>/<tür>_<saat>) ve aşırı hızlı giriş raporu ===
+    window.hrLog = function (kind, stfId, delta) {
+        try {
+            if (window.__DEMO || !delta) return;
+            const hh = String(new Date().getHours()).padStart(2, '0');
+            const base = dbRoot.child('staffhour').child(ACTIVE_DATE).child(String(stfId));
+            base.child('s').set(String(currentId || '').slice(0, 80)).catch(() => {});
+            base.child(kind + '_' + hh).transaction(v => { const x = (Number(v) || 0) + delta; return x < 0 ? 0 : x; });
+        } catch (e) {}
+    };
+    (function () {
+        const KN = { b: 'Bonus Pack', o: 'Odak', k: 'KPI' }, KC = { b: 'bg-pink-100 text-pink-700', o: 'bg-purple-100 text-purple-700', k: 'bg-cyan-100 text-cyan-700' };
+        const pad = n => String(n).padStart(2, '0');
+        const dstr = off => { const d = new Date(); d.setDate(d.getDate() - off); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+        const esc = v => String(v == null ? '' : v).replace(/[<>&"']/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' }[c]));
+        function rows() {
+            const range = Number((document.getElementById('hr-range') || {}).value || 0), kind = (document.getElementById('hr-kind') || {}).value || '';
+            const th = Math.max(2, Number((document.getElementById('hr-th') || {}).value) || 6);
+            const all = (globalData && globalData.staffhour) || {}, out = [];
+            const days = range === 1 ? [dstr(1)] : range === 7 ? Array.from({ length: 7 }, (_, i) => dstr(i)) : [dstr(0)];
+            if (range === 0) { try { days[0] = ACTIVE_DATE || days[0]; } catch (e) {} }
+            days.forEach(d => { const day = all[d]; if (!day) return; Object.keys(day).forEach(id => {
+                const r = day[id] || {}, tot = {};
+                Object.keys(r).forEach(k => { const m = /^([bok])_(\d\d)$/.exec(k); if (m) tot[m[1]] = (tot[m[1]] || 0) + (Number(r[k]) || 0); });
+                Object.keys(r).forEach(k => {
+                    const m = /^([bok])_(\d\d)$/.exec(k); if (!m) return;
+                    const n = Number(r[k]) || 0;
+                    if (n >= th && (!kind || m[1] === kind)) out.push({ d, id, k: m[1], h: m[2], n, day: tot[m[1]] || n, s: r.s || '' });
+                });
+            }); });
+            return out.sort((a, b) => b.n - a.n || (b.d > a.d ? 1 : -1));
+        }
+        function storeRows() {
+            const range = Number((document.getElementById('hr-range') || {}).value || 0), kind = (document.getElementById('hr-kind') || {}).value || '';
+            const th = Math.max(3, Number((document.getElementById('hr-th2') || {}).value) || 20);
+            const all = (globalData && globalData.staffhour) || {}, g = {};
+            const days = range === 1 ? [dstr(1)] : range === 7 ? Array.from({ length: 7 }, (_, i) => dstr(i)) : [dstr(0)];
+            if (range === 0) { try { days[0] = ACTIVE_DATE || days[0]; } catch (e) {} }
+            days.forEach(d => { const day = all[d]; if (!day) return; Object.keys(day).forEach(id => {
+                const r = day[id] || {}; if (!r.s) return;
+                Object.keys(r).forEach(k => {
+                    const m = /^([bok])_(\d\d)$/.exec(k); if (!m || (kind && m[1] !== kind)) return;
+                    const n = Number(r[k]) || 0; if (n <= 0) return;
+                    const key = d + '|' + r.s + '|' + m[1] + '|' + m[2];
+                    const o = g[key] || (g[key] = { d, s: r.s, k: m[1], h: m[2], n: 0, p: 0, top: '', topN: 0 });
+                    o.n += n; o.p++; if (n > o.topN) { o.topN = n; o.top = id; }
+                });
+            }); });
+            return Object.keys(g).map(k => g[k]).filter(x => x.n >= th).sort((a, b) => b.n - a.n);
+        }
+        const nameOf = id => { try { return findStaffNameGlobal(id) || 'Personel'; } catch (e) { return 'Personel'; } };
+        const hrs = h => h + ':00-' + pad((Number(h) + 1) % 24) + ':00';
+        window.hrPaint = function (force) {
+            const list = document.getElementById('hr-list'); if (!list) return;
+            if (!force && list.offsetParent === null) return;
+            const storeV = ((document.getElementById('hr-view') || {}).value) === 's';
+            const w2 = document.getElementById('hr-th2-wrap'); if (w2) w2.classList.toggle('hidden', !storeV);
+            if (storeV) {
+                const sr = storeRows();
+                list.innerHTML = sr.length ? sr.slice(0, 200).map(x => `<div class="px-3 py-2 flex items-start gap-2"><span class="shrink-0 mt-0.5 px-1.5 py-0.5 rounded text-[10px] font-black ${KC[x.k]}">${KN[x.k]}</span><div class="min-w-0 flex-1"><div class="text-xs font-black text-slate-800 truncate">${esc(String(x.s).replace(/^\d+-/, ''))}</div><div class="text-[10px] font-bold text-slate-500">${hrs(x.h)} saatinde <b class="text-amber-600">${x.n}</b> giriş · ${x.p} personel · en çok: ${esc(nameOf(x.top))} (${x.topN}) · ${(x.d || '').slice(5).split('-').reverse().join('.')}</div></div><div class="text-right shrink-0"><div class="text-sm font-black text-amber-600">${x.n}/saat</div></div></div>`).join('') : '<div class="p-4 text-center text-xs text-slate-400 font-bold">Bu aralıkta mağaza eşiğini aşan giriş yok.</div>';
+                return;
+            }
+            const r = rows();
+            list.innerHTML = r.length ? r.slice(0, 200).map(x => `<div class="px-3 py-2 flex items-start gap-2"><span class="shrink-0 mt-0.5 px-1.5 py-0.5 rounded text-[10px] font-black ${KC[x.k]}">${KN[x.k]}</span><div class="min-w-0 flex-1"><div class="text-xs font-black text-slate-800 truncate">${esc(nameOf(x.id))} <span class="text-slate-400 font-bold">· ${esc(String(x.s).replace(/^\d+-/, ''))}</span></div><div class="text-[10px] font-bold text-slate-500">${hrs(x.h)} saatinde <b class="text-amber-600">${x.n}</b> giriş · günlük toplam ${x.day} · ${(x.d || '').slice(5).split('-').reverse().join('.')}</div></div><div class="text-right shrink-0"><div class="text-sm font-black text-amber-600">${x.n}/saat</div></div></div>`).join('') : '<div class="p-4 text-center text-xs text-slate-400 font-bold">Bu aralıkta eşiği aşan giriş yok.</div>';
+        };
+        window.hrShare = function () {
+            const storeV = ((document.getElementById('hr-view') || {}).value) === 's';
+            const r = storeV ? storeRows() : rows(); if (!r.length) return alert('Paylaşılacak kayıt yok.');
+            const L = ['⚡ *AŞIRI HIZLI GİRİŞ RAPORU*', ''];
+            if (storeV) { r.slice(0, 25).forEach(x => L.push('• ' + String(x.s).replace(/^\d+-/, '') + ' ' + KN[x.k] + ' ' + hrs(x.h) + ': ' + x.n + ' giriş (' + x.p + ' personel)')); return window.open('https://wa.me/?text=' + encodeURIComponent(L.join('\n')), '_blank'); }
+            r.slice(0, 25).forEach(x => L.push('• ' + nameOf(x.id) + ' (' + String(x.s).replace(/^\d+-/, '') + ') ' + KN[x.k] + ' ' + hrs(x.h) + ': ' + x.n + ' giriş'));
+            window.open('https://wa.me/?text=' + encodeURIComponent(L.join('\n')), '_blank');
+        };
+        setInterval(() => { try { hrPaint(false); } catch (e) {} }, 3000);
     })();
 
     // === Wegi'yi Sistem Merkezi'nden aç/kapat (ayar: settings.wegi, yoksa açık) ===
@@ -5627,6 +5736,7 @@
         const recBefore = window.recState ? recState().today : 0;
         dbRoot.child('daily').child(ACTIVE_DATE).child(currentId).child('staff').child(id).update({ sales: next });
         if (change < 0) { try { delLog('b', id, 'Bonus Pack', current, next); } catch (e) {} }
+        try { hrLog('b', id, next - current); } catch (e) {}
         if (change > 0 && window.recOnSale) recOnSale('region', id, recBefore, next - current);
         try { if (window.saleBarWrite) saleBarWrite(id, next - current); } catch (e) {}
 
@@ -8685,6 +8795,7 @@
             if (kBusy['s' + stfId + bk] && Date.now() - kBusy['s' + stfId + bk] < 250) return;
             kBusy['s' + stfId + bk] = Date.now();
             Snd.play(d > 0 ? 'sale' : 'saleUndo');
+            try { const bb = kpiStaffBrands().find(b => b.key === bk); if (bb && bb.eu === 'adet') hrLog('k', stfId, d); } catch (e) {}
             if (d < 0) { try { const cur0 = kpiStaffGet(stfId, bk), br0 = kpiStaffBrands().find(b => b.key === bk); delLog('k', stfId, br0 ? br0.name : bk, cur0, Math.max(0, cur0 + d)); } catch (e) {} }
             dbRoot.child('kpi').child('comps').child(k.active).child('staff').child(ACTIVE_DATE).child(currentId).child(stfId).child(bk)
                 .transaction(v => { const x = (Number(v) || 0) + d; return x < 0 ? 0 : x; });
@@ -9748,6 +9859,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.65</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.67</div>
 </body>
 </html>
