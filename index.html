@@ -9561,8 +9561,10 @@
                 : '<div class="text-xs text-slate-400 text-center py-4">Henüz ekip arkadaşı işareti yok. Ekip Arkadaşı, Bonus Pack ekranında odak ürün düğmesinden işaretler.</div>'}
             </div>`;
         }
-        const podiumHost = () => '<div id="kpi-pd-staff" class="hidden"></div><div id="kpi-pd-store" class="hidden"></div>';
+        // KPI panellerinde şampiyon podyumları kaldırıldı (istek üzerine)
+        const podiumHost = () => '';
         function drawPodiums(c, staffList, storeRows, scopeTxt) {
+            return;
             const adetBrands = c.brands.filter(b => entryUnit(b) === 'adet');
             const sel = (kState.sBrand === 'all' || adetBrands.some(b => b.key === kState.sBrand)) ? kState.sBrand : 'all';
             const selName = sel === 'all' ? 'Tüm Adet Markaları' : (adetBrands.find(b => b.key === sel) || {}).name;
@@ -10528,6 +10530,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.91</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.92</div>
 </body>
 </html>
