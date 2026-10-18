@@ -503,6 +503,19 @@
         </div>
     </div>
 
+    <!-- KPI ÜRÜNLER GÖRSEL MODALI (kpi.jpg) -->
+    <div id="kpi-modal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[110] flex items-center justify-center p-2 sm:p-6">
+        <div class="bg-white rounded-2xl shadow-2xl relative w-full max-w-3xl max-h-[95vh] flex flex-col overflow-hidden border border-cyan-500/30">
+            <div class="bg-gradient-to-r from-cyan-600 to-teal-600 p-3 sm:p-4 text-white flex justify-between items-center shadow-md z-10">
+                <h3 class="font-black text-sm sm:text-lg flex items-center gap-2"><i class="fa-solid fa-star text-cyan-200"></i> KPI Ürünler</h3>
+                <button type="button" onclick="closeKpiModal()" class="text-white hover:text-cyan-100 transition-colors bg-white/10 px-3 py-1 rounded-lg"><i class="fa-solid fa-xmark text-xl"></i> Kapat</button>
+            </div>
+            <div class="overflow-y-auto p-0 flex-1 bg-slate-100 flex justify-center custom-scrollbar">
+                <img src="kpi.jpg" alt="KPI Ürünler" class="w-full h-auto object-contain" onerror="this.outerHTML='<div class=&quot;p-8 text-center text-sm font-bold text-slate-400&quot;>KPI ürün görseli henüz yüklenmedi.</div>'">
+            </div>
+        </div>
+    </div>
+
     <!-- ODAK ÜRÜN GÖRSEL MODALI -->
     <div id="odak-modal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[110] flex items-center justify-center p-2 sm:p-6">
         <div class="bg-white rounded-2xl shadow-2xl relative w-full max-w-3xl max-h-[95vh] flex flex-col overflow-hidden border border-purple-500/30">
@@ -1118,6 +1131,9 @@
                             <button type="button" onclick="openOdakModal()" class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5 w-max">
                                 <i class="fa-solid fa-star animate-pulse text-amber-300"></i> Odak Ürün
                             </button>
+                            <button type="button" onclick="openKpiModal()" class="px-3 py-1.5 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5 w-max">
+                                <i class="fa-solid fa-star animate-pulse text-cyan-100"></i> KPI Ürünler
+                            </button>
                             <button type="button" id="stockout-btn" onclick="openStockoutModal()" class="px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5 w-max">
                                 <i class="fa-solid fa-box-open"></i> Ürün Bitti <span id="stockout-badge" class="hidden bg-white text-red-600 rounded-full px-1.5 min-w-[18px] text-center text-[10px] font-black leading-[18px]">0</span>
                             </button>
@@ -1256,6 +1272,9 @@
                         </button>
                         <button type="button" onclick="openOdakModal()" class="px-2 py-1 bg-purple-500 hover:bg-purple-400 rounded-full shadow-md transition flex items-center gap-1 text-[10px] font-bold border border-purple-300">
                             <i class="fa-solid fa-star text-amber-300"></i> Odak Ürün
+                        </button>
+                        <button type="button" onclick="openKpiModal()" class="px-2 py-1 bg-cyan-500 hover:bg-cyan-400 rounded-full shadow-md transition flex items-center gap-1 text-[10px] font-bold border border-cyan-300">
+                            <i class="fa-solid fa-star text-cyan-100"></i> KPI Ürünler
                         </button>
                     </div>
                     
@@ -4458,6 +4477,8 @@
     
     window.openOdakModal = function() { document.getElementById('odak-modal').classList.remove('hidden'); }
     window.closeOdakModal = function() { document.getElementById('odak-modal').classList.add('hidden'); }
+    window.openKpiModal = function() { document.getElementById('kpi-modal').classList.remove('hidden'); }
+    window.closeKpiModal = function() { document.getElementById('kpi-modal').classList.add('hidden'); }
 
     window.openTransferModal = function(id, name) {
         currentTransferStaffId = id;
@@ -6026,6 +6047,9 @@
         
         document.getElementById('odak-modal').addEventListener('click', function(e) {
             if(e.target === this) closeOdakModal();
+        });
+        document.getElementById('kpi-modal').addEventListener('click', function(e) {
+            if(e.target === this) closeKpiModal();
         });
 
         initGlobalAnnouncementListener();
@@ -10072,6 +10096,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.71</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Güliz Atik Bölgesi · v10.2.72</div>
 </body>
 </html>
