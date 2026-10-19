@@ -546,11 +546,22 @@
     </div>
 
     <!-- 🏆 ODAK ÜRÜN LİDER TABLOSU MODALI -->
+    <!-- 🏆 BONUS PACK LİGİ MODALI -->
+    <div id="bp-league-modal" class="hidden fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[140] flex items-center justify-center p-2 sm:p-6">
+        <div class="bg-slate-50 rounded-2xl shadow-2xl relative w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden border border-pink-500/50">
+            <div class="bg-gradient-to-r from-pink-600 to-rose-600 p-4 sm:p-5 text-white flex justify-between items-center shadow-lg z-10">
+                <h3 class="font-black text-lg sm:text-xl flex items-center gap-2"><i class="fa-solid fa-layer-group text-amber-200"></i> Bonus Pack Ligi</h3>
+                <button type="button" onclick="closeBpLeague()" class="text-white bg-white/10 px-3 py-1.5 rounded-lg text-sm font-bold"><i class="fa-solid fa-xmark"></i> Kapat</button>
+            </div>
+            <div id="bp-league-body" class="overflow-y-auto overscroll-contain p-4 sm:p-6 flex-1 space-y-3"></div>
+        </div>
+    </div>
+
     <div id="contest-leaderboard-modal" class="hidden fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[140] flex items-center justify-center p-2 sm:p-6">
         <div class="bg-slate-50 dark:bg-slate-900 rounded-2xl shadow-2xl relative w-full max-w-3xl max-h-[95vh] flex flex-col overflow-hidden border border-purple-500/50">
             <div class="bg-gradient-to-r from-purple-700 to-indigo-700 p-4 sm:p-5 text-white flex justify-between items-center shadow-lg z-10 relative overflow-hidden">
                 <div class="absolute right-0 top-0 opacity-10 text-8xl transform translate-x-4 -translate-y-4"><i class="fa-solid fa-trophy"></i></div>
-                <h3 class="font-black text-lg sm:text-xl flex items-center gap-2 relative z-10"><i class="fa-solid fa-crown text-amber-300 animate-pulse"></i> Odak Ürün Ligi</h3>
+                <h3 class="font-black text-lg sm:text-xl flex items-center gap-2 relative z-10"><i class="fa-solid fa-crown text-amber-300 animate-pulse"></i> Odak Ürün Satışları</h3>
                 <button type="button" onclick="closeContestLeaderboard()" class="text-white hover:text-purple-200 transition-colors bg-white/10 px-3 py-1.5 rounded-lg text-sm font-bold relative z-10"><i class="fa-solid fa-xmark"></i> Kapat</button>
             </div>
             <div class="overflow-y-auto p-4 sm:p-6 flex-1 custom-scrollbar space-y-6">
@@ -582,9 +593,14 @@
             <div class="flex items-center gap-1.5 sm:gap-3 flex-none">
                 <span id="active-date-badge" class="hidden sm:inline-block px-3 py-1 bg-slate-800 rounded-lg text-xs font-bold text-slate-300 border border-slate-700"></span>
 
+                <!-- 🏆 BONUS PACK LİGİ BUTONU -->
+                <button type="button" onclick="openBpLeague()" class="px-2.5 sm:px-3 py-1.5 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow border border-pink-400 text-white" title="Bonus Pack Ligi">
+                    <i class="fa-solid fa-layer-group text-amber-200"></i> <span class="hidden sm:inline">Bonus Pack Ligi</span>
+                </button>
+
                 <!-- 🌟 ODAK ÜRÜN BUTONU -->
-                <button type="button" onclick="openContestLeaderboard()" class="px-2.5 sm:px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow border border-purple-400 text-white" title="Odak Ürün / Marka Ligi">
-                    <i class="fa-solid fa-star animate-pulse text-amber-300"></i> <span class="hidden sm:inline">Odak Ligi</span>
+                <button type="button" onclick="openContestLeaderboard()" class="px-2.5 sm:px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow border border-purple-400 text-white" title="Odak Ürün Satışları">
+                    <i class="fa-solid fa-star animate-pulse text-amber-300"></i> <span class="hidden sm:inline">Odak Satışları</span>
                 </button>
 
                 <button type="button" id="topbar-mode-btn" onclick="switchMode()" class="px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm border text-white bg-gradient-to-r from-violet-600 to-cyan-600 border-violet-400"><i class="fa-solid fa-trophy"></i> <span class="hidden sm:inline">KPI Yarışması</span></button>
@@ -891,6 +907,16 @@
                         <input type="date" id="lg-to" onchange="lgPm()" class="bg-sky-950 text-sky-50 border border-sky-600 rounded-lg px-2 py-1 font-bold [color-scheme:dark]">
                     </span>
                     <span id="lg-days" class="text-[10px] text-sky-300 font-bold"></span>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 text-xs rounded-xl bg-sky-950/50 border border-sky-700 p-2.5">
+                    <span class="font-black text-sky-200"><i class="fa-solid fa-hourglass-half mr-1"></i>Yarışma süresi:</span>
+                    <label class="flex items-center gap-1 text-sky-300 font-bold">Başlangıç <input type="date" id="lg-start" class="bg-sky-950 text-sky-50 border border-sky-600 rounded-lg px-2 py-1 font-bold [color-scheme:dark]"></label>
+                    <label class="flex items-center gap-1 text-sky-300 font-bold">Bitiş <input type="datetime-local" id="lg-end" class="bg-sky-950 text-sky-50 border border-sky-600 rounded-lg px-2 py-1 font-bold [color-scheme:dark]"></label>
+                    <button type="button" onclick="lgEndPreset('sun')" class="px-2.5 py-1 rounded-full bg-sky-700 hover:bg-sky-600 text-white font-black">Bu pazar akşamı</button>
+                    <button type="button" onclick="lgEndPreset(3)" class="px-2.5 py-1 rounded-full bg-sky-800 hover:bg-sky-700 text-sky-100 font-black">+3 gün</button>
+                    <button type="button" onclick="lgEndPreset(7)" class="px-2.5 py-1 rounded-full bg-sky-800 hover:bg-sky-700 text-sky-100 font-black">+7 gün</button>
+                    <button type="button" onclick="lgExtend()" class="px-3 py-1 rounded-full bg-amber-400 hover:bg-amber-300 text-amber-950 font-black">Süreyi güncelle</button>
+                    <span class="text-[10px] text-sky-300/80 font-bold w-full">Sıralamalar başlangıçtan bugüne <b>toplam</b> satışa göre hesaplanır. Süre dolunca lig otomatik kapanır. Süreyi istediğin an uzatıp kısaltabilirsin.</span>
                 </div>
                 <div id="lg-cards" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
                 <div id="lg-detail"></div>
@@ -4624,7 +4650,25 @@
         const withOver = res => { res.rows.forEach(r => { if (st.over[r.store]) r.g = st.over[r.store]; }); return res; };
         const counts = rows => ({ A: rows.filter(r => r.g === 'A').length, B: rows.filter(r => r.g === 'B').length, C: rows.filter(r => r.g === 'C').length });
 
-        window.lgActive = () => { try { const a = globalData && globalData.leagues && globalData.leagues.active; return (a && a.assign) ? a : null; } catch (e) { return null; } };
+        window.lgRaw = () => { try { const a = globalData && globalData.leagues && globalData.leagues.active; return (a && a.assign) ? a : null; } catch (e) { return null; } };
+        window.lgActive = () => { const a = lgRaw(); if (!a) return null; if (Number(a.end) > 0 && Date.now() > Number(a.end)) return null; return a; };
+        const pad2 = n => String(n).padStart(2, '0');
+        const toLocalInput = d => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + 'T' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+        const nextSunday = () => { const d = new Date(); d.setHours(23, 59, 0, 0); d.setDate(d.getDate() + ((7 - d.getDay()) % 7)); if (d.getTime() < Date.now()) d.setDate(d.getDate() + 7); return d; };
+        window.lgEndPreset = function (k) {
+            const el = $('lg-end'); if (!el) return;
+            let d; if (k === 'sun') d = nextSunday(); else { d = new Date(); d.setDate(d.getDate() + Number(k)); d.setHours(23, 59, 0, 0); }
+            el.value = toLocalInput(d);
+        };
+        const readEnd = () => { const v = ($('lg-end') || {}).value; const t = v ? new Date(v).getTime() : 0; return t > 0 ? t : nextSunday().getTime(); };
+        window.lgExtend = function () {
+            if (!window.__DEMO && currentRole !== 'central') return alert('Bu işlem için Sistem Merkezi girişi gerekir.');
+            if (!lgRaw()) return alert('Önce bir lig senaryosu devreye alın.');
+            const end = readEnd();
+            if (end <= Date.now()) return alert('Bitiş zamanı şu andan sonra olmalı.');
+            if (!confirm('Lig bitiş zamanı ' + new Date(end).toLocaleString('tr-TR') + ' olarak güncellensin mi?')) return;
+            const pr = dbRoot.child('leagues').child('active').child('end').set(end); if (pr && pr.then) pr.then(() => { try { lgPaint(true); } catch (e) {} }); else { try { lgPaint(true); } catch (e) {} }
+        };
         window.lgOf = store => { const a = lgActive(); return (a && a.assign[store]) || ''; };
         window.lgName = g => g ? g + ' Grubu' : '';
         window.lgStores = store => { const a = lgActive(); if (!a || !a.assign[store]) return null; const g = a.assign[store]; return Object.keys(a.assign).filter(k => a.assign[k] === g); };
@@ -4645,9 +4689,11 @@
             const res = withOver(compute(st.sc, st.pm, st.from, st.to));
             if (!res.rows.length) return alert('Mağaza bulunamadı.');
             const c = counts(res.rows);
-            if (!confirm(SC[st.sc].t + ' devreye alınsın mı?\n\nA Grubu: ' + c.A + ' mağaza\nB Grubu: ' + c.B + ' mağaza\nC Grubu: ' + c.C + ' mağaza\n\nMağaza ve ekip arkadaşları sıralamada yalnızca kendi grubundakileri görecek.')) return;
+            const lgStart = ($('lg-start') || {}).value || ACTIVE_DATE, lgEnd = readEnd();
+            if (lgEnd <= Date.now()) return alert('Bitiş zamanı şu andan sonra olmalı.');
+            if (!confirm(SC[st.sc].t + ' devreye alınsın mı?\n\nSüre: ' + lgStart + ' → ' + new Date(lgEnd).toLocaleString('tr-TR') + '\n\nA Grubu: ' + c.A + ' mağaza\nB Grubu: ' + c.B + ' mağaza\nC Grubu: ' + c.C + ' mağaza\n\nMağaza ve ekip arkadaşları sıralamada yalnızca kendi grubundakileri görecek.')) return;
             const assign = {}; res.rows.forEach(r => { assign[r.store] = r.g; });
-            dbRoot.child('leagues').child('active').set({ sc: st.sc, pm: st.pm, from: st.from || '', to: st.to || '', ts: Date.now(), by: 'merkez', assign })
+            dbRoot.child('leagues').child('active').set({ sc: st.sc, pm: st.pm, from: st.from || '', to: st.to || '', ts: Date.now(), start: lgStart, end: lgEnd, by: 'merkez', assign })
                 .then(() => { try { lgPaint(true); } catch (e) {} });
         };
         window.lgOff = function () {
@@ -4663,13 +4709,17 @@
         window.lgPaint = function (force) {
             const host = $('lg-cards'); if (!host) return;
             if (!force) { const card = $('lg-card'); if (card && card.offsetParent === null) return; const now = Date.now(); if (now - (lgPaint._t || 0) < 1500) return; lgPaint._t = now; }
-            const act = lgActive();
+            const act = lgActive(), raw = lgRaw();
+            try { const se = $('lg-start'), ee = $('lg-end'); if (se && !se.value) se.value = (raw && raw.start) || ACTIVE_DATE; if (ee && !ee.value) ee.value = toLocalInput(raw && Number(raw.end) > Date.now() ? new Date(Number(raw.end)) : nextSunday()); } catch (e) {}
             const stEl = $('lg-status');
             if (stEl) {
                 if (act) {
                     const c = counts(Object.keys(act.assign).map(k => ({ g: act.assign[k] })));
                     stEl.className = 'text-[11px] font-black px-3 py-1.5 rounded-full bg-emerald-500 text-white shrink-0';
-                    stEl.textContent = 'AKTİF · ' + SC[act.sc].t.replace(/^\d · /, '') + ' · A' + c.A + ' B' + c.B + ' C' + c.C;
+                    stEl.innerHTML = 'AKTİF · ' + eh(SC[act.sc].t.replace(/^\d · /, '')) + ' · A' + c.A + ' B' + c.B + ' C' + c.C + (Number(act.end) > 0 ? ' · <span class="lg-cd" data-end="' + Number(act.end) + '"></span>' : '');
+                } else if (raw) {
+                    stEl.className = 'text-[11px] font-black px-3 py-1.5 rounded-full bg-amber-500 text-amber-950 shrink-0';
+                    stEl.textContent = 'SÜRESİ DOLDU · ' + new Date(Number(raw.end)).toLocaleString('tr-TR') + ' · yeni lig başlatabilirsin';
                 } else { stEl.className = 'text-[11px] font-black px-3 py-1.5 rounded-full bg-slate-700 text-slate-200 shrink-0'; stEl.textContent = 'Kapalı · herkes ortak yarışıyor'; }
             }
             host.innerHTML = Object.keys(SC).map(k => {
@@ -4692,6 +4742,134 @@
         };
         setInterval(() => { try { if (typeof currentRole !== 'undefined' && (window.__DEMO || currentRole === 'central')) lgPaint(); } catch (e) {} }, 4000);
     } catch (e) { console.error('leagueInit', e); } })();
+
+
+    // ===== LİG TABLOSU: mağaza ekranında kendi ligi, merkez/bölge/Güliz ekranlarında 3 lig birden =====
+    ;(function leagueBoard() { try {
+        const GC = { A: ['bg-amber-50 border-amber-300', 'text-amber-800', '#f59e0b'], B: ['bg-sky-50 border-sky-300', 'text-sky-800', '#0ea5e9'], C: ['bg-emerald-50 border-emerald-300', 'text-emerald-800', '#10b981'] };
+        const eh = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const MOUNT = { store: ['store-podium-grid', 'before'], region: ['region-leaders-list', 'before'], general: ['general-leaders-list', 'before'], central: ['lg-card', 'after'] };
+        window.__lgRank = window.__lgRank || 'pct';
+        window.lgRankSet = function (m) { window.__lgRank = m; lgBoardPaint(); };
+        // Lig dönemi: başlangıç gününden bugüne toplam
+        const perDays = act => { const from = act.start || ACTIVE_DATE; return Object.keys((globalData && globalData.daily) || {}).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k) && k >= from && k <= ACTIVE_DATE); };
+        const dayStore = (d, store) => {
+            const o = (((globalData.daily || {})[d] || {})[store]);
+            if (!o || !o.staff) return { sales: 0, target: 0 };
+            let sales = 0, tg = 0;
+            Object.keys(o.staff).forEach(id => { const q = o.staff[id] || {}; sales += Number(q.sales) || 0; tg += Number(q.target) || 0; });
+            return { sales, target: Number(o.target) || tg };
+        };
+        const rowsOf = (g, act) => {
+            const out = [], days = perDays(act);
+            Object.keys(act.assign).forEach(store => {
+                if (act.assign[store] !== g) return;
+                let sales = 0, target = 0;
+                days.forEach(d => { const x = dayStore(d, store); sales += x.sales; target += x.target; });
+                out.push({ store, sales, target, pct: target > 0 ? sales / target * 100 : null });
+            });
+            out.sort((a, b) => window.__lgRank === 'adet' ? ((b.sales - a.sales) || a.store.localeCompare(b.store, 'tr')) : (((b.pct == null ? -1 : b.pct) - (a.pct == null ? -1 : a.pct)) || (b.sales - a.sales) || a.store.localeCompare(b.store, 'tr')));
+            return out;
+        };
+        // Grubun yıldızı: lig döneminde o gruptaki mağazalarda toplamda en çok satan ekip arkadaşı
+        const starOf = (g, act) => {
+            const days = perDays(act), by = {};
+            Object.keys(act.assign).forEach(store => {
+                if (act.assign[store] !== g) return;
+                days.forEach(d => {
+                    const o = (((globalData.daily || {})[d] || {})[store]); if (!o || !o.staff) return;
+                    Object.keys(o.staff).forEach(id => {
+                        const q = o.staff[id] || {}, v = Number(q.sales) || 0; if (!(v > 0)) return;
+                        const e = by[id] || (by[id] = { id, sales: 0, store, name: '' });
+                        e.sales += v; e.store = store;
+                        if (!e.name) { try { e.name = q.name || (((globalData.master_staff || {})[store] || {})[id] || {}).name || findStaffNameGlobal(id) || ''; } catch (er) {} }
+                    });
+                });
+            });
+            let best = null; Object.keys(by).forEach(id => { const e = by[id]; if (!best || e.sales > best.sales) best = e; });
+            if (best && !best.name) best.name = 'Ekip Arkadaşı';
+            return best;
+        };
+        const starHtml = (g, act) => {
+            const b = starOf(g, act);
+            return `<div class="rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 p-2.5 mb-2 shadow-sm flex items-center gap-2.5"><div class="text-2xl leading-none drop-shadow">⭐</div><div class="min-w-0 flex-1"><div class="text-[9px] font-black text-amber-900/80 uppercase tracking-wide">${g} Grubu Yıldızı</div>${b ? `<div class="text-[12px] font-black text-slate-900 truncate">${eh(b.name)}</div><div class="text-[10px] font-bold text-amber-900/80 truncate">${eh(String(b.store).replace(/^\d+-/, ''))}</div>` : '<div class="text-[11px] font-bold text-amber-900/70">Henüz satış yok</div>'}</div>${b ? `<div class="text-right shrink-0"><div class="text-xl font-black text-slate-900 leading-none">${b.sales}</div><div class="text-[9px] font-black text-amber-900/80">adet</div></div>` : ''}</div>`;
+        };
+        const med = i => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '<span class="font-black text-slate-400 inline-block w-5 text-center">' + (i + 1) + '</span>';
+        const rowHtml = (r, i, me) => {
+            const p = r.pct == null ? 0 : Math.min(100, r.pct);
+            return `<div class="flex items-center gap-2 py-1.5 px-2 rounded-lg ${me ? 'bg-yellow-100 ring-2 ring-yellow-400' : ''}"><span class="text-sm w-6 text-center shrink-0">${med(i)}</span><div class="min-w-0 flex-1"><div class="text-[11px] font-black text-slate-800 truncate">${eh(String(r.store).replace(/^\d+-/, ''))}${me ? ' <span class="text-[9px] text-yellow-700">(sen)</span>' : ''}</div><div class="h-1.5 rounded-full bg-slate-200 mt-0.5 overflow-hidden"><div class="h-full rounded-full" style="width:${p}%;background:${r.pct != null && r.pct >= 100 ? '#10b981' : '#6366f1'}"></div></div></div><div class="text-right shrink-0"><div class="text-[11px] font-black text-slate-700">${r.sales}${r.target ? '<span class="text-slate-400 font-bold">/' + r.target + '</span>' : ''}</div><div class="text-[9px] font-black ${r.pct != null && r.pct >= 100 ? 'text-emerald-600' : 'text-slate-400'}">${r.pct == null ? '—' : '%' + Math.round(r.pct)}</div></div></div>`;
+        };
+        const rowsAll = () => {
+            const out = [];
+            try { Object.keys(effectiveHierarchy || {}).forEach(bm => (effectiveHierarchy[bm] || []).forEach(store => {
+                let sales = 0, tg = 0, st = null;
+                try { st = getStoreDailyStats(store, ACTIVE_DATE); } catch (e) {}
+                if (st && st.staff) Object.keys(st.staff).forEach(id => { const q = st.staff[id] || {}; sales += Number(q.sales) || 0; tg += Number(q.target) || 0; });
+                const target = (st && Number(st.storeTarget)) || tg;
+                out.push({ store, sales, target, pct: target > 0 ? sales / target * 100 : null });
+            })); } catch (e) {}
+            out.sort((a, b) => window.__lgRank === 'adet' ? ((b.sales - a.sales) || a.store.localeCompare(b.store, 'tr')) : (((b.pct == null ? -1 : b.pct) - (a.pct == null ? -1 : a.pct)) || (b.sales - a.sales) || a.store.localeCompare(b.store, 'tr')));
+            return out.filter(r => r.sales > 0 || r.target > 0);
+        };
+        // role: store/region/general/central; modal=true ise lig kapalıyken ortak sıralamayı da gösterir
+        const build = (role, modal) => {
+            const act = lgActive();
+            const hist = (role === 'store' && typeof isStoreHistorical !== 'undefined' && isStoreHistorical) || (role === 'region' && typeof isRegionHistorical !== 'undefined' && isRegionHistorical);
+            if (hist && !modal) return null;
+            const rk = window.__lgRank;
+            const tog = `<div class="flex gap-1 text-[10px] font-black"><button type="button" onclick="lgRankSet('pct')" class="px-2.5 py-1 rounded-full ${rk === 'pct' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500'}">Hedefe oran</button><button type="button" onclick="lgRankSet('adet')" class="px-2.5 py-1 rounded-full ${rk === 'adet' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500'}">Adet</button></div>`;
+            const cdBanner = (act && Number(act.end) > 0) ? `<div class="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white px-3 py-2 mb-3 shadow-sm"><i class="fa-solid fa-hourglass-half animate-pulse"></i><span class="text-[11px] font-black uppercase tracking-wide">Lig bitimine</span><span class="lg-cd text-base font-black tabular-nums" data-end="${Number(act.end)}"></span></div>` : '';
+            const lbl = act ? 'toplam · ' + (act.start || ACTIVE_DATE).split('-').reverse().slice(0, 2).join('.') + ' → bugün' : 'bugün';
+            const wrap = (title, cols, grid, foot) => `${cdBanner}<div class="flex items-center justify-between gap-2 flex-wrap mb-3"><h3 class="font-black text-slate-700 text-sm"><i class="fa-solid fa-layer-group text-indigo-500 mr-1.5"></i>${title} <span class="text-[10px] font-bold text-slate-400">· ${lbl}</span></h3>${tog}</div><div class="grid grid-cols-1 ${grid} gap-3">${cols}</div>${foot || ''}`;
+            if (!act) {
+                if (!modal) return null;
+                const rows = rowsAll(), myIdx = role === 'store' ? rows.findIndex(r => r.store === currentId) : -1;
+                const list = rows.slice(0, 15).map((r, i) => rowHtml(r, i, r.store === currentId)).join('') + (myIdx >= 15 ? '<div class="text-center text-[10px] text-slate-400 font-black">⋯</div>' + rowHtml(rows[myIdx], myIdx, true) : '');
+                return wrap('Bonus Pack · Tüm Mağazalar', `<div class="rounded-2xl border-2 border-slate-200 bg-white p-3"><div class="space-y-0.5">${list || '<div class="text-[11px] text-slate-400 py-2">Henüz satış yok</div>'}</div></div>`, '', '<div class="text-[10px] text-slate-400 mt-2">Lig sistemi şu an kapalı, tüm mağazalar tek sırada yarışıyor.</div>');
+            }
+            const groups = role === 'store' ? [act.assign[currentId]].filter(Boolean) : ['A', 'B', 'C'];
+            if (!groups.length) return modal ? '<div class="text-sm text-slate-500 py-4">Mağazan henüz bir lige atanmamış.</div>' : null;
+            const cols = groups.map(g => {
+                const rows = rowsOf(g, act); const myIdx = role === 'store' ? rows.findIndex(r => r.store === currentId) : -1;
+                const lim = modal ? 15 : (role === 'store' ? 5 : 10);
+                let shown = rows.slice(0, lim).map((r, i) => rowHtml(r, i, r.store === currentId)).join('');
+                if (myIdx >= lim) shown += '<div class="text-center text-[10px] text-slate-400 font-black">⋯</div>' + rowHtml(rows[myIdx], myIdx, true);
+                return `<div class="rounded-2xl border-2 ${GC[g][0]} p-3"><div class="flex items-center justify-between mb-1"><div class="font-black text-sm ${GC[g][1]}">🏆 ${g} GRUBU</div><div class="text-[10px] font-black text-slate-400">${rows.length} mağaza</div></div>${starHtml(g, act)}<div class="${role === 'store' ? '' : 'max-h-80 overflow-y-auto'} space-y-0.5">${shown || '<div class="text-[11px] text-slate-400 py-2">Henüz satış yok</div>'}</div></div>`;
+            }).join('');
+            return wrap(role === 'store' ? 'Ligim · ' + act.assign[currentId] + ' Grubu Sıralaması' : 'Lig Sıralaması', cols, role === 'store' ? '' : 'lg:grid-cols-3', role === 'store' ? '<div class="text-[10px] text-slate-400 mt-2">Mağazalar büyüklüğüne göre gruplandı; herkes kendi grubundaki mağazalarla yarışıyor.</div>' : '');
+        };
+        window.lgBoardPaint = function () {
+            try {
+                const role = (typeof currentRole !== 'undefined') ? currentRole : '';
+                Object.keys(MOUNT).forEach(r => { const h = document.getElementById('lg-board-' + r); if (h && r !== role) { h.innerHTML = ''; h.className = 'hidden'; } });
+                try { const mb = document.getElementById('bp-league-modal'); if (mb && !mb.classList.contains('hidden')) { const bd = document.getElementById('bp-league-body'); if (bd) bd.innerHTML = build(role, true) || ''; } } catch (e) {}
+                const m = MOUNT[role]; if (!m) return;
+                const anchor = document.getElementById(m[0]); if (!anchor || !anchor.parentNode) return;
+                let host = document.getElementById('lg-board-' + role);
+                if (!host) { host = document.createElement('div'); host.id = 'lg-board-' + role; if (m[1] === 'after') anchor.parentNode.insertBefore(host, anchor.nextSibling); else anchor.parentNode.insertBefore(host, anchor); }
+                const html = build(role, false);
+                if (!html) { host.innerHTML = ''; host.className = 'hidden'; return; }
+                host.className = 'bg-white rounded-2xl shadow-sm border border-slate-200 p-4';
+                host.innerHTML = html;
+            } catch (e) { console.error('lgBoard', e); }
+        };
+        window.openBpLeague = function () {
+            try {
+                const role = (typeof currentRole !== 'undefined') ? currentRole : '';
+                const bd = document.getElementById('bp-league-body'); if (bd) bd.innerHTML = build(role, true) || '';
+                document.getElementById('bp-league-modal').classList.remove('hidden');
+            } catch (e) { console.error(e); }
+        };
+        window.closeBpLeague = function () { document.getElementById('bp-league-modal').classList.add('hidden'); };
+        const cdTxt = end => { let ms = end - Date.now(); if (ms <= 0) return 'Süre doldu'; const d = Math.floor(ms / 864e5); ms -= d * 864e5; const h = Math.floor(ms / 36e5); ms -= h * 36e5; const m = Math.floor(ms / 6e4); const sc = Math.floor((ms - m * 6e4) / 1e3); return (d ? d + 'g ' : '') + pad(h) + ':' + pad(m) + ':' + pad(sc); };
+        const pad = n => String(n).padStart(2, '0');
+        let lgWasOn = null;
+        setInterval(() => { try {
+            document.querySelectorAll('.lg-cd').forEach(el => { const e = Number(el.getAttribute('data-end')); if (e) el.textContent = cdTxt(e); });
+            const on = !!lgActive(); if (lgWasOn !== null && lgWasOn && !on) { lgBoardPaint(); if (window.lgPaint) lgPaint(true); } lgWasOn = on;
+        } catch (e) {} }, 1000);
+        setInterval(() => { try { lgBoardPaint(); } catch (e) {} }, 3000);
+    } catch (e) { console.error('leagueBoardInit', e); } })();
 
     window.sendApplauseFromModal = function(event) {
         if (!window.currentProfileStaffId || !window.currentProfileStore || window.currentProfileStore === "Silinmiş Ekip Arkadaşı") return;
@@ -7575,6 +7753,7 @@
                 </tr>`;
             });
             try { window.ringAnimate && ringAnimate(); } catch (e) {}
+            try { window.lgBoardPaint && lgBoardPaint(); } catch (e) {}
         }
     }
 
@@ -8086,7 +8265,7 @@
 
     function renderCentralUI() {
         updateAnnouncementUI();
-        try { window.lgPaint && lgPaint(); } catch (e) {}
+        try { window.lgPaint && lgPaint(); window.lgBoardPaint && lgBoardPaint(); } catch (e) {}
 
         let totalSales = 0;
         let totalTarget = 0;
@@ -11012,6 +11191,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.03</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.07</div>
 </body>
 </html>
