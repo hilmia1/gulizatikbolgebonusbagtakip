@@ -859,6 +859,18 @@
                 </div>
             </div>
 
+            <!-- ÖNERİ KUTUSU: ekip arkadaşlarının önerileri -->
+            <div class="bg-gradient-to-r from-amber-900 to-orange-900 p-4 rounded-2xl border border-amber-600/60 shadow-lg space-y-3">
+                <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+                    <div class="min-w-0">
+                        <div class="text-amber-100 font-black text-sm"><i class="fa-solid fa-lightbulb mr-2"></i>ÖNERİLER <span id="sg-count" class="ml-1 px-2 py-0.5 rounded-full bg-amber-400 text-amber-950 text-[10px]"></span></div>
+                        <div class="text-[11px] text-amber-100/80 mt-0.5">Ekip arkadaşlarının mağaza ekranından yazdığı öneriler. <b>Kabul et</b> derseniz kişiye 1 gün boyunca isminin altında "Öneriniz uygulanmıştır, teşekkür ederiz" yazısı çıkar ve Fikir Kahramanı rozeti verilir.</div>
+                    </div>
+                    <select id="sg-view" onchange="sgPaint(true)" class="bg-amber-950 text-amber-50 border border-amber-600 rounded-lg px-2 py-1.5 text-xs font-bold"><option value="new">Yeni (bekleyen)</option><option value="ok">Kabul edilenler</option><option value="no">Reddedilenler</option><option value="all">Hepsi</option></select>
+                </div>
+                <div id="sg-list" class="max-h-96 overflow-y-auto rounded-xl bg-white/95 divide-y divide-slate-100"></div>
+            </div>
+
             <!-- GÜVENLİK: silme, aşırı hızlı giriş ve ekip arkadaşı değişiklik raporları -->
             <details open class="rounded-2xl border border-slate-600/60 bg-slate-900/60 p-3 space-y-3">
                 <summary class="cursor-pointer select-none list-none flex items-center gap-2 text-slate-100 font-black text-sm"><i class="fa-solid fa-shield-halved text-emerald-400"></i>GÜVENLİK <span class="text-[11px] font-bold text-slate-400">· silme, aşırı hızlı giriş ve ekip arkadaşı değişiklik raporları (cihaz adlarıyla)</span><i class="fa-solid fa-chevron-down ml-auto text-slate-400 text-xs"></i></summary>
@@ -6946,6 +6958,70 @@
         }).join('') + `</div></div>`;
     }
 
+    // ================= ÖNERİ KUTUSU: ekip arkadaşı önerir, merkez kabul ederse rozet + 1 gün teşekkür yazısı =================
+    ;(function sugInit() { try {
+        const DAY = 24 * 3600 * 1000;
+        const E = t => String(t == null ? '' : t).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+        const list = () => { const o = globalData.suggestions || {}; return Object.keys(o).map(k => Object.assign({ key: k }, o[k])).filter(x => x && x.sid); };
+        window.sugAccepted = function (id) { const now = Date.now(); return list().some(x => x.sid === id && x.st === 'ok' && Number(x.ats) > 0 && now - Number(x.ats) < DAY); };
+        window.sugRowHtml = function (id, hist) {
+            try {
+                let h = '';
+                if (window.sugAccepted(id)) h += '<div class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-700 text-[9px] sm:text-[10px] font-black leading-tight">💡 Öneriniz uygulanmıştır, teşekkür ederiz!</div>';
+                if (!hist) h += '<div><button type="button" onclick="openSuggestModal(\'' + E(id) + '\')" class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-amber-300 bg-amber-50 text-amber-700 text-[9px] sm:text-[10px] font-black hover:bg-amber-100 active:scale-95">💡 Öneri</button></div>';
+                return h;
+            } catch (e) { return ''; }
+        };
+        window.openSuggestModal = function (id) {
+            let name = ''; try { name = findStaffNameGlobal(id) || ''; } catch (e) {}
+            let m = document.getElementById('sug-modal');
+            if (!m) { m = document.createElement('div'); m.id = 'sug-modal'; m.style.cssText = 'position:fixed;inset:0;z-index:145;background:rgba(15,23,42,.88);display:flex;align-items:center;justify-content:center;padding:16px'; m.onclick = ev => { if (ev.target === m) m.style.display = 'none'; }; document.body.appendChild(m); }
+            m.innerHTML = '<div style="background:#fff;border-radius:22px;width:100%;max-width:380px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)"><div style="background:linear-gradient(135deg,#f59e0b,#f97316);padding:16px;color:#fff"><div style="font-weight:900;font-size:18px">💡 Öneri Kutusu</div><div style="font-size:12px;font-weight:700;opacity:.95;margin-top:2px">' + E(name || 'Ekip arkadaşı') + '</div></div><div style="padding:14px"><div style="font-size:12px;font-weight:700;color:#475569;margin-bottom:6px">Sistemi, işleyişi ya da satışı geliştirecek bir fikrin mi var? Yaz, merkeze iletilsin. Uygulanırsa adının altında teşekkür yazısı çıkar ve <b>Fikir Kahramanı</b> rozeti kazanırsın.</div><textarea id="sug-text" rows="5" maxlength="300" placeholder="Önerini buraya yaz..." style="width:100%;border:2px solid #fcd34d;border-radius:12px;padding:10px;font-size:14px;font-weight:600;outline:none;resize:none"></textarea><div style="display:flex;gap:8px;margin-top:10px"><button type="button" onclick="document.getElementById(\'sug-modal\').style.display=\'none\'" style="flex:1;padding:11px;border-radius:12px;background:#f1f5f9;color:#475569;font-weight:900">Vazgeç</button><button type="button" onclick="sendSuggestion(\'' + E(id) + '\')" style="flex:1;padding:11px;border-radius:12px;background:#f59e0b;color:#fff;font-weight:900">Gönder</button></div></div></div>';
+            m.style.display = 'flex';
+            setTimeout(() => { try { document.getElementById('sug-text').focus(); } catch (e) {} }, 100);
+        };
+        window.sendSuggestion = function (id) {
+            try {
+                const el = document.getElementById('sug-text'); const t = cleanText(el ? el.value : '').trim();
+                if (t.length < 5) return alert('Lütfen önerini biraz daha ayrıntılı yaz (en az 5 karakter).');
+                const last = Number(localStorage.getItem('bb_sug_ts') || 0);
+                if (Date.now() - last < 30000) return alert('Birkaç saniye sonra tekrar deneyin.');
+                let name = ''; try { name = findStaffNameGlobal(id) || ''; } catch (e) {}
+                const pr = dbRoot.child('suggestions').push({ sid: String(id).slice(0, 40), n: String(name).slice(0, 60), s: String(currentId || '').slice(0, 80), t: t.slice(0, 300), ts: Date.now() });
+                try { localStorage.setItem('bb_sug_ts', String(Date.now())); } catch (e) {}
+                if (pr && pr.catch) pr.catch(() => alert('Öneri gönderilemedi. database.rules.json dosyasının son halini yayınladınız mı?'));
+                const m = document.getElementById('sug-modal'); if (m) m.style.display = 'none';
+                alert('Önerin merkeze iletildi, teşekkürler! 💡');
+            } catch (e) { alert('Gönderilemedi.'); }
+        };
+        // Sistem Merkezi listesi
+        let sgSig = '';
+        window.sgPaint = function (force) {
+            const box = document.getElementById('sg-list'); if (!box) return;
+            const mode = (document.getElementById('sg-view') || {}).value || 'new';
+            const all = list().sort((a, b) => Number(b.ts) - Number(a.ts));
+            const nNew = all.filter(x => !x.st).length;
+            const cnt = document.getElementById('sg-count'); if (cnt) cnt.textContent = nNew ? nNew + ' yeni' : '';
+            const rows = all.filter(x => mode === 'all' ? true : mode === 'ok' ? x.st === 'ok' : mode === 'no' ? x.st === 'no' : !x.st);
+            const sig = mode + '|' + rows.map(x => x.key + (x.st || '') + (x.ats || '')).join(',');
+            if (!force && sig === sgSig) return; sgSig = sig;
+            const f = ts => { const d = new Date(Number(ts)); const p2 = n => String(n).padStart(2, '0'); return p2(d.getDate()) + '.' + p2(d.getMonth() + 1) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()); };
+            box.innerHTML = rows.length ? rows.map(x => '<div class="p-3 text-slate-800"><div class="flex items-start justify-between gap-2"><div class="min-w-0"><div class="font-black text-sm">' + E(x.n || 'Ekip arkadaşı') + ' <span class="text-[10px] font-bold text-slate-400">· ' + E(x.s || '') + '</span></div><div class="text-[10px] font-bold text-slate-400">' + f(x.ts) + (x.st === 'ok' ? ' · <span class="text-emerald-600">✅ Kabul edildi</span>' : x.st === 'no' ? ' · <span class="text-slate-500">Reddedildi</span>' : '') + '</div></div><div class="flex gap-1.5 shrink-0">' +
+                (x.st === 'ok' || x.st === 'no' ? '<button type="button" onclick="sgSet(\'' + x.key + '\',null)" class="px-2 py-1 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-black">Geri al</button>' : '<button type="button" onclick="sgSet(\'' + x.key + '\',\'ok\')" class="px-2.5 py-1 rounded-lg bg-emerald-500 text-white text-[10px] font-black">Kabul et</button><button type="button" onclick="sgSet(\'' + x.key + '\',\'no\')" class="px-2.5 py-1 rounded-lg bg-slate-200 text-slate-700 text-[10px] font-black">Reddet</button>') +
+                '</div></div><div class="mt-1.5 text-sm font-semibold text-slate-700 whitespace-pre-wrap break-words">' + E(x.t) + '</div></div>').join('') : '<div class="p-4 text-center text-xs text-slate-400 font-bold">Bu görünümde öneri yok.</div>';
+        };
+        window.sgSet = function (key, st) {
+            if (!window.__DEMO && currentRole !== 'central') return alert('Bu işlem için Sistem Merkezi girişi gerekir.');
+            try {
+                const o = st === 'ok' ? { st: 'ok', ats: Date.now() } : st === 'no' ? { st: 'no', ats: null } : { st: null, ats: null };
+                const pr = dbRoot.child('suggestions').child(key).update(o);
+                if (pr && pr.catch) pr.catch(() => alert('Kaydedilemedi. database.rules.json dosyasının son halini yayınladınız mı?'));
+                setTimeout(() => sgPaint(true), 500);
+            } catch (e) { alert('Kaydedilemedi.'); }
+        };
+        setInterval(() => { try { if ((window.__DEMO || currentRole === 'central') && document.getElementById('sg-list') && document.getElementById('sg-list').offsetParent !== null) sgPaint(); } catch (e) {} }, 1500);
+    } catch (e) { console.error('Öneri kutusu kurulamadı', e); } })();
+
     // Rozetler haftalıktır: her Pazartesi sıfırlanır (eşikler: bronz, gümüş, altın)
     const BADGES = [
         { k: 'hedef', icon: '🎯', name: 'Hedef Avcısı', desc: 'Bu hafta kendi hedefine ulaştığı gün sayısı', lv: [2, 4, 6] },
@@ -6954,13 +7030,15 @@
         { k: 'yildiz', icon: '🌟', name: 'Günün Yıldızı', desc: 'Bu hafta tüm mağazalar arasında günün birincisi olduğu gün sayısı', lv: [1, 2, 3] },
         { k: 'alkis', icon: '👏', name: 'Alkış Şampiyonu', desc: 'Bu hafta aldığı toplam alkış', lv: [5, 15, 30] },
         { k: 'odak', icon: '⭐', name: 'Odak Ustası', desc: 'Bu hafta toplam odak ürün satışı', lv: [5, 15, 30] },
-        { k: 'yuzler', icon: '💯', name: 'Satış Kulübü', desc: 'Bu hafta toplam satış adedi', lv: [40, 80, 150] }
+        { k: 'yuzler', icon: '💯', name: 'Satış Kulübü', desc: 'Bu hafta toplam satış adedi', lv: [40, 80, 150] },
+        { k: 'oneri', icon: '💡', name: 'Fikir Kahramanı', desc: 'Uygulanan öneri sayısı (kalıcı rozet, haftalık sıfırlanmaz)', lv: [1, 3, 5] }
     ];
     function socBadgeValues(id) {
         const daily = globalData.daily || {}, known = socKnown();
         const ws = socWeekStart();
         const dates = Object.keys(daily).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d) && d >= ws && d <= ACTIVE_DATE).sort();
-        const v = { hedef: 0, alev: 0, seri: 0, yildiz: 0, alkis: 0, odak: 0, yuzler: 0 };
+        const v = { hedef: 0, alev: 0, seri: 0, yildiz: 0, alkis: 0, odak: 0, yuzler: 0, oneri: 0 };
+        try { const sg = globalData.suggestions || {}; Object.keys(sg).forEach(k => { if (sg[k] && sg[k].sid === id && sg[k].st === 'ok') v.oneri++; }); } catch (e) {}
         const hit = {};
         dates.forEach(dk => {
             const day = daily[dk] || {};
@@ -7299,6 +7377,7 @@
                         ${fireBadge} 
                         ${nameBadge}
                         ${regionalBadge}
+                        ${window.sugRowHtml && !p.isTransfer ? sugRowHtml(p.id, isStoreHistorical) : ''}
                     </td>
                     <td class="py-2.5 px-1 sm:px-4 text-center">${targetEl}</td>
                     <td class="py-2.5 px-1 sm:px-4 text-center"><span class="inline-block font-black text-xs sm:text-sm text-pink-600 bg-white px-1.5 sm:px-2 py-0.5 rounded border border-pink-200 shadow-sm">${p.sales}</span> ${focusSalesBadge}${kpiBadge}</td>
@@ -10721,6 +10800,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.96</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.97</div>
 </body>
 </html>
