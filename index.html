@@ -955,13 +955,13 @@
                 <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between border-t border-violet-800/50 pt-3">
                     <div class="min-w-0">
                         <div class="text-violet-100 font-black text-sm"><i class="fa-solid fa-robot mr-2"></i>WATKO KPI KOÇU (GÜNLÜK ADET GÖREVİ)</div>
-                        <div class="text-[11px] text-slate-300 mt-0.5">Mağaza ekranında WatKo, ayın sonunda hedefin %100'ünü yakalamak için bugün yapılması gereken adedi söyler (hafta içi/sonu düzenini ve mağazanın kendi son günlerdeki hızını öğrenerek her gün daha isabetli hesaplar). Ciro tutarı göstermez, adet markalarında adet, TL markalarında yalnızca yüzde yönlendirmesi verir. Varsayılan <b>açık</b>.</div>
+                        <div class="text-[11px] text-slate-300 mt-0.5">Mağaza ekranında WatKo, ayın sonunda hedefin %100'ünü yakalamak için bugün yapılması gereken adedi söyler (hafta içi/sonu düzenini ve mağazanın kendi son günlerdeki hızını öğrenerek her gün daha isabetli hesaplar). Ciro tutarı göstermez; adet görevi verir. Varsayılan <b>açık</b>.</div>
                     </div>
                     <button type="button" id="opt-kpiCoach-btn" onclick="setKpiOpt('kpiCoach')" class="shrink-0 px-4 py-2 rounded-xl border font-black text-xs transition"></button>
                 </div>
                 <div class="border-t border-violet-800/50 pt-3">
                     <div class="text-violet-100 font-black text-xs mb-1"><i class="fa-solid fa-tags mr-2"></i>MAĞAZALARA GÖSTERİLECEK KPI MARKALARI</div>
-                    <div class="text-[10px] text-slate-400 mb-2">Markalar aktif KPI yarışmasından gelir. Boş bırakırsanız hepsi gösterilir. Her marka için ekip arkadaşının <b>adet</b> mi yoksa <b>tutar (₺)</b> mı gireceğini seçebilirsiniz. Mağaza ekranındaki gidişat şeridinde TL markaları sadece % görünür.</div>
+                    <div class="text-[10px] text-slate-400 mb-2">Markalar aktif KPI yarışmasından gelir. Boş bırakırsanız hepsi gösterilir. Ekip arkadaşları her markada <b>adet</b> girer; mağazalar ciro girmez (ciroyu merkez ertesi gün girer). TL hedefli markalarda yapay zekanın adet görevi hesaplayabilmesi için isterseniz başlangıç <b>ort. ₺/adet</b> değeri yazın; sonra günlük cirolardan kendisi öğrenir. Mağaza ekranındaki gidişat şeridinde TL markaları sadece % görünür.</div>
                     <div id="kpi-pick-list" class="flex flex-wrap gap-2 mb-2"><span class="text-[11px] text-slate-400">Aktif KPI yarışması yok.</span></div>
                     <button type="button" onclick="sendKpiBrands()" class="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white font-black rounded-xl text-xs shadow"><i class="fa-solid fa-paper-plane mr-1"></i> Ekranlara gönder</button>
                 </div>
@@ -8666,11 +8666,7 @@
         // ------------------------------------------------------------------
         // Ekip Arkadaşının gireceği birim (Sistem Merkezi'nden): ayar yoksa markanın kendi birimi
         function entryUnit(b) {
-            try {
-                const m = String((globalData.settings || {}).kpiUnits || '').split(',').map(x => x.split(':')).find(x => x[0] === b.key);
-                if (m && (m[1] === 'adet' || m[1] === 'TL')) return m[1];
-            } catch (e) {}
-            return b.unit;
+            return 'adet';   // mağazada ciro (TL) girilmez; ekip arkadaşları ADET girer, ciroyu merkez ertesi gün girer
         }
         function ctxGet() {
             const k = (globalData && globalData.kpi) || {};
@@ -9097,6 +9093,7 @@
             if (kBusy['s' + stfId + bk] && Date.now() - kBusy['s' + stfId + bk] < 250) return;
             kBusy['s' + stfId + bk] = Date.now();
             Snd.play(d > 0 ? 'sale' : 'saleUndo');
+            try { if (d > 0) kpiEffectToast(bk); } catch (e) {}
             try { const bb = kpiStaffBrands().find(b => b.key === bk); if (bb && bb.eu === 'adet') hrLog('k', stfId, d); } catch (e) {}
             if (d < 0) { try { const cur0 = kpiStaffGet(stfId, bk), br0 = kpiStaffBrands().find(b => b.key === bk); delLog('k', stfId, br0 ? br0.name : bk, cur0, Math.max(0, cur0 + d)); } catch (e) {} }
             dbRoot.child('kpi').child('comps').child(k.active).child('staff').child(ACTIVE_DATE).child(currentId).child(stfId).child(bk)
@@ -9154,7 +9151,7 @@
                 pickSig = sig;
                 if (!c || !c.brands.length) { box.innerHTML = '<span class="text-[11px] text-slate-400">Aktif KPI yarışması yok.</span>'; return; }
                 const chosen = saved ? saved.split(',') : c.brands.map(b => b.key);
-                box.innerHTML = c.brands.map(b => `<label class="inline-flex items-center gap-1.5 bg-violet-950 border border-violet-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-violet-100 cursor-pointer"><input type="checkbox" value="${b.key}" ${chosen.includes(b.key) ? 'checked' : ''} onchange="kpiPickDirty()">${esc(b.name)} <select data-k="${b.key}" data-def="${b.unit}" onchange="kpiPickDirty()" class="bg-violet-900 text-violet-100 border border-violet-600 rounded text-[10px] font-black px-1 py-0.5"><option value="adet" ${entryUnit(b) === 'adet' ? 'selected' : ''}>adet gir</option><option value="TL" ${entryUnit(b) === 'TL' ? 'selected' : ''}>tutar (₺) gir</option></select>${b.unit === 'TL' ? `<input type="number" min="0" data-bk="${b.key}" value="${manualBasket(b.key) || ''}" placeholder="ort. ₺/adet" title="Ortalama sepet: 1 adet ürünün ortalama tutarı (başlangıç tahmini)" oninput="kpiPickDirty()" class="w-20 bg-violet-900 text-violet-100 border border-violet-600 rounded text-[10px] font-black px-1 py-0.5">` : ''}</label>`).join('');
+                box.innerHTML = c.brands.map(b => `<label class="inline-flex items-center gap-1.5 bg-violet-950 border border-violet-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-violet-100 cursor-pointer"><input type="checkbox" value="${b.key}" ${chosen.includes(b.key) ? 'checked' : ''} onchange="kpiPickDirty()">${esc(b.name)} ${b.unit === 'TL' ? `<input type="number" min="0" data-bk="${b.key}" value="${manualBasket(b.key) || ''}" placeholder="ort. ₺/adet" title="Ortalama sepet: 1 adet ürünün ortalama tutarı (başlangıç tahmini)" oninput="kpiPickDirty()" class="w-20 bg-violet-900 text-violet-100 border border-violet-600 rounded text-[10px] font-black px-1 py-0.5">` : ''}</label>`).join('');
             } catch (e) {}
         }, 1500);
 
@@ -9304,6 +9301,36 @@
             }
             return out;
         }
+        // Bugün ekip arkadaşlarının girdiği adetlerin, mağaza çubuğuna TAHMİNİ katkısı (ciro ertesi gün gerçek rakamla değişir)
+        function kpiEst(c, st, bk) {
+            try {
+                const b = c.brands.find(x => x.key === bk); if (!b || !c.live) return null;
+                const T = c.tStore(st, bk), tv = (c.todayVal[st] && c.todayVal[st][bk]) || 0, ad = staffAdetDay(c, c.today, st, bk);
+                if (b.unit === 'adet') { const e = Math.max(0, ad - tv); return { est: e, adet: ad, pctAdd: T > 0 ? e / T * 100 : 0, unit: 'adet' }; }
+                if (tv > 0) return { est: 0, adet: ad, pctAdd: 0, unit: 'TL', actual: true };   // gerçek ciro girilmişse tahmin eklenmez
+                let r = basketRate(c, st, bk).rate || manualBasket(bk);
+                if (!(r > 0)) return { est: 0, adet: ad, pctAdd: 0, unit: 'TL', unknown: true };
+                const e = ad * r;
+                return { est: e, adet: ad, rate: r, pctAdd: T > 0 ? e / T * 100 : 0, unit: 'TL' };
+            } catch (e) { return null; }
+        }
+        window.kpiEst = function (st, bk) { const c = ctxGet(); return c ? kpiEst(c, st, bk) : null; };
+        // Bir satış girilince çubuğa etkisini göster
+        function kpiEffectToast(bk) {
+            try {
+                const c = ctxGet(); if (!c || !currentId) return;
+                const b = c.brands.find(x => x.key === bk), T = c.tStore(currentId, bk); if (!b || !(T > 0)) return;
+                let add = 0;
+                if (b.unit === 'adet') add = 1 / T * 100;
+                else { const r = basketRate(c, currentId, bk).rate || manualBasket(bk); if (r > 0) add = r / T * 100; }
+                if (!(add > 0)) return;
+                let el = document.getElementById('kpi-fx'); if (!el) { el = document.createElement('div'); el.id = 'kpi-fx'; el.style.cssText = 'position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:99999;max-width:90vw;pointer-events:none;transition:opacity .35s'; document.body.appendChild(el); }
+                el.innerHTML = '<div style="background:#4c1d95;color:#fff;border-radius:999px;padding:9px 16px;font-weight:900;font-size:13px;box-shadow:0 8px 24px rgba(76,29,149,.45);border:2px solid #c4b5fd;white-space:nowrap">🎯 ' + String(b.name).replace(/[<>&]/g, '') + ' +1 → mağaza çubuğu <span style="color:#fde68a">▲ ≈%' + (add >= 10 ? Math.round(add) : add.toFixed(1)) + '</span></div>';
+                el.style.opacity = '1'; clearTimeout(el._t); el._t = setTimeout(() => { el.style.opacity = '0'; }, 2200);
+                const sp = document.getElementById('store-kpi-strip'); if (sp) { sp.classList.add('kpi-bump'); setTimeout(() => sp.classList.remove('kpi-bump'), 1200); }
+                setTimeout(() => { try { window.storeBoardPaint && storeBoardPaint(false); } catch (e) {} }, 500);
+            } catch (e) {}
+        }
         // TL hedefli ama ekip arkadaşının ADET girdiği markalar: ₺/adet oranını geçmişten öğren
         function staffAdetDay(c, d, st, bk) {
             let t = 0; const sd = c.comp.staff && c.comp.staff[d] && c.comp.staff[d][st];
@@ -9378,14 +9405,14 @@
                 const chip = (txt, ok) => `<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-black border ${ok ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-white text-slate-700 border-teal-200'}">${txt}</span>`;
                 const chips = p.items.map(i => i.complete ? chip('✅ ' + esc(i.b.name) + ' hedefi tamam', true)
                     : i.goal === 0 ? '' : chip('🎯 ' + esc(i.b.name) + ' <b>' + (i.est ? '≈' : '') + i.goal + ' adet</b> <span class="text-slate-400 font-bold">(' + Math.min(i.done, i.goal) + '/' + i.goal + ')</span>' + (i.done >= i.goal ? ' ✅' : '') + (i.step && i.done < i.goal ? ' <span class="text-amber-600 font-bold">· ara hedef ' + i.step + '</span>' : ''), i.done >= i.goal)).join('')
-                    + p.tl.map(t => t.done ? chip('✅ ' + esc(t.b.name) + ' hedefi tamam', true) : chip('💜 ' + esc(t.b.name) + (t.goalPct >= 1 ? ': bugün hedefin <b>≈%' + t.goalPct + '</b>\'ini tamamla' : ': cironu güncel tut'), t.sent && t.goalPct < 1)).join('');
+                    + p.tl.map(t => t.done ? chip('✅ ' + esc(t.b.name) + ' hedefi tamam', true) : chip('💜 ' + esc(t.b.name) + ': adet görevi yarın başlıyor <span class="text-slate-400 font-bold">(ort. sepet öğreniliyor)</span>', false)).join('');
                 const projs = p.items.concat(p.tl).filter(x => x.proj !== null && x.proj !== undefined && !x.complete && !x.done);
                 const projTxt = projs.length ? '<div class="mt-1 text-[10px] font-bold text-slate-500">Bu hızla ay sonu: ' + projs.map(x => esc(x.b.name) + ' ≈%' + Math.round(x.proj)).join(' · ') + '</div>' : '';
                 const LV = ['İlk tahmin · henüz veri yok', 'Öğreniyor · birkaç günlük veri', 'Orta · satış düzenini tanıyor', 'Güçlü · kendi geçmişine göre'];
                 const lvTxt = '<div class="mt-1 text-[10px] font-bold text-teal-600">🧠 Tahmin gücü: ' + '●'.repeat(p.lvl + 1) + '○'.repeat(3 - p.lvl) + ' ' + LV[p.lvl] + '</div>';
                 const tail = p.allDone ? 'Bugünkü görevlerin tamam, harikasın! 🎉' : p.behind ? 'Çizginin biraz gerisindesin; bu görevler seni toparlar, hadi başlayalım! 💪' : 'Tempon iyi, bu görevlerle ay sonunda hedefi %100 yakalarsın 🚀';
                 const estNote = p.items.some(i => i.est && !i.complete) ? '<div class="mt-1 text-[10px] font-bold text-slate-500">≈ işaretli adetler tahmindir; ₺/adet ortalaması ' + (p.items.filter(i => i.est).every(i => i.rn >= 5) ? 'mağazanın kendi satışlarından' : 'her gün girilen adet ve cirodan öğrenilerek') + ' güncellenir.</div>' : '';
-                const tlNote = p.tl.some(t => !t.done && !t.sent) ? '<div class="mt-1 text-[10px] font-bold text-slate-500">TL markaları için günün cirosunu göndermeyi unutma (son girdiğin rakam geçerli).</div>' : '';
+                const tlNote = '';
                 return `<div class="mt-2 flex items-start gap-3 bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-100 rounded-2xl px-3 py-2.5"><div class="shrink-0 mc-bob">${face}</div><div class="min-w-0 flex-1"><span class="block text-[10px] font-black text-teal-600 uppercase tracking-wider mb-0.5">WatKo · bugünkü KPI görevin</span><div class="text-[12px] font-bold text-slate-700 leading-snug">${hi} Ay sonunda hedefin %100'ünü yakalamak için bugün:</div><div class="flex flex-wrap gap-1.5 mt-1.5">${chips}</div>${estNote}${tlNote}${projTxt}${lvTxt}<div class="mt-1.5 text-[11px] font-bold text-teal-700">${tail}</div></div></div>`;
             } catch (e) { return ''; }
         }
@@ -9490,7 +9517,7 @@
                     '<span class="text-left leading-tight whitespace-nowrap"><span class="block text-[10px] sm:text-[11px] font-black" style="color:' + col + '">' + (amb ? '🌟 ' : '') + 'KPI' + (man ? ' ✎' : '') + '</span><span class="block text-[11px] sm:text-[12px] font-black text-slate-700">' + D + '/' + G + '</span></span></button>';
             } catch (e) { return ''; }
         };
-        (function () { try { const st = document.createElement('style'); st.textContent = '.kpi-rgw{position:relative;display:inline-block;flex:none;width:46px;height:46px}.kpi-rgs{width:100%;height:100%;display:block}@media(max-width:639px){.kpi-rgw{width:34px;height:34px}.kpi-rgw span{font-size:10px!important}}@keyframes kpiPulse{0%,100%{box-shadow:0 0 0 0 rgba(6,182,212,.45)}50%{box-shadow:0 0 0 7px rgba(6,182,212,0)}}.kpi-pulse{animation:kpiPulse 2.2s ease-in-out infinite}@media(prefers-reduced-motion:reduce){.kpi-pulse{animation:none}}'; document.head.appendChild(st); } catch (e) {} })();
+        (function () { try { const st = document.createElement('style'); st.textContent = '.kpi-est{opacity:.55;background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.55) 0 3px,transparent 3px 6px)!important;animation:kpiEst 1.6s ease-in-out infinite}@keyframes kpiEst{0%,100%{opacity:.45}50%{opacity:.9}}.kpi-bump{animation:kpiBump .9s ease}@keyframes kpiBump{0%{transform:scale(1)}30%{transform:scale(1.035);box-shadow:0 0 0 4px rgba(139,92,246,.35)}100%{transform:scale(1)}}.kpi-rgw{position:relative;display:inline-block;flex:none;width:46px;height:46px}.kpi-rgs{width:100%;height:100%;display:block}@media(max-width:639px){.kpi-rgw{width:34px;height:34px}.kpi-rgw span{font-size:10px!important}}@keyframes kpiPulse{0%,100%{box-shadow:0 0 0 0 rgba(6,182,212,.45)}50%{box-shadow:0 0 0 7px rgba(6,182,212,0)}}.kpi-pulse{animation:kpiPulse 2.2s ease-in-out infinite}@media(prefers-reduced-motion:reduce){.kpi-pulse{animation:none}}'; document.head.appendChild(st); } catch (e) {} })();
         window.kpiGoalChips = function (id, name, goals) {
             try {
                 if (!goals || !goals.byId[id]) return '';
@@ -9541,10 +9568,12 @@
             if (kpiOn) {
                 const sel = selKeys(c);
                 const items = c.brands.filter(b => sel.includes(b.key)).map(b => {
-                    const m = metrics(c.aStore(currentId, b.key), c.tStore(currentId, b.key), c);
+                    const es = kpiEst(c, currentId, b.key) || { est: 0, pctAdd: 0 };
+                    const m0 = metrics(c.aStore(currentId, b.key), c.tStore(currentId, b.key), c);
+                    const m = es.est > 0 ? metrics(c.aStore(currentId, b.key) + es.est, c.tStore(currentId, b.key), c) : m0;
                     const pct = m.pct;
-                    const w = Math.min(100, pct || 0);
-                    return `<div class="min-w-0"><div class="flex justify-between items-baseline gap-1"><span class="truncate text-[10px] font-black text-slate-700">${esc(b.name)}</span><span class="text-[10px] font-black ${m.st.txt}">${pct === null ? 'hedef yok' : '%' + Math.round(pct)}</span></div><div class="relative w-full bg-slate-200 rounded-full h-1.5"><div class="h-1.5 rounded-full" style="width:${w}%;background:${m.st.bar}"></div><div class="absolute top-[-3px] bottom-[-3px] w-[2px] bg-slate-700/70" style="left:${Math.min(100, c.pace * 100)}%" title="Bugün olması gereken seviye: %${Math.round(c.pace * 100)}"></div></div></div>`;
+                    const w = Math.min(100, pct || 0), w0 = Math.min(100, m0.pct || 0), wEst = Math.max(0, w - w0);
+                    return `<div class="min-w-0"><div class="flex justify-between items-baseline gap-1"><span class="truncate text-[10px] font-black text-slate-700">${esc(b.name)}</span><span class="text-[10px] font-black ${m.st.txt}">${pct === null ? 'hedef yok' : (es.est > 0 ? '≈' : '') + '%' + Math.round(pct)}</span></div><div class="relative w-full bg-slate-200 rounded-full h-1.5"><div class="h-1.5 rounded-full" style="width:${w0}%;background:${m.st.bar};transition:width .6s"></div>${wEst > 0 ? `<div class="absolute top-0 h-1.5 rounded-r-full kpi-est" style="left:${w0}%;width:${wEst}%;background:${m.st.bar}" title="Bugün ekip arkadaşlarının girdiği adetlerden tahmini ilerleme"></div>` : ''}<div class="absolute top-[-3px] bottom-[-3px] w-[2px] bg-slate-700/70" style="left:${Math.min(100, c.pace * 100)}%" title="Bugün olması gereken seviye: %${Math.round(c.pace * 100)}"></div></div></div>`;
                 }).join('');
                 const rk = rankOf(c.rows, currentId, 'overall');
                 const rkTxt = rk.rank > 0 ? `<span class="px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 text-[9px] font-black">KPI ${rk.rank}/${rk.total}</span>` : '';
@@ -9656,16 +9685,8 @@
                 if (!c.live) {
                     entry = `<div class="pl-2 mt-3 text-[11px] text-slate-400 font-bold text-center bg-slate-50 rounded-xl p-2">${c.upcoming ? 'Yarışma henüz başlamadı' : 'Yarışma bitti, giriş kapalı'}</div>`;
                 } else if (b.unit === 'TL') {
-                    const ls = kState.lastSend[b.key];
-                    entry = `<div class="pl-2 mt-3 bg-violet-50 border border-violet-100 rounded-xl p-2.5">
-                        <div class="text-[10px] font-bold text-violet-700 uppercase mb-2"><i class="fa-solid fa-paper-plane mr-1"></i>Bugünkü cironuzu gönderin</div>
-                        <div class="text-[10px] font-bold text-slate-500 mb-2 leading-snug">Her gönderim bugünkü toplam cironuzu günceller, <b>son girdiğiniz rakam geçerlidir</b> (ör. 14:00'te 2.000, 18:00'te 10.000 yazarsanız bugünkü ciro 10.000 olur).</div>
-                        <div class="flex gap-2"><input type="number" min="0" inputmode="numeric" id="kpi-amt-${b.key}" placeholder="Bugünkü toplam (TL)" class="flex-1 min-w-0 p-2 border border-violet-200 rounded-lg text-sm font-bold focus:outline-none focus:border-violet-500">
-                        <button type="button" onclick="kpiAdd('${b.key}', 1)" class="px-4 h-10 bg-violet-600 hover:bg-violet-700 rounded-lg font-black text-white shadow whitespace-nowrap">Gönder</button></div>
-                        <div class="mt-1.5 flex items-center justify-between gap-2 text-[10px] font-bold">
-                            <span class="text-emerald-600">${lastTs(c, st, b.key) ? '✓ Son giriş: ' + hhmm(lastTs(c, st, b.key)) : (tv > 0 ? '✓ Bugün giriş yapıldı' : (ls ? '✓ Son gönderim iletildi' : ''))}</span>
-                            ${kState.prevSend[b.key] !== undefined ? `<button type="button" onclick="kpiAdd('${b.key}', -1)" class="text-rose-600 underline">Son gönderimi geri al</button>` : ''}
-                        </div></div>`;
+                    const es = kpiEst(c, st, b.key);
+                    entry = `<div class="pl-2 mt-3 bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-[11px] font-bold text-slate-600 leading-snug"><i class="fa-solid fa-circle-info text-violet-500 mr-1"></i>Ciro merkez tarafından ertesi gün girilir; burada sadece takip edilir.${es && es.est > 0 ? '<div class="mt-1 text-violet-700">Bugün ekip arkadaşlarının girdiği adetlerden tahmini katkı: <b>≈%' + (es.pctAdd >= 10 ? Math.round(es.pctAdd) : es.pctAdd.toFixed(1)) + '</b></div>' : ''}</div>`;
                 } else {
                     entry = `<div class="pl-2 mt-3 bg-violet-50 border border-violet-100 rounded-xl p-2.5 flex items-center justify-between gap-2">
                         <div><div class="text-[10px] font-bold text-violet-700 uppercase">Bugün girilen</div><div class="text-2xl font-black text-violet-800 leading-none">${nf(tv)}</div></div>
@@ -9711,6 +9732,7 @@
             const c = ctxGet(); if (!c || currentRole !== 'kstore') return;
             if (!c.live) return alert('Yarışma şu an aktif tarih aralığında değil.');
             const b = c.brands.find(x => x.key === bk); if (!b) return;
+            if (b.unit === 'TL') return alert('Ciro girişi mağazalarda kapalı; ciroyu merkez ertesi gün girer.');
             const ref = dbRoot.child('kpi').child('comps').child(c.cid).child('daily').child(ACTIVE_DATE).child(currentId).child(bk);
             if (b.unit === 'TL') {
                 // TL markalarında SON GİRİLEN RAKAM geçerlidir: bugünkü toplam ciro bu rakamla değiştirilir (toplanmaz).
@@ -10175,7 +10197,7 @@
         function renderCentral() {
             const body = $('kcentral-body');
             const c = ctxGet();
-            const tabs = [['comp', 'fa-trophy', 'Yarışma'], ['targets', 'fa-bullseye', 'Mağaza Hedefleri'], ['upper', 'fa-sitemap', 'Bölge / Genel Hedef'], ['actual', 'fa-clipboard-check', 'Resmi Rakamlar']];
+            const tabs = [['comp', 'fa-trophy', 'Yarışma'], ['targets', 'fa-bullseye', 'Mağaza Hedefleri'], ['upper', 'fa-sitemap', 'Bölge / Genel Hedef'], ['actual', 'fa-clipboard-check', 'Resmi Rakamlar'], ['daily', 'fa-calendar-day', 'Günlük Ciro']];
             const tabHtml = `<div class="flex flex-wrap gap-2">${tabs.map(t => `<button type="button" onclick="kcTab('${t[0]}')" class="px-4 py-2 rounded-xl text-xs font-black border transition ${kState.tab === t[0] ? 'bg-violet-600 text-white border-violet-600 shadow' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}"><i class="fa-solid ${t[1]} mr-1.5"></i>${t[2]}</button>`).join('')}</div>`;
             const head = c
                 ? header(c, 'KPI Sistem Merkezi', 'YARIŞMA YÖNETİMİ', 'Sadece yetkili hesap', statBox('Marka', c.brands.length) + statBox('Hedefli Mağaza', c.rows.filter(r => r.overall !== null).length + ' / ' + ALL.length))
@@ -10185,6 +10207,7 @@
             else if (!c) content = noComp(true);
             else if (kState.tab === 'targets') content = centralTargets(c);
             else if (kState.tab === 'upper') content = centralUpper(c);
+            else if (kState.tab === 'daily') content = centralDaily(c);
             else content = centralActual(c);
             body.innerHTML = head + tabHtml + `<div id="kcentral-grid">${content}</div>`;
         }
@@ -10313,6 +10336,67 @@
                 </div></div>`;
         }
 
+        // GÜNLÜK CİRO: mağazalar ciro girmez; merkez her mağazanın günlük cirosunu (genelde ertesi gün) buradan girer
+        function centralDaily(c) {
+            const tl = c.brands.filter(b => b.unit === 'TL');
+            const def = (() => { const y = addDays(c.today, -1); return y < c.start ? c.start : y; })();
+            const d = kState.dDate || def;
+            const inRange = d >= c.start && d <= c.end;
+            if (!tl.length) return '<div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 text-sm font-bold">Bu yarışmada ciro (TL) markası yok; günlük ciro girişi gerekmiyor.</div>';
+            const head = tl.map(b => `<th class="py-2 px-2 text-center" style="color:${b.color}">${esc(b.name)}<div class="text-[8px] text-slate-400 normal-case">günlük ciro (TL)</div></th>`).join('');
+            const rows = sortedStores().map(s => `<tr data-s="${esc((s.name + ' ' + s.bm).toLocaleLowerCase('tr'))}" class="border-b border-slate-100 hover:bg-violet-50/40"><td class="py-1.5 px-2 font-bold text-xs text-slate-700 whitespace-nowrap">${esc(s.name)}</td>${tl.map(b => {
+                const v = Number(c.daily && c.daily[d] && c.daily[d][s.name] && c.daily[d][s.name][b.key]) || 0;
+                return `<td class="py-1.5 px-2 text-center">${numInput(`kcSetDaily('${esc(s.name)}','${b.key}',this.value)`, v, '0', 'w-28')}</td>`;
+            }).join('')}</tr>`).join('');
+            return `<div class="space-y-4">
+                <div class="bg-white rounded-2xl border border-violet-200 shadow-sm p-4 flex flex-wrap items-end gap-3">
+                    <div><label class="text-[10px] font-bold text-slate-500 uppercase">Hangi günün cirosu?</label><input type="date" value="${d}" min="${c.start}" max="${c.end}" onchange="kcDDate(this.value)" class="block mt-1 p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold light-date-input"></div>
+                    <div class="text-[11px] font-bold text-slate-500 max-w-md leading-snug">Mağazalar ciro girmez. O günün mağaza cirosunu buraya girin (aynı gün tekrar girerseniz son rakam geçerlidir). Yapay zeka, bu günlük cirolarla ekip arkadaşlarının girdiği adetlerden ortalama sepeti (₺/adet) öğrenir.</div>
+                </div>
+                ${inRange ? '' : '<div class="bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl p-3 text-xs font-bold">Seçilen tarih yarışma tarihleri dışında.</div>'}
+                <div class="bg-violet-50 border border-violet-200 rounded-2xl p-4"><h4 class="font-black text-violet-800 text-sm mb-1"><i class="fa-solid fa-paste mr-1.5"></i>Excel'den Toplu Yapıştır (${esc(d)})</h4>
+                    <p class="text-[11px] text-violet-700 mb-2">Her satır: mağaza kodu veya adı, ardından sırasıyla ${tl.map(b => '<b>' + esc(b.name) + '</b>').join(', ')} günlük cirosu.</p>
+                    <textarea id="kc-bulk-daily" rows="4" class="w-full p-2 border border-violet-200 rounded-lg text-xs font-mono focus:outline-none focus:border-violet-500" placeholder="143&#9;12500&#9;8300"></textarea>
+                    <button type="button" onclick="kcBulkDaily()" class="mt-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-lg text-xs shadow">Kontrol Et ve Yükle</button></div>
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"><div class="p-3 bg-slate-50 border-b border-slate-200">${filterBox()}</div>
+                    <div class="overflow-x-auto max-h-[34rem] overflow-y-auto"><table class="w-full text-left text-sm"><thead class="sticky top-0 bg-slate-100 z-10"><tr class="text-[10px] uppercase tracking-wider text-slate-500"><th class="py-2 px-2">Mağaza</th>${head}</tr></thead><tbody>${rows}</tbody></table></div></div></div>`;
+        }
+        window.kcDDate = function (v) { kState.dDate = /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null; renderCentral(); };
+        window.kcSetDaily = function (store, bk, val) {
+            const c = ctxGet(); if (!c) return;
+            const d = kState.dDate || (() => { const y = addDays(c.today, -1); return y < c.start ? c.start : y; })();
+            if (d < c.start || d > c.end) return alert('Seçilen tarih yarışma tarihleri dışında.');
+            const ref = kpiRef(c, 'daily').child(d).child(store).child(bk);
+            const raw = String(val).trim();
+            if (raw === '') { ref.remove(); return; }
+            const v = parseNum(raw); if (v === null || isNaN(v) || v < 0) return alert('Geçerli bir tutar girin.');
+            ref.set(v);
+        };
+        window.kcBulkDaily = function () {
+            const c = ctxGet(); if (!c) return;
+            const tl = c.brands.filter(b => b.unit === 'TL');
+            const d = kState.dDate || (() => { const y = addDays(c.today, -1); return y < c.start ? c.start : y; })();
+            if (d < c.start || d > c.end) return alert('Seçilen tarih yarışma tarihleri dışında.');
+            const lines = String(($('kc-bulk-daily') || {}).value || '').split(/\r?\n/).map(l => l.trim()).filter(l => l);
+            if (!lines.length) return alert('Önce yapıştırma alanına veri girin.');
+            const updates = {}; let okRows = 0, cells = 0; const bad = [];
+            lines.forEach(line => {
+                const parts = line.split(/\t|;/).map(p => p.trim());
+                const store = matchStore(parts[0]);
+                if (!store) { bad.push(parts[0] || line); return; }
+                let any = false;
+                tl.forEach((b, i) => {
+                    const n = parseNum(parts[i + 1]);
+                    if (n === null || n === undefined) return;
+                    if (isNaN(n) || n < 0) { bad.push(store + ' (' + b.name + ' geçersiz)'); return; }
+                    updates[d + '/' + store + '/' + b.key] = n; cells++; any = true;
+                });
+                if (any) okRows++;
+            });
+            if (!cells) return alert('Geçerli satır bulunamadı.' + (bad.length ? '\nEşleşmeyen: ' + bad.slice(0, 5).join(', ') : ''));
+            if (!confirm(d + ' tarihi için ' + okRows + ' mağaza, ' + cells + ' ciro değeri yüklenecek (aynı günün eski rakamının yerine geçer).' + (bad.length ? '\n\nOkunamayan: ' + bad.slice(0, 5).join(', ') : ''))) return;
+            kpiRef(c, 'daily').update(updates).then(() => { alert('Yükleme tamamlandı: ' + cells + ' değer.'); const bx = $('kc-bulk-daily'); if (bx) bx.value = ''; }).catch(e => alert('Yükleme başarısız: ' + (e && e.message ? e.message : e)));
+        };
         const kpiRef = (c, path) => dbRoot.child('kpi').child('comps').child(c.cid).child(path);
 
         window.kcSetTarget = function (store, bk, val) {
@@ -10579,6 +10663,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.94</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.95</div>
 </body>
 </html>
