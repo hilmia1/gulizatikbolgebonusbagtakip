@@ -4748,7 +4748,7 @@
     ;(function leagueBoard() { try {
         const GC = { A: ['bg-amber-50 border-amber-300', 'text-amber-800', '#f59e0b'], B: ['bg-sky-50 border-sky-300', 'text-sky-800', '#0ea5e9'], C: ['bg-emerald-50 border-emerald-300', 'text-emerald-800', '#10b981'] };
         const eh = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-        const MOUNT = { store: ['store-podium-grid', 'before'], region: ['region-leaders-list', 'before'], general: ['general-leaders-list', 'before'], central: ['lg-card', 'after'] };
+        const MOUNT = { store: ['store-podium-grid', 'before'], central: ['lg-card', 'after'] };
         window.__lgRank = window.__lgRank || 'pct';
         window.lgRankSet = function (m) { window.__lgRank = m; lgBoardPaint(); };
         // Lig dönemi: başlangıç gününden bugüne toplam
@@ -10116,6 +10116,10 @@
             if (historical || !currentId) { strip.classList.add('hidden'); card.classList.add('hidden'); if (kp) { kp.classList.add('hidden'); kp.innerHTML = ''; } return; }
             const c = kpiShowOn() ? ctxGet() : null;
             const kpiOn = !!(c && c.live);
+            // Lig açıksa: sıralamalar yalnız mağazanın kendi grubundan
+            let lgSet = null, lgG = '';
+            try { if (window.lgStores) { const L = lgStores(currentId); if (L) { lgSet = new Set(L); lgG = lgName(lgOf(currentId)); } } } catch (e) {}
+            const inG = st => !lgSet || lgSet.has(st);
             // --- KPI gidişat şeridi (ince; Bonus Pack kartının altında)
             if (kpiOn) {
                 const sel = selKeys(c);
@@ -10127,14 +10131,14 @@
                     const w = Math.min(100, pct || 0), w0 = Math.min(100, m0.pct || 0), wEst = Math.max(0, w - w0);
                     return `<div class="min-w-0"><div class="flex justify-between items-baseline gap-1"><span class="truncate text-[10px] font-black text-slate-700">${esc(b.name)}</span><span class="text-[10px] font-black ${m.st.txt}">${pct === null ? 'hedef yok' : (es.est > 0 ? '≈' : '') + '%' + Math.round(pct)}</span></div><div class="relative w-full bg-slate-200 rounded-full h-1.5"><div class="h-1.5 rounded-full" style="width:${w0}%;background:${m.st.bar};transition:width .6s"></div>${wEst > 0 ? `<div class="absolute top-0 h-1.5 rounded-r-full kpi-est" style="left:${w0}%;width:${wEst}%;background:${m.st.bar}" title="Bugün ekip arkadaşlarının girdiği adetlerden tahmini ilerleme"></div>` : ''}<div class="absolute top-[-3px] bottom-[-3px] w-[2px] bg-slate-700/70" style="left:${Math.min(100, c.pace * 100)}%" title="Bugün olması gereken seviye: %${Math.round(c.pace * 100)}"></div></div></div>`;
                 }).join('');
-                const rk = rankOf(c.rows, currentId, 'overall');
+                const rk = rankOf(lgSet ? c.rows.filter(r => lgSet.has(r.name)) : c.rows, currentId, 'overall');
                 const rkTxt = rk.rank > 0 ? `<span class="px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 text-[9px] font-black">KPI ${rk.rank}/${rk.total}</span>` : '';
                 strip.className = 'bg-white rounded-xl border border-violet-200 px-3 py-2 shadow-sm';
                 strip.innerHTML = `<div class="flex items-center justify-between gap-2 mb-1.5"><div class="text-[10px] font-black text-violet-700 uppercase tracking-wider truncate"><i class="fa-solid fa-chart-line mr-1"></i>KPI gidişatı · ${esc(c.name)}</div><div class="flex items-center gap-1.5 shrink-0">${rkTxt}<span class="text-[9px] font-bold text-slate-400">çizgi: olması gereken %${Math.round(c.pace * 100)} · ${c.daysLeft} gün kaldı</span></div></div>${(() => { const t = stTotal(c, currentId, true), t0 = stTotal(c, currentId, false); if (!t) return ''; const w = Math.min(100, t.pct), w0 = Math.min(100, t0 ? t0.pct : 0), we = Math.max(0, w - w0); return `<div class="mb-2 p-2 rounded-lg bg-violet-50 border border-violet-200"><div class="flex justify-between items-baseline gap-1"><span class="text-[11px] font-black text-violet-800 uppercase tracking-wide">🎯 Toplam KPI (tüm markalar)</span><span class="text-sm font-black ${t.m.st.txt}">${t.est ? '≈' : ''}%${Math.round(t.pct)}</span></div><div class="relative w-full bg-slate-200 rounded-full h-2.5 mt-1"><div class="h-2.5 rounded-full" style="width:${w0}%;background:${t.m.st.bar};transition:width .6s"></div>${we > 0 ? `<div class="absolute top-0 h-2.5 rounded-r-full kpi-est" style="left:${w0}%;width:${we}%;background:${t.m.st.bar}"></div>` : ''}<div class="absolute top-[-3px] bottom-[-3px] w-[2px] bg-slate-700/70" style="left:${Math.min(100, c.pace * 100)}%" title="Bugün olması gereken seviye: %${Math.round(c.pace * 100)}"></div></div></div>`; })()}<div class="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-1.5">${items}</div>${coachHtml(c, currentId)}`;
             } else { strip.classList.add('hidden'); strip.innerHTML = ''; }
 
             // --- Sağ kart: ilk 3 mağaza (Bonus Pack · Odak · KPI)
-            const all = window.allStaffGlobal || [];
+            const all = (window.allStaffGlobal || []).filter(p => inG(p.store));
             const bonus = agg(all.map(p => ({ name: p.name, store: p.store, v: p.sales || 0 })));
             const odakOn = (window.activeContestBrands || []).length > 0;
             const odak = agg(all.map(p => ({ name: p.name, store: p.store, v: p.focusSales || 0 })));
@@ -10148,7 +10152,7 @@
                 const fmtL = v => leadTl ? '₺' + nf(v) : v;
                 const sd = (cmp.staff && cmp.staff[ACTIVE_DATE]) || {};
                 const rowsK = [];
-                Object.keys(sd).forEach(st => Object.keys(sd[st] || {}).forEach(id => {
+                Object.keys(sd).forEach(st => inG(st) && Object.keys(sd[st] || {}).forEach(id => {
                     let v = 0; sel.forEach(k => { v += Number(sd[st][id][k]) || 0; });
                     if (v > 0) { let nm = ''; try { nm = findStaffNameGlobal(id) || ''; } catch (e) {} rowsK.push({ id, name: nm || 'Ekip Arkadaşı', store: st, v }); }
                 }));
@@ -10158,7 +10162,7 @@
                 boxes.push(sbox('KPI Ürünleri', '🎯', 'text-violet-600', 'bg-violet-50 border-violet-200', kStores, currentId, fmtL));
                 if (kp && window.renderPodium) {
                     renderPodium('store-kpi-top3-banner', kk.staff, {
-                        theme: 'pd-indigo', icon: 'fa-bullseye', bgIcon: 'fa-bullseye', title: '🎯 KPI ÜRÜN ŞAMPİYONLARI', sub: 'Tüm Mağazalar Arası En Çok KPI Ürünü Satan Ekip Arkadaşları', pill: false, limit: 3,
+                        theme: 'pd-indigo', icon: 'fa-bullseye', bgIcon: 'fa-bullseye', title: lgG ? '🎯 KPI ÜRÜN ŞAMPİYONLARI · ' + lgG.toUpperCase() : '🎯 KPI ÜRÜN ŞAMPİYONLARI', sub: lgG ? lgG + ' Mağazaları Arasında En Çok KPI Ürünü Satan Ekip Arkadaşları' : 'Tüm Mağazalar Arası En Çok KPI Ürünü Satan Ekip Arkadaşları', pill: false, limit: 3,
                         nameOf: st => st.name, subOf: st => st.store, valOf: st => fmtL(st.v),
                         onMain: st => `openStaffProfile('${window.pdJs(st.id)}')`, onSub: st => `goToStore('${window.pdJs(st.store)}')`,
                         mainTitle: 'Karne için tıkla', subTitle: 'Mağazaya Git'
@@ -10166,7 +10170,7 @@
                 }
             } else if (kp) { kp.classList.add('hidden'); kp.innerHTML = ''; }
             card.className = 'bg-white rounded-2xl shadow-sm border border-slate-200 p-3 space-y-2 lg:sticky lg:top-20';
-            card.innerHTML = `<div class="text-center"><div class="font-black text-slate-700 text-xs"><i class="fa-solid fa-ranking-star text-pink-500 mr-1"></i>Günün İlk 3 Mağazası</div></div>${boxes.join('')}`;
+            card.innerHTML = `<div class="text-center"><div class="font-black text-slate-700 text-xs"><i class="fa-solid fa-ranking-star text-pink-500 mr-1"></i>Günün İlk 3 Mağazası${lgG ? ' · ' + lgG : ''}</div>${lgG ? '<div class="text-[9px] font-bold text-slate-400">yalnızca ' + lgG + ' mağazaları</div>' : ''}</div>${boxes.join('')}`;
         };
 
         window.kpiSetStaffBrand = function (k) { kState.sBrand = k; render(); };
@@ -11215,6 +11219,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.09</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.12</div>
 </body>
 </html>
