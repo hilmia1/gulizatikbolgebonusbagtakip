@@ -4523,6 +4523,26 @@
         } catch (e) {}
     }
 
+    // Yöneticiler (bölge müdürü / genel müdür / merkez) liderler listesinden ekip arkadaşını alkışlar; kimin alkışladığı ekip arkadaşının ekranında görünür.
+    window.applaudStaff = function (store, id, name, ev) {
+        try {
+            if (['region', 'general', 'central'].indexOf(currentRole) < 0) return;
+            if (!store || !id) return;
+            const by = (currentRole === 'general' ? 'Güliz Atik' : currentRole === 'central' ? 'Merkez' : String(currentId || 'Bölge Müdürü')).replace(/[<>"'`]/g, '').slice(0, 40);
+            const day = ACTIVE_DATE;
+            const nodeRef = dbRoot.child('daily').child(day).child(store).child('staff').child(id);
+            nodeRef.child('applause').transaction(v => (v || 0) + 1);
+            nodeRef.child('applauseBy').set(by);
+            let x = window.innerWidth / 2, y = window.innerHeight / 2;
+            if (ev && ev.clientX) { x = ev.clientX; y = ev.clientY; }
+            Snd.play('clap');
+            createFloatingEmoji('👏', x, y);
+            setTimeout(() => createFloatingEmoji('❤️', x + (Math.random() * 20 - 10), y), 100);
+            setTimeout(() => createFloatingEmoji('🔥', x + (Math.random() * 20 - 10), y), 200);
+            if (ev && ev.currentTarget) { const b = ev.currentTarget; b.classList.add('scale-125'); setTimeout(() => { try { b.classList.remove('scale-125'); } catch (e) {} }, 250); }
+        } catch (e) { console.error(e); }
+    };
+
     window.sendApplauseFromModal = function(event) {
         if (!window.currentProfileStaffId || !window.currentProfileStore || window.currentProfileStore === "Silinmiş Ekip Arkadaşı") return;
         
@@ -6395,7 +6415,7 @@
         
         for(let id in masterStaff) {
             const fo = focusOf(sData.staff?.[id]);
-            staffObj[id] = { id: id, name: masterStaff[id].name || "İsimsiz", sales: sData.staff?.[id]?.sales || 0, focusSales: fo.total, focusBrands: fo.brands, target: sData.staff?.[id]?.target || 0, applause: sData.staff?.[id]?.applause || 0, isTransfer: false };
+            staffObj[id] = { id: id, name: masterStaff[id].name || "İsimsiz", sales: sData.staff?.[id]?.sales || 0, focusSales: fo.total, focusBrands: fo.brands, target: sData.staff?.[id]?.target || 0, applause: sData.staff?.[id]?.applause || 0, applauseBy: sData.staff?.[id]?.applauseBy || '', isTransfer: false };
         }
         
         if (sData.staff) {
@@ -7297,6 +7317,16 @@
             staffArray.forEach((p, idxOfP) => {
                 let pPerc = p.target > 0 ? Math.round((p.sales / p.target) * 100) : 0;
                 let fireBadge = pPerc >= 150 ? `<span class="ml-1 inline-block animate-pulse text-[12px] drop-shadow-md" title="%150 Üzeri Başarı! Mükemmel!">🔥</span>` : '';
+                let apBadge = '';
+                try {
+                    if (!isStoreHistorical && p.applauseBy) {
+                        apBadge = `<div class="mt-1"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 border border-orange-200 text-[9px] sm:text-[10px] font-black text-orange-600 leading-tight">👏 ${escHtml(p.applauseBy)} alkışladı</span></div>`;
+                        window.__apSeen = window.__apSeen || {};
+                        const ak = currentId + '|' + p.id, prevAp = window.__apSeen[ak];
+                        window.__apSeen[ak] = p.applause || 0;
+                        if (prevAp !== undefined && (p.applause || 0) > prevAp && currentRole === 'store') { try { Snd.play('clap'); createFloatingEmoji('👏', window.innerWidth / 2, window.innerHeight / 2); setTimeout(() => createFloatingEmoji('❤️', window.innerWidth / 2 + 20, window.innerHeight / 2), 120); } catch (e) {} }
+                    } else if (!isStoreHistorical) { window.__apSeen = window.__apSeen || {}; window.__apSeen[currentId + '|' + p.id] = p.applause || 0; }
+                } catch (e) {}
                 
                 let rankIndex = isStoreHistorical ? -1 : (window.top3Staff || []).findIndex(t => t.id === p.id);
                 let rowClass = "hover:bg-slate-50 border-b border-slate-100 transition-colors";
@@ -7377,6 +7407,7 @@
                     <td class="py-2.5 px-2 sm:px-4 font-bold text-[10px] sm:text-sm text-slate-700 max-w-[65px] sm:max-w-none break-words leading-tight">
                         ${window.avatarHtml ? (p.isTransfer ? avatarHtml(currentId, p.id, p.name, 30, false) : avatarHtml(currentId, p.id, p.name, 30, !isStoreHistorical)) : ''} <span class="clickable-name" onclick="openStaffProfile('${p.id}')" title="Performans Karnesini Gör">${safePName}</span> 
                         ${fireBadge} 
+                        ${apBadge}
                         ${nameBadge}
                         ${regionalBadge}
                         ${window.sugRowHtml && !p.isTransfer ? sugRowHtml(p.id, isStoreHistorical) : ''}
@@ -8181,8 +8212,9 @@
         o = o || {};
         const box = document.getElementById(o.id || 'general-leaders-list'); if (!box) return;
         const med = i => ['🥇', '🥈', '🥉'][i];
-        const list = (rows, tone, empty) => rows.length === 0 ? `<div class="text-[11px] text-slate-400 py-2">${empty || 'Henüz yok'}</div>` : rows.map((r, i) => `<div class="flex items-center gap-2 py-1.5 ${i ? 'border-t border-slate-100' : ''}"><span class="text-base w-6 text-center shrink-0">${med(i)}</span><div class="min-w-0 flex-1"><div class="text-xs font-black text-slate-800 truncate">${r.click || escHtml(r.name)}</div><div class="text-[10px] font-bold text-slate-400 truncate">${escHtml(r.sub || '')}</div></div><div class="text-sm font-black ${tone} shrink-0">${r.val}</div></div>`).join('');
-        const sRow = p => ({ name: p.name || 'İsimsiz', click: `<span class="clickable-name" onclick="openStaffProfile('${pdJs(p.id)}')">${escHtml(p.name || 'İsimsiz')}</span>`, sub: p.store });
+        const list = (rows, tone, empty) => rows.length === 0 ? `<div class="text-[11px] text-slate-400 py-2">${empty || 'Henüz yok'}</div>` : rows.map((r, i) => `<div class="flex items-center gap-2 py-1.5 ${i ? 'border-t border-slate-100' : ''}"><span class="text-base w-6 text-center shrink-0">${med(i)}</span><div class="min-w-0 flex-1"><div class="text-xs font-black text-slate-800 truncate">${r.click || escHtml(r.name)}</div><div class="text-[10px] font-bold text-slate-400 truncate">${escHtml(r.sub || '')}</div></div><div class="text-sm font-black ${tone} shrink-0">${r.val}</div>${r.ap || ''}</div>`).join('');
+        const canClap = (currentRole === 'general' || currentRole === 'central' || (currentRole === 'region' && !isRegionHistorical));
+        const sRow = p => ({ name: p.name || 'İsimsiz', click: `<span class="clickable-name" onclick="openStaffProfile('${pdJs(p.id)}')">${escHtml(p.name || 'İsimsiz')}</span>`, sub: p.store, ap: (canClap && p.id && p.store) ? `<button type="button" onclick="applaudStaff('${pdJs(p.store)}','${pdJs(p.id)}','${pdJs(p.name || '')}',event)" title="Alkışla — ekip arkadaşının ekranında adınız görünür" class="shrink-0 w-8 h-8 rounded-full bg-orange-100 hover:bg-orange-200 text-base flex items-center justify-center shadow-sm active:scale-90 transition">👏</button>` : '' });
         const stRow = s => ({ name: s.name, click: `<span class="clickable-store" onclick="goToStore('${pdJs(s.name)}')">${escHtml(s.name)}</span>`, sub: s.bm });
         const dataBlocks = [];
         const HEX = { 'text-pink-600': '#db2777', 'text-emerald-600': '#059669', 'text-purple-600': '#9333ea', 'text-cyan-700': '#0e7490' };
@@ -10823,6 +10855,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.01</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.02</div>
 </body>
 </html>
