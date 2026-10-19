@@ -9440,6 +9440,24 @@
                 return { est: e, adet: ad, rate: r, pctAdd: T > 0 ? e / T * 100 : 0, unit: 'TL' };
             } catch (e) { return null; }
         }
+        // Mağazanın TÜM seçili KPI markalarının toplam hedefi ve gidişatı (aynı birimdeyse havuz, değilse yüzde ortalaması)
+        function stTotal(c, st, useEst) {
+            try {
+                const sel = selKeys(c);
+                const rows = c.brands.filter(b => sel.includes(b.key)).map(b => {
+                    const T = c.tStore(st, b.key); if (!(T > 0)) return null;
+                    const es = useEst ? (kpiEst(c, st, b.key) || { est: 0 }) : { est: 0 };
+                    return { b, T, A: c.aStore(st, b.key) + es.est, est: es.est > 0 };
+                }).filter(Boolean);
+                if (rows.length < 2) return null;
+                const same = rows.every(r => r.b.unit === rows[0].b.unit);
+                let m;
+                if (same) m = metrics(rows.reduce((t, r) => t + r.A, 0), rows.reduce((t, r) => t + r.T, 0), c);
+                else m = metrics(overall(rows.map(r => metrics(r.A, r.T, c).pct)), 100, c);
+                return { pct: m.pct || 0, m, est: rows.some(r => r.est), n: rows.length };
+            } catch (e) { return null; }
+        }
+        window.kpiTotal = function (st) { const c = ctxGet(); if (!c) return null; const t = stTotal(c, st, true); return t; };
         window.kpiEst = function (st, bk) { const c = ctxGet(); return c ? kpiEst(c, st, bk) : null; };
         // Bir satış girilince çubuğa etkisini göster
         function kpiEffectToast(bk) {
@@ -9628,12 +9646,15 @@
         window.kpiStoreBars = function () {
             try {
                 const c = ctxGet(); if (!c || !c.live || currentRole !== 'store' || !currentId || !kpiEntryOn()) return [];
-                return selKeys(c).map(k => c.brands.find(b => b.key === k)).filter(Boolean).map(b => {
+                const out = selKeys(c).map(k => c.brands.find(b => b.key === k)).filter(Boolean).map(b => {
                     const T = c.tStore(currentId, b.key); if (!(T > 0)) return null;
                     const es = kpiEst(c, currentId, b.key) || { est: 0 };
                     const m = metrics(c.aStore(currentId, b.key) + es.est, T, c);
                     return { key: b.key, name: b.name, pct: m.pct || 0, est: es.est > 0 };
                 }).filter(Boolean);
+                const t = stTotal(c, currentId, true);
+                if (t) out.unshift({ key: 'all', name: '🎯 TOPLAM KPI', pct: t.pct, est: t.est });
+                return out;
             } catch (e) { return []; }
         };
         window.kpiGoalTotal = function (id) {
@@ -9715,7 +9736,7 @@
                 const rk = rankOf(c.rows, currentId, 'overall');
                 const rkTxt = rk.rank > 0 ? `<span class="px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 text-[9px] font-black">KPI ${rk.rank}/${rk.total}</span>` : '';
                 strip.className = 'bg-white rounded-xl border border-violet-200 px-3 py-2 shadow-sm';
-                strip.innerHTML = `<div class="flex items-center justify-between gap-2 mb-1.5"><div class="text-[10px] font-black text-violet-700 uppercase tracking-wider truncate"><i class="fa-solid fa-chart-line mr-1"></i>KPI gidişatı · ${esc(c.name)}</div><div class="flex items-center gap-1.5 shrink-0">${rkTxt}<span class="text-[9px] font-bold text-slate-400">çizgi: olması gereken %${Math.round(c.pace * 100)} · ${c.daysLeft} gün kaldı</span></div></div><div class="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-1.5">${items}</div>${coachHtml(c, currentId)}`;
+                strip.innerHTML = `<div class="flex items-center justify-between gap-2 mb-1.5"><div class="text-[10px] font-black text-violet-700 uppercase tracking-wider truncate"><i class="fa-solid fa-chart-line mr-1"></i>KPI gidişatı · ${esc(c.name)}</div><div class="flex items-center gap-1.5 shrink-0">${rkTxt}<span class="text-[9px] font-bold text-slate-400">çizgi: olması gereken %${Math.round(c.pace * 100)} · ${c.daysLeft} gün kaldı</span></div></div>${(() => { const t = stTotal(c, currentId, true), t0 = stTotal(c, currentId, false); if (!t) return ''; const w = Math.min(100, t.pct), w0 = Math.min(100, t0 ? t0.pct : 0), we = Math.max(0, w - w0); return `<div class="mb-2 p-2 rounded-lg bg-violet-50 border border-violet-200"><div class="flex justify-between items-baseline gap-1"><span class="text-[11px] font-black text-violet-800 uppercase tracking-wide">🎯 Toplam KPI (tüm markalar)</span><span class="text-sm font-black ${t.m.st.txt}">${t.est ? '≈' : ''}%${Math.round(t.pct)}</span></div><div class="relative w-full bg-slate-200 rounded-full h-2.5 mt-1"><div class="h-2.5 rounded-full" style="width:${w0}%;background:${t.m.st.bar};transition:width .6s"></div>${we > 0 ? `<div class="absolute top-0 h-2.5 rounded-r-full kpi-est" style="left:${w0}%;width:${we}%;background:${t.m.st.bar}"></div>` : ''}<div class="absolute top-[-3px] bottom-[-3px] w-[2px] bg-slate-700/70" style="left:${Math.min(100, c.pace * 100)}%" title="Bugün olması gereken seviye: %${Math.round(c.pace * 100)}"></div></div></div>`; })()}<div class="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-1.5">${items}</div>${coachHtml(c, currentId)}`;
             } else { strip.classList.add('hidden'); strip.innerHTML = ''; }
 
             // --- Sağ kart: ilk 3 mağaza (Bonus Pack · Odak · KPI)
@@ -9848,7 +9869,7 @@
                 statBox('Genel Sıra', ovRank.rank > 0 ? '#' + ovRank.rank + ' <span class="text-sm text-cyan-100">/ ' + ovRank.total + '</span>' : '—')) +
                 (hasTarget ? '' : `<div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 text-sm font-bold"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Mağazanız için bu yarışmada henüz hedef girilmemiş. Hedef Sistem Merkezi tarafından girilir.</div>`) +
                 podiumHost() + coachHtml(c, st) +
-                `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">${cards}</div>
+                `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">${totalCards(ms, c)}${cards}</div>
                 ${staffReport(c, c.staff.filter(r => r.store === st), 'Mağazamın Ekip Arkadaşı Raporu (KPI adet markaları)')}
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4"><h3 class="font-bold text-slate-700 text-sm mb-2"><i class="fa-solid fa-ranking-star text-amber-500 mr-2"></i>Sıralamam (tüm mağazalar arasında)</h3><div class="flex flex-wrap gap-2">${rankChips}</div></div>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -10800,6 +10821,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.98</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.99</div>
 </body>
 </html>
