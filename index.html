@@ -394,7 +394,10 @@
                 <div class="w-20 h-20 bg-pink-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-3 shadow-inner text-pink-500 border border-pink-200">
                     <i class="fa-solid fa-id-badge"></i>
                 </div>
+                <div class="flex items-center justify-center gap-2 flex-wrap">
                 <h3 class="font-black text-2xl text-slate-800 uppercase" id="profile-name">Yükleniyor...</h3>
+                <span id="profile-applause-btn-container"><button type="button" id="btn-send-applause" onclick="sendApplauseFromModal(event)" class="px-3 py-1.5 bg-gradient-to-r from-orange-400 to-rose-400 hover:from-orange-500 hover:to-rose-500 text-white font-black rounded-full transition-all shadow-md active:scale-95 text-[11px] flex items-center gap-1.5 whitespace-nowrap"><i class="fa-solid fa-hands-clapping animate-bounce"></i> Alkış Gönder</button></span>
+                </div>
                 <p class="text-xs text-slate-500 mt-1 font-bold tracking-wider uppercase"><i class="fa-solid fa-ranking-star text-amber-500 mr-1"></i> Performans Karnesi</p>
             </div>
             <div id="profile-kpi-amb" class="mb-3"></div>
@@ -453,11 +456,7 @@
                     <div class="text-3xl font-black text-orange-500 relative z-10" id="profile-applause-count">0</div>
                 </div>
 
-                <div class="pt-2" id="profile-applause-btn-container">
-                    <button type="button" id="btn-send-applause" onclick="sendApplauseFromModal(event)" class="w-full py-3.5 bg-gradient-to-r from-orange-400 to-rose-400 hover:from-orange-500 hover:to-rose-500 text-white font-black rounded-2xl transition-all shadow-md active:scale-95 text-sm flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-hands-clapping animate-bounce"></i> Harika İş! Alkış Gönder
-                    </button>
-                </div>
+                <div id="profile-days-anchor"></div>
             </div>
         </div>
     </div>
@@ -3981,7 +3980,7 @@
             let box = document.getElementById('profile-days');
             const show = ['central', 'general', 'region'].indexOf(currentRole) >= 0;
             if (!box) {
-                const anchor = document.getElementById('profile-applause-btn-container'); if (!anchor || !anchor.parentNode) return;
+                const anchor = document.getElementById('profile-days-anchor'); if (!anchor || !anchor.parentNode) return;
                 box = document.createElement('div'); box.id = 'profile-days'; anchor.parentNode.insertBefore(box, anchor);
             }
             if (!show) { box.innerHTML = ''; box.className = 'hidden'; return; }
