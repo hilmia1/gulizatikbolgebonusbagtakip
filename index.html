@@ -4846,6 +4846,22 @@
             el.innerHTML = html; el.__lgh = html;
             try { if (el.querySelectorAll) el.querySelectorAll('.lg-sc').forEach((n, i) => { if (pos[i]) n.scrollTop = pos[i]; }); if (top) el.scrollTop = top; } catch (e) {}
         };
+        // Mağaza ekranı: büyük tablo yerine tek satırlık "Ligim" kartı
+        const meHtml = () => {
+            const act = lgActive();
+            if (!act || (typeof isStoreHistorical !== 'undefined' && isStoreHistorical)) return null;
+            const g = act.assign[currentId]; if (!g) return null;
+            const rows = rowsOf(g, act), idx = rows.findIndex(r => r.store === currentId); if (idx < 0) return null;
+            const me = rows[idx], n = rows.length, lead = rows[0];
+            const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '';
+            const pct = me.pct == null ? null : Math.round(me.pct);
+            const gapTxt = idx === 0 ? '<b class="text-amber-200">Grubun lideri sensin! 👑</b>' : (window.__lgRank === 'adet' ? 'Lidere <b>' + Math.max(0, lead.sales - me.sales) + ' adet</b> kaldı' : (lead.pct != null && me.pct != null ? 'Lidere <b>%' + Math.max(0, Math.round(lead.pct - me.pct)) + '</b> puan kaldı' : 'Satış girdikçe sıran yükselir'));
+            const cd = Number(act.end) > 0 ? `<div class="text-right shrink-0"><div class="text-[9px] font-black text-white/70 uppercase tracking-wide">Lig bitimine</div><div class="lg-cd text-sm sm:text-base font-black tabular-nums" data-end="${Number(act.end)}"></div></div>` : '';
+            return `<button type="button" onclick="openBpLeague()" class="w-full text-left rounded-2xl p-3 sm:p-4 text-white shadow-lg border border-white/20 flex items-center gap-3 sm:gap-4 active:scale-[.99] transition" style="background:linear-gradient(120deg,${GC[g][2]},#6366f1)">
+                <div class="shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/20 backdrop-blur flex flex-col items-center justify-center leading-none"><div class="text-2xl sm:text-3xl font-black">${medal || (idx + 1) + '.'}</div>${medal ? '<div class="text-[10px] font-black mt-0.5">' + (idx + 1) + '. sıra</div>' : ''}</div>
+                <div class="min-w-0 flex-1"><div class="text-[10px] font-black uppercase tracking-wider text-white/80">🏆 ${g} Grubu · Ligim</div><div class="text-sm sm:text-base font-black leading-tight">${n} mağaza arasında <span class="text-amber-200">${idx + 1}. sıradasın</span></div><div class="text-[11px] font-bold text-white/90 mt-0.5">${me.sales}${me.target ? '/' + me.target : ''} adet${pct != null ? ' · %' + pct : ''} · ${gapTxt}</div></div>
+                ${cd}<i class="fa-solid fa-chevron-right text-white/60 text-sm shrink-0"></i></button>`;
+        };
         window.lgBoardPaint = function () {
             try {
                 const role = (typeof currentRole !== 'undefined') ? currentRole : '';
@@ -4855,9 +4871,9 @@
                 const anchor = document.getElementById(m[0]); if (!anchor || !anchor.parentNode) return;
                 let host = document.getElementById('lg-board-' + role);
                 if (!host) { host = document.createElement('div'); host.id = 'lg-board-' + role; if (m[1] === 'after') anchor.parentNode.insertBefore(host, anchor.nextSibling); else anchor.parentNode.insertBefore(host, anchor); }
-                const html = build(role, false);
+                const html = role === 'store' ? meHtml() : build(role, false);
                 if (!html) { host.innerHTML = ''; host.__lgh = ''; host.className = 'hidden'; return; }
-                host.className = 'bg-white rounded-2xl shadow-sm border border-slate-200 p-4';
+                host.className = role === 'store' ? '' : 'bg-white rounded-2xl shadow-sm border border-slate-200 p-4';
                 setHtml(host, html);
             } catch (e) { console.error('lgBoard', e); }
         };
@@ -11199,6 +11215,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.08</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.09</div>
 </body>
 </html>
