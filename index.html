@@ -1421,7 +1421,7 @@
         <!-- ================= 4. GENEL YÖNETİM (EGE BÖLGESİ) EKRANI ================= -->
         <div id="screen-general" class="screen hidden space-y-6">
             <div class="wx-host" data-scope="general"></div>
-            <div class="gw-host" data-scope="general"></div>
+            <div class="gw-host" id="gw-general" data-scope="general"></div>
             <div class="rec-host"></div>
             <div id="general-top3-stores-banner" class="hidden" style="display:none!important"></div>
             <div id="general-top3-banner" class="hidden" style="display:none!important"></div>
@@ -4748,7 +4748,7 @@
     ;(function leagueBoard() { try {
         const GC = { A: ['bg-amber-50 border-amber-300', 'text-amber-800', '#f59e0b'], B: ['bg-sky-50 border-sky-300', 'text-sky-800', '#0ea5e9'], C: ['bg-emerald-50 border-emerald-300', 'text-emerald-800', '#10b981'] };
         const eh = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-        const MOUNT = { store: ['store-podium-grid', 'before'], central: ['lg-card', 'after'] };
+        const MOUNT = { store: ['store-podium-grid', 'before'], central: ['lg-card', 'after'], general: ['gw-general', 'before'] };
         window.__lgRank = window.__lgRank || 'pct';
         window.lgRankSet = function (m) { window.__lgRank = m; lgBoardPaint(); };
         // Lig dönemi: başlangıç gününden bugüne toplam
@@ -4862,6 +4862,36 @@
                 <div class="min-w-0 flex-1"><div class="text-[10px] font-black uppercase tracking-wider text-white/80">🏆 ${g} Grubu · Ligim</div><div class="text-sm sm:text-base font-black leading-tight">${n} mağaza arasında <span class="text-amber-200">${idx + 1}. sıradasın</span></div><div class="text-[11px] font-bold text-white/90 mt-0.5">${me.sales}${me.target ? '/' + me.target : ''} adet${pct != null ? ' · %' + pct : ''} · ${gapTxt}</div></div>
                 ${cd}<i class="fa-solid fa-chevron-right text-white/60 text-sm shrink-0"></i></button>`;
         };
+        // Güliz Atik ekranı: minimal A/B/C gidişat kartı + sayaç + grubun günlük yıldızı
+        const genHtml = () => {
+            const act = lgActive(); if (!act) return null;
+            const days = perDays(act);
+            const agg = g => {
+                let sales = 0, target = 0, n = 0, today = 0; const by = {};
+                Object.keys(act.assign).forEach(store => {
+                    if (act.assign[store] !== g) return; n++;
+                    days.forEach(d => { const x = dayStore(d, store); sales += x.sales; target += x.target; });
+                    const o = (((globalData.daily || {})[ACTIVE_DATE] || {})[store]);
+                    if (o && o.staff) Object.keys(o.staff).forEach(id => {
+                        const q = o.staff[id] || {}, v = Number(q.sales) || 0; if (!(v > 0)) return;
+                        today += v;
+                        if (!by[id] || v > by[id].v) { let nm = q.name || ''; try { nm = nm || (((globalData.master_staff || {})[store] || {})[id] || {}).name || findStaffNameGlobal(id) || ''; } catch (e) {} by[id] = { v, name: nm || 'Ekip Arkadaşı', store }; }
+                    });
+                });
+                let best = null; Object.keys(by).forEach(id => { if (!best || by[id].v > best.v) best = by[id]; });
+                return { sales, target, n, today, best, pct: target > 0 ? sales / target * 100 : null };
+            };
+            const endTxt = Number(act.end) > 0 ? (() => { const d = new Date(Number(act.end)); return d.toLocaleDateString('tr-TR', { weekday: 'long' }) + ' günü ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + "'da bitiyor"; })() : 'Lig devam ediyor';
+            const cd = Number(act.end) > 0 ? `<span class="lg-cd font-black tabular-nums text-rose-600" data-end="${Number(act.end)}"></span>` : '';
+            const box = g => {
+                const a = agg(g), p = a.pct == null ? 0 : Math.min(100, a.pct);
+                return `<div class="rounded-xl border ${GC[g][0]} p-2.5"><div class="flex items-center justify-between"><div class="text-[11px] font-black ${GC[g][1]}">🏆 ${g} GRUBU</div><div class="text-[10px] font-black text-slate-400">${a.n} mağaza</div></div>
+                    <div class="flex items-baseline justify-between mt-1.5"><div class="text-xl font-black text-slate-800 leading-none">${a.pct == null ? '—' : '%' + Math.round(a.pct)}</div><div class="text-[10px] font-black text-slate-500">${a.sales}${a.target ? '<span class="text-slate-400">/' + a.target + '</span>' : ''} adet</div></div>
+                    <div class="h-1.5 rounded-full bg-white/80 mt-1.5 overflow-hidden"><div class="h-full rounded-full" style="width:${p}%;background:${GC[g][2]}"></div></div>
+                    <div class="mt-2 text-[10px] font-bold text-slate-500 truncate">⭐ Günün yıldızı: ${a.best ? '<b class="text-slate-800">' + eh(a.best.name) + '</b> · ' + a.best.v + ' adet' : 'henüz satış yok'}</div></div>`;
+            };
+            return `<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-3 space-y-2"><div class="text-center"><div class="font-black text-slate-700 text-xs"><i class="fa-solid fa-layer-group text-indigo-500 mr-1"></i>Lig Gidişatı</div><div class="text-[10px] font-bold text-slate-400">${endTxt} · kalan ${cd}</div></div><div class="grid grid-cols-1 sm:grid-cols-3 gap-2">${['A', 'B', 'C'].map(box).join('')}</div></div>`;
+        };
         window.lgBoardPaint = function () {
             try {
                 const role = (typeof currentRole !== 'undefined') ? currentRole : '';
@@ -4871,9 +4901,9 @@
                 const anchor = document.getElementById(m[0]); if (!anchor || !anchor.parentNode) return;
                 let host = document.getElementById('lg-board-' + role);
                 if (!host) { host = document.createElement('div'); host.id = 'lg-board-' + role; if (m[1] === 'after') anchor.parentNode.insertBefore(host, anchor.nextSibling); else anchor.parentNode.insertBefore(host, anchor); }
-                const html = role === 'store' ? meHtml() : build(role, false);
+                const html = role === 'store' ? meHtml() : role === 'general' ? genHtml() : build(role, false);
                 if (!html) { host.innerHTML = ''; host.__lgh = ''; host.className = 'hidden'; return; }
-                host.className = role === 'store' ? '' : 'bg-white rounded-2xl shadow-sm border border-slate-200 p-4';
+                host.className = (role === 'store' || role === 'general') ? '' : 'bg-white rounded-2xl shadow-sm border border-slate-200 p-4';
                 setHtml(host, html);
             } catch (e) { console.error('lgBoard', e); }
         };
@@ -5568,6 +5598,7 @@
             Array.prototype.forEach.call(hosts, h => {
                 const scope = h.getAttribute('data-scope');
                 const f = scopeFilter(scope, r);
+                if (scope === 'general') { h.innerHTML = ''; return; }
                 if (scope === 'store') {
                     const me = r.stores.findIndex(x => x.name === currentId);
                     if (me < 0 || me > 2) { h.innerHTML = ''; return; }
@@ -11219,6 +11250,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.12</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.13</div>
 </body>
 </html>
