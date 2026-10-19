@@ -4834,29 +4834,37 @@
                 const lim = modal ? 15 : (role === 'store' ? 5 : 10);
                 let shown = rows.slice(0, lim).map((r, i) => rowHtml(r, i, r.store === currentId)).join('');
                 if (myIdx >= lim) shown += '<div class="text-center text-[10px] text-slate-400 font-black">⋯</div>' + rowHtml(rows[myIdx], myIdx, true);
-                return `<div class="rounded-2xl border-2 ${GC[g][0]} p-3"><div class="flex items-center justify-between mb-1"><div class="font-black text-sm ${GC[g][1]}">🏆 ${g} GRUBU</div><div class="text-[10px] font-black text-slate-400">${rows.length} mağaza</div></div>${starHtml(g, act)}<div class="${role === 'store' ? '' : 'max-h-80 overflow-y-auto'} space-y-0.5">${shown || '<div class="text-[11px] text-slate-400 py-2">Henüz satış yok</div>'}</div></div>`;
+                return `<div class="rounded-2xl border-2 ${GC[g][0]} p-3"><div class="flex items-center justify-between mb-1"><div class="font-black text-sm ${GC[g][1]}">🏆 ${g} GRUBU</div><div class="text-[10px] font-black text-slate-400">${rows.length} mağaza</div></div>${starHtml(g, act)}<div class="lg-sc ${role === 'store' ? '' : 'max-h-80 overflow-y-auto'} space-y-0.5">${shown || '<div class="text-[11px] text-slate-400 py-2">Henüz satış yok</div>'}</div></div>`;
             }).join('');
             return wrap(role === 'store' ? 'Ligim · ' + act.assign[currentId] + ' Grubu Sıralaması' : 'Lig Sıralaması', cols, role === 'store' ? '' : 'lg:grid-cols-3', role === 'store' ? '<div class="text-[10px] text-slate-400 mt-2">Mağazalar büyüklüğüne göre gruplandı; herkes kendi grubundaki mağazalarla yarışıyor.</div>' : '');
+        };
+        // İçerik değişmediyse dokunma; değiştiyse kaydırma konumlarını koru (liste kendi kendine yukarı sıçramasın)
+        const setHtml = (el, html) => {
+            if (!el || el.__lgh === html) return;
+            let pos = [], top = 0;
+            try { top = el.scrollTop || 0; if (el.querySelectorAll) el.querySelectorAll('.lg-sc').forEach(n => pos.push(n.scrollTop)); } catch (e) {}
+            el.innerHTML = html; el.__lgh = html;
+            try { if (el.querySelectorAll) el.querySelectorAll('.lg-sc').forEach((n, i) => { if (pos[i]) n.scrollTop = pos[i]; }); if (top) el.scrollTop = top; } catch (e) {}
         };
         window.lgBoardPaint = function () {
             try {
                 const role = (typeof currentRole !== 'undefined') ? currentRole : '';
-                Object.keys(MOUNT).forEach(r => { const h = document.getElementById('lg-board-' + r); if (h && r !== role) { h.innerHTML = ''; h.className = 'hidden'; } });
-                try { const mb = document.getElementById('bp-league-modal'); if (mb && !mb.classList.contains('hidden')) { const bd = document.getElementById('bp-league-body'); if (bd) bd.innerHTML = build(role, true) || ''; } } catch (e) {}
+                Object.keys(MOUNT).forEach(r => { const h = document.getElementById('lg-board-' + r); if (h && r !== role) { h.innerHTML = ''; h.__lgh = ''; h.className = 'hidden'; } });
+                try { const mb = document.getElementById('bp-league-modal'); if (mb && !mb.classList.contains('hidden')) { const bd = document.getElementById('bp-league-body'); if (bd) setHtml(bd, build(role, true) || ''); } } catch (e) {}
                 const m = MOUNT[role]; if (!m) return;
                 const anchor = document.getElementById(m[0]); if (!anchor || !anchor.parentNode) return;
                 let host = document.getElementById('lg-board-' + role);
                 if (!host) { host = document.createElement('div'); host.id = 'lg-board-' + role; if (m[1] === 'after') anchor.parentNode.insertBefore(host, anchor.nextSibling); else anchor.parentNode.insertBefore(host, anchor); }
                 const html = build(role, false);
-                if (!html) { host.innerHTML = ''; host.className = 'hidden'; return; }
+                if (!html) { host.innerHTML = ''; host.__lgh = ''; host.className = 'hidden'; return; }
                 host.className = 'bg-white rounded-2xl shadow-sm border border-slate-200 p-4';
-                host.innerHTML = html;
+                setHtml(host, html);
             } catch (e) { console.error('lgBoard', e); }
         };
         window.openBpLeague = function () {
             try {
                 const role = (typeof currentRole !== 'undefined') ? currentRole : '';
-                const bd = document.getElementById('bp-league-body'); if (bd) bd.innerHTML = build(role, true) || '';
+                const bd = document.getElementById('bp-league-body'); if (bd) { bd.__lgh = null; setHtml(bd, build(role, true) || ''); }
                 document.getElementById('bp-league-modal').classList.remove('hidden');
             } catch (e) { console.error(e); }
         };
@@ -11191,6 +11199,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.07</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.08</div>
 </body>
 </html>
