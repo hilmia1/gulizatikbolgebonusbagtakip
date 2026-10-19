@@ -1475,6 +1475,7 @@
                 </div>
             </div>
 
+            <div class="flex justify-end"><button type="button" onclick="gExcel()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs shadow flex items-center gap-2"><i class="fa-solid fa-file-excel"></i> Excel indir (açık sekme)</button></div>
             <!-- RAPOR SEKMELERİ: aynı anda tek rapor görünür -->
             <div class="grid grid-cols-5 gap-1 bg-white border border-slate-200 rounded-2xl p-1 shadow-sm" id="gtab-bar">
                 <button type="button" data-gbtn="regions" onclick="gTab('regions')" class="gtab-btn flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-1 sm:px-3 py-2 rounded-xl text-[10px] sm:text-xs font-black leading-tight transition"><i class="fa-solid fa-ranking-star text-sm sm:text-xs"></i><span class="sm:hidden">Bölge</span><span class="hidden sm:inline">Bölgeler</span></button>
@@ -5151,6 +5152,52 @@
             });
         };
     })();
+
+    // ===== Ege Bölgesi: açık rapor sekmesini Excel (CSV) olarak indir =====
+    window.gExcel = function () {
+        try {
+            const pane = document.querySelector('[data-gtab]:not(.hidden)');
+            if (!pane) return alert('Açık rapor bulunamadı.');
+            const tab = pane.getAttribute('data-gtab');
+            const NM = { regions: 'Bolge_Mudurleri', achievers: 'Hedefini_Gecenler', staff: 'Lider_Ekip_Arkadaslari', stores: 'Tum_Magazalar', focus: 'Odak_Urun', kpi: 'KPI_Urun' };
+            const clean = t => String(t == null ? '' : t).replace(/[▼▲↕⇅]/g, '').replace(/🥇/g, '1').replace(/🥈/g, '2').replace(/🥉/g, '3').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\uFE0F]/gu, m => (m === '✓' || m === '✔' ? 'Evet' : m === '✕' || m === '✖' ? 'Hayır' : '')).replace(/\s+/g, ' ').trim();
+            const cellTxt = c => {
+                if (c.querySelector && c.querySelector('.fa-check,.fa-circle-check')) return 'Evet';
+                if (c.querySelector && c.querySelector('.fa-xmark,.fa-times,.fa-circle-xmark')) return 'Hayır';
+                let t = clean(c.textContent);
+                if (t === '✓') t = 'Evet'; else if (t === '✕' || t === '✗') t = 'Hayır';
+                return t;
+            };
+            const secs = [];
+            if (tab === 'achievers') {
+                const d = (window.achieversData || {}).general;
+                if (!d) return alert('Veri henüz hazır değil.');
+                secs.push({ t: 'Hedefini Geçen Mağazalar', h: ['Sıra', 'Bölge Müdürü', 'Mağaza', 'Satış', 'Hedef', 'Başarı %'], r: d.stores.map((x, i) => [i + 1, x.bm || '', x.name, x.sales, x.target, Math.round(x.perc)]) });
+                secs.push({ t: 'Hedefini Geçen Ekip Arkadaşları', h: ['Sıra', 'Mağaza', 'Ekip Arkadaşı', 'Satış', 'Hedef', 'Başarı %'], r: d.staff.map((x, i) => [i + 1, x.store || '', x.name, x.sales, x.target, Math.round(x.perc)]) });
+            } else {
+                let title = clean((pane.querySelector('h3') || {}).textContent || NM[tab]);
+                Array.prototype.forEach.call(pane.querySelectorAll('h4, table, [id$="brand-cards"]'), el => {
+                    if (el.tagName === 'H4') { title = clean(el.textContent); return; }
+                    if (el.tagName === 'TABLE') {
+                        const h = Array.prototype.map.call(el.querySelectorAll('thead th'), cellTxt);
+                        const r = Array.prototype.map.call(el.querySelectorAll('tbody tr'), tr => Array.prototype.map.call(tr.children, cellTxt)).filter(x => x.some(v => v !== ''));
+                        if (r.length) secs.push({ t: title, h, r });
+                    } else {
+                        const r = Array.prototype.map.call(el.children, ch => String(ch.innerText || ch.textContent || '').split(/\n+/).map(clean).filter(Boolean)).filter(x => x.length);
+                        if (r.length) secs.push({ t: title, h: [], r });
+                    }
+                });
+            }
+            if (!secs.length || !secs.some(x => x.r.length)) return alert('Bu sekmede indirilecek veri yok.');
+            const q = v => { let t = String(v == null ? '' : v); if (/^[=+@]/.test(t) || /^-(?!\d)/.test(t)) t = "'" + t; return /[;"\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+            let csv = '\uFEFF';
+            secs.forEach((x, i) => { if (i) csv += '\n'; csv += q(x.t) + '\n'; if (x.h.length) csv += x.h.map(q).join(';') + '\n'; x.r.forEach(r => { csv += r.map(q).join(';') + '\n'; }); });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob); a.download = 'Ege_' + (NM[tab] || tab) + '_' + String(reportDateRangeStr).replace(/\s+/g, '') + '.csv';
+            a.style.visibility = 'hidden'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        } catch (e) { console.error(e); alert('Excel hazırlanamadı.'); }
+    };
 
     // ===== Ege Bölgesi rapor sekmeleri =====
     ;(function () {
@@ -10530,6 +10577,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.92</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.93</div>
 </body>
 </html>
