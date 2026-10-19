@@ -871,6 +871,36 @@
                 <div id="sg-list" class="max-h-96 overflow-y-auto rounded-xl bg-white/95 divide-y divide-slate-100"></div>
             </div>
 
+            <!-- LİG SİSTEMİ: mağazaları 3 gruba böl, grup içinde yarıştır -->
+            <div id="lg-card" class="bg-gradient-to-r from-sky-900 to-indigo-900 p-4 rounded-2xl border border-sky-600/60 shadow-lg space-y-3">
+                <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between">
+                    <div class="min-w-0">
+                        <div class="text-sky-100 font-black text-sm"><i class="fa-solid fa-layer-group mr-2"></i>LİG SİSTEMİ <span class="text-[11px] font-bold text-sky-300">· mağazalar gruplar içinde yarışır</span></div>
+                        <div class="text-[11px] text-sky-100/80 mt-0.5">Mağazaları 3 gruba (A, B, C) böler. Devreye alınca mağaza ve ekip arkadaşları sıralamada <b>yalnızca kendi grubundakileri</b> görür. İstediğin gün senaryoyu değiştirebilir ya da kapatabilirsin.</div>
+                    </div>
+                    <div id="lg-status" class="text-[11px] font-black px-3 py-1.5 rounded-full bg-slate-700 text-slate-200 shrink-0">Kapalı</div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                    <span class="font-black text-sky-200">Dönem:</span>
+                    <select id="lg-pm" onchange="lgPm()" class="bg-sky-950 text-sky-50 border border-sky-600 rounded-lg px-2 py-1.5 font-bold">
+                        <option value="auto">Senaryonun kendi dönemi</option><option value="yday">Dün</option><option value="d7">Son 7 gün</option><option value="d14">Son 14 gün</option><option value="d28">Son 28 gün (4 hafta)</option><option value="all">Başından bugüne</option><option value="custom">Özel aralık…</option>
+                    </select>
+                    <span id="lg-custom" class="hidden items-center gap-1">
+                        <input type="date" id="lg-from" onchange="lgPm()" class="bg-sky-950 text-sky-50 border border-sky-600 rounded-lg px-2 py-1 font-bold [color-scheme:dark]">
+                        <span class="text-sky-300">–</span>
+                        <input type="date" id="lg-to" onchange="lgPm()" class="bg-sky-950 text-sky-50 border border-sky-600 rounded-lg px-2 py-1 font-bold [color-scheme:dark]">
+                    </span>
+                    <span id="lg-days" class="text-[10px] text-sky-300 font-bold"></span>
+                </div>
+                <div id="lg-cards" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+                <div id="lg-detail"></div>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" onclick="lgApply()" class="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-xs font-black shadow"><i class="fa-solid fa-circle-check mr-1"></i>Seçili senaryoyu devreye al</button>
+                    <button type="button" onclick="lgOver()" class="px-3 py-2.5 bg-sky-800 hover:bg-sky-700 text-sky-100 rounded-xl text-xs font-black">Elle değişiklikleri sıfırla</button>
+                    <button type="button" onclick="lgOff()" class="px-3 py-2.5 bg-rose-600/90 hover:bg-rose-500 text-white rounded-xl text-xs font-black"><i class="fa-solid fa-power-off mr-1"></i>Kapat (herkes ortak yarışsın)</button>
+                </div>
+            </div>
+
             <!-- GÜVENLİK: silme, aşırı hızlı giriş ve ekip arkadaşı değişiklik raporları -->
             <details open class="rounded-2xl border border-slate-600/60 bg-slate-900/60 p-3 space-y-3">
                 <summary class="cursor-pointer select-none list-none flex items-center gap-2 text-slate-100 font-black text-sm"><i class="fa-solid fa-shield-halved text-emerald-400"></i>GÜVENLİK <span class="text-[11px] font-bold text-slate-400">· silme, aşırı hızlı giriş ve ekip arkadaşı değişiklik raporları (cihaz adlarıyla)</span><i class="fa-solid fa-chevron-down ml-auto text-slate-400 text-xs"></i></summary>
@@ -2556,6 +2586,7 @@
         
         Object.keys(dailyData).forEach(store => {
             if(store === 'isLocked' || store === 'central_announcement') return;
+            try { if (currentRole === 'store' && window.lgStores) { const L = lgStores(currentId); if (L && L.indexOf(store) < 0) return; } } catch (e) {}
             
             let sData = dailyData[store];
             let storeTotal = 0;
@@ -4543,6 +4574,125 @@
         } catch (e) { console.error(e); }
     };
 
+
+    // ===== LİG SİSTEMİ: mağazaları 3 gruba (A/B/C) böl; sıralamalar grup içinde gösterilsin =====
+    ;(function leagueInit() { try {
+        const SC = {
+            s1: { t: '1 · Son 4 hafta ortalaması', d: 'Mağazanın günlük ortalama satışına göre böler.', def: 'd28', fv: r => r.avg.toFixed(1) + ' adet/gün' },
+            s2: { t: '2 · Verilen hedeflere göre', d: 'Mağazaya verilen günlük hedefin ortalamasına göre böler.', def: 'd28', fv: r => Math.round(r.tgAvg) + ' hedef/gün' },
+            s3: { t: '3 · Ekip arkadaşı sayısına göre', d: 'Mağazadaki ekip arkadaşı sayısına göre böler (eşitlikte günlük ortalama satış).', def: 'd28', fv: r => r.n + ' kişi' },
+            s4: { t: '4 · Bu zamana kadar toplam satış', d: 'Başından bugüne toplam satışa göre böler.', def: 'all', fv: r => r.tot + ' adet' }
+        };
+        const GC = { A: ['bg-amber-100 text-amber-800 border-amber-300', '#f59e0b'], B: ['bg-sky-100 text-sky-800 border-sky-300', '#0ea5e9'], C: ['bg-emerald-100 text-emerald-800 border-emerald-300', '#10b981'] };
+        const st = window.__lg = window.__lg || { sc: 's1', pm: 'auto', from: '', to: '', over: {} };
+        const $ = id => document.getElementById(id);
+        const eh = v => (window.escHtml ? escHtml(v) : String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
+        const storesAll = () => { const out = []; try { Object.keys(effectiveHierarchy || {}).forEach(bm => (effectiveHierarchy[bm] || []).forEach(s => out.push({ store: s, bm }))); } catch (e) {} return out; };
+        const dayKeys = (sc, pm, from, to) => {
+            const mode = pm === 'auto' ? SC[sc].def : pm;
+            const daily = (globalData && globalData.daily) || {};
+            const keys = Object.keys(daily).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
+            const today = ACTIVE_DATE;
+            const prev = n => { const d = new Date(today + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() - n); return d.toISOString().slice(0, 10); };
+            if (mode === 'all') return keys.filter(k => k <= today);
+            if (mode === 'custom') return keys.filter(k => (!from || k >= from) && (!to || k <= to));
+            const n = { yday: 1, d7: 7, d14: 14, d28: 28 }[mode] || 28;
+            const lo = prev(n);
+            return keys.filter(k => k >= lo && k < today);
+        };
+        const stDay = (d, store) => {
+            const o = (((globalData.daily || {})[d] || {})[store]);
+            if (!o || !o.staff) return { sales: 0, target: 0 };
+            let sales = 0, tg = 0;
+            Object.keys(o.staff).forEach(id => { const q = o.staff[id] || {}; sales += Number(q.sales) || 0; tg += Number(q.target) || 0; });
+            return { sales, target: Number(o.target) || tg };
+        };
+        const staffCount = store => Object.keys(((globalData.master_staff || {})[store]) || {}).length;
+        function compute(sc, pm, from, to) {
+            const days = dayKeys(sc, pm, from, to), stores = storesAll();
+            const rows = stores.map(({ store, bm }) => {
+                let tot = 0, act = 0, tgS = 0, tgN = 0;
+                days.forEach(d => { const x = stDay(d, store); tot += x.sales; if (x.sales > 0) act++; if (x.target > 0) { tgS += x.target; tgN++; } });
+                const avg = act ? tot / act : 0, tgAvg = tgN ? tgS / tgN : 0, n = staffCount(store);
+                return { store, bm, tot, avg, tgAvg, n, v: sc === 's1' ? avg : sc === 's2' ? tgAvg : sc === 's3' ? n : tot };
+            });
+            rows.sort((a, b) => (b.v - a.v) || (sc === 's3' ? (b.avg - a.avg) : 0) || a.store.localeCompare(b.store, 'tr'));
+            const n = rows.length, a = Math.ceil(n / 3), b = Math.ceil((n - a) / 2);
+            rows.forEach((r, i) => { r.g = i < a ? 'A' : i < a + b ? 'B' : 'C'; });
+            return { rows, days: days.length };
+        }
+        const withOver = res => { res.rows.forEach(r => { if (st.over[r.store]) r.g = st.over[r.store]; }); return res; };
+        const counts = rows => ({ A: rows.filter(r => r.g === 'A').length, B: rows.filter(r => r.g === 'B').length, C: rows.filter(r => r.g === 'C').length });
+
+        window.lgActive = () => { try { const a = globalData && globalData.leagues && globalData.leagues.active; return (a && a.assign) ? a : null; } catch (e) { return null; } };
+        window.lgOf = store => { const a = lgActive(); return (a && a.assign[store]) || ''; };
+        window.lgName = g => g ? g + ' Grubu' : '';
+        window.lgStores = store => { const a = lgActive(); if (!a || !a.assign[store]) return null; const g = a.assign[store]; return Object.keys(a.assign).filter(k => a.assign[k] === g); };
+
+        window.lgPm = function () {
+            st.pm = ($('lg-pm') || {}).value || 'auto'; st.from = ($('lg-from') || {}).value || ''; st.to = ($('lg-to') || {}).value || '';
+            const c = $('lg-custom'); if (c) { c.classList.toggle('hidden', st.pm !== 'custom'); c.classList.toggle('inline-flex', st.pm === 'custom'); }
+            st.over = {}; lgPaint(true);
+        };
+        window.lgPick = function (sc) { st.sc = sc; st.over = {}; lgPaint(true); };
+        window.lgOver = function () { st.over = {}; lgPaint(true); };
+        window.lgMove = function (store) {
+            const cur = st.over[store] || (compute(st.sc, st.pm, st.from, st.to).rows.find(r => r.store === store) || {}).g || 'A';
+            st.over[store] = cur === 'A' ? 'B' : cur === 'B' ? 'C' : 'A'; lgPaint(true);
+        };
+        window.lgApply = function () {
+            if (!window.__DEMO && currentRole !== 'central') return alert('Bu işlem için Sistem Merkezi girişi gerekir.');
+            const res = withOver(compute(st.sc, st.pm, st.from, st.to));
+            if (!res.rows.length) return alert('Mağaza bulunamadı.');
+            const c = counts(res.rows);
+            if (!confirm(SC[st.sc].t + ' devreye alınsın mı?\n\nA Grubu: ' + c.A + ' mağaza\nB Grubu: ' + c.B + ' mağaza\nC Grubu: ' + c.C + ' mağaza\n\nMağaza ve ekip arkadaşları sıralamada yalnızca kendi grubundakileri görecek.')) return;
+            const assign = {}; res.rows.forEach(r => { assign[r.store] = r.g; });
+            dbRoot.child('leagues').child('active').set({ sc: st.sc, pm: st.pm, from: st.from || '', to: st.to || '', ts: Date.now(), by: 'merkez', assign })
+                .then(() => { try { lgPaint(true); } catch (e) {} });
+        };
+        window.lgOff = function () {
+            if (!window.__DEMO && currentRole !== 'central') return alert('Bu işlem için Sistem Merkezi girişi gerekir.');
+            if (!lgActive()) return alert('Lig sistemi zaten kapalı.');
+            if (!confirm('Lig sistemi kapatılsın mı? Herkes yine tek ortak sıralamada yarışacak.')) return;
+            const pr = dbRoot.child('leagues').child('active').remove(); if (pr && pr.then) pr.then(() => { try { lgPaint(true); } catch (e) {} }); else { try { lgPaint(true); } catch (e) {} }
+        };
+        const periodTxt = (sc, pm, from, to) => {
+            const m = pm === 'auto' ? SC[sc].def : pm;
+            return ({ yday: 'dün', d7: 'son 7 gün', d14: 'son 14 gün', d28: 'son 28 gün', all: 'başından bugüne', custom: (from || '…') + ' – ' + (to || '…') })[m] || m;
+        };
+        window.lgPaint = function (force) {
+            const host = $('lg-cards'); if (!host) return;
+            if (!force) { const card = $('lg-card'); if (card && card.offsetParent === null) return; const now = Date.now(); if (now - (lgPaint._t || 0) < 1500) return; lgPaint._t = now; }
+            const act = lgActive();
+            const stEl = $('lg-status');
+            if (stEl) {
+                if (act) {
+                    const c = counts(Object.keys(act.assign).map(k => ({ g: act.assign[k] })));
+                    stEl.className = 'text-[11px] font-black px-3 py-1.5 rounded-full bg-emerald-500 text-white shrink-0';
+                    stEl.textContent = 'AKTİF · ' + SC[act.sc].t.replace(/^\d · /, '') + ' · A' + c.A + ' B' + c.B + ' C' + c.C;
+                } else { stEl.className = 'text-[11px] font-black px-3 py-1.5 rounded-full bg-slate-700 text-slate-200 shrink-0'; stEl.textContent = 'Kapalı · herkes ortak yarışıyor'; }
+            }
+            host.innerHTML = Object.keys(SC).map(k => {
+                const r = compute(k, st.pm, st.from, st.to), c = counts(r.rows), on = st.sc === k, live = act && act.sc === k;
+                return `<button type="button" onclick="lgPick('${k}')" class="text-left p-3 rounded-xl border-2 transition ${on ? 'bg-white border-sky-300 shadow-lg' : 'bg-sky-950/60 border-sky-700 hover:border-sky-400'}">
+                    <div class="flex items-center justify-between gap-2"><div class="font-black text-xs ${on ? 'text-sky-900' : 'text-sky-100'}">${SC[k].t}</div>${live ? '<span class="text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-500 text-white">AKTİF</span>' : ''}</div>
+                    <div class="text-[10px] mt-0.5 ${on ? 'text-slate-500' : 'text-sky-200/80'} font-bold">${SC[k].d}</div>
+                    <div class="mt-1.5 flex gap-1.5 text-[10px] font-black"><span class="px-2 py-0.5 rounded-full ${GC.A[0]} border">A ${c.A}</span><span class="px-2 py-0.5 rounded-full ${GC.B[0]} border">B ${c.B}</span><span class="px-2 py-0.5 rounded-full ${GC.C[0]} border">C ${c.C}</span></div>
+                </button>`;
+            }).join('');
+            const res = withOver(compute(st.sc, st.pm, st.from, st.to));
+            const dEl = $('lg-days'); if (dEl) dEl.textContent = res.days ? '(' + res.days + ' günlük veri · ' + periodTxt(st.sc, st.pm, st.from, st.to) + ')' : '⚠ Bu dönemde veri yok';
+            const det = $('lg-detail'); if (!det) return;
+            const f = SC[st.sc].fv;
+            det.innerHTML = `<div class="rounded-xl bg-white/95 p-3"><div class="text-[11px] font-black text-slate-600 mb-2">${SC[st.sc].t} — mağazaya dokununca grubu elle değiştirebilirsin (A→B→C). Devreye alınca bu liste geçerli olur.</div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-2">${['A', 'B', 'C'].map(g => {
+                    const list = res.rows.filter(r => r.g === g);
+                    return `<div class="rounded-lg border ${GC[g][0]} p-2"><div class="text-[11px] font-black mb-1">${g} Grubu · ${list.length} mağaza</div><div class="max-h-60 overflow-y-auto space-y-1">${list.map(r => `<button type="button" onclick="lgMove('${pdJs(r.store)}')" class="w-full flex items-center justify-between gap-2 px-2 py-1 rounded bg-white/80 hover:bg-white text-left"><span class="text-[10px] font-bold text-slate-700 truncate">${eh(r.store)}${st.over[r.store] ? ' ✎' : ''}</span><span class="text-[10px] font-black text-slate-500 shrink-0">${f(r)}</span></button>`).join('') || '<div class="text-[10px] text-slate-400">—</div>'}</div></div>`;
+                }).join('')}</div></div>`;
+        };
+        setInterval(() => { try { if (typeof currentRole !== 'undefined' && (window.__DEMO || currentRole === 'central')) lgPaint(); } catch (e) {} }, 4000);
+    } catch (e) { console.error('leagueInit', e); } })();
+
     window.sendApplauseFromModal = function(event) {
         if (!window.currentProfileStaffId || !window.currentProfileStore || window.currentProfileStore === "Silinmiş Ekip Arkadaşı") return;
         
@@ -6281,17 +6431,23 @@
 
             let sortedBySales = [...allStaff].filter(p => p.sales > 0).sort((a, b) => b.sales - a.sales);
             window.top3Staff = sortedBySales.slice(0, 3);
+            // Lig sistemi açıksa mağaza ekranı sadece kendi grubundakileri gösterir
+            let lgSet = null, lgG = '';
+            try { if (currentRole === 'store' && window.lgStores) { const L = lgStores(currentId); if (L) { lgSet = new Set(L); lgG = lgName(lgOf(currentId)); } } } catch (e) {}
+            window.top3StaffView = lgSet ? sortedBySales.filter(p => lgSet.has(p.store)).slice(0, 3) : window.top3Staff;
+            window.lgNowG = lgG;
             
             let sortedByFocus = [...allStaff].filter(p => p.focusSales > 0).sort((a, b) => (b.focusSales - a.focusSales) || ((b.sales || 0) - (a.sales || 0)));
             window.top3FocusStaffGlobal = sortedByFocus.slice(0, 3);
+            const top3FocusView = lgSet ? sortedByFocus.filter(p => lgSet.has(p.store)).slice(0, 3) : window.top3FocusStaffGlobal;
 
             let allStoresTop = Object.values(allStoresSalesMap);
             allStoresTop.sort((a, b) => b.sales - a.sales);
             window.top3StoresGlobal = allStoresTop.slice(0, 3);
             
             if(!isStoreHistorical) {
-                if (window.activeContestBrands.length > 0 && window.top3FocusStaffGlobal.length > 0) {
-                    updateFocusTopBanners('store-focus-top3-banner', window.top3FocusStaffGlobal, '🏆 ODAK ÜRÜN ŞAMPİYONLARI', 'Tüm Mağazalar Arası En Çok Odak Ürün Satan Ekip Arkadaşları', 3);
+                if (window.activeContestBrands.length > 0 && top3FocusView.length > 0) {
+                    updateFocusTopBanners('store-focus-top3-banner', top3FocusView, lgG ? '🏆 ODAK ÜRÜN ŞAMPİYONLARI · ' + lgG.toUpperCase() : '🏆 ODAK ÜRÜN ŞAMPİYONLARI', lgG ? lgG + ' Mağazaları Arasında En Çok Odak Ürün Satan Ekip Arkadaşları' : 'Tüm Mağazalar Arası En Çok Odak Ürün Satan Ekip Arkadaşları', 3);
                 } else {
                     document.getElementById('store-focus-top3-banner')?.classList.add('hidden');
                 }
@@ -6299,7 +6455,7 @@
                 try { window.instrPaint(); } catch (e) {}
 
                 updateTop3StoresBanner('store-top3-stores-banner', window.top3StoresGlobal, '🏆 EGE BÖLGESİ ŞAMPİYON MAĞAZALARI', 'Bonus Pack Satışında En Çok Satan İlk 3 Mağaza');
-                updateTop3Banners('store-top3-banner', window.top3Staff, '🌟 GÜNÜN BONUS PACK YILDIZLARI', 'Bonus Pack Satışında Tüm Mağazalar Arası Top 3 Ekip Arkadaşı');
+                updateTop3Banners('store-top3-banner', window.top3StaffView, lgG ? '🌟 GÜNÜN BONUS PACK YILDIZLARI · ' + lgG.toUpperCase() : '🌟 GÜNÜN BONUS PACK YILDIZLARI', lgG ? 'Bonus Pack Satışında ' + lgG + ' Mağazaları Arası Top 3 Ekip Arkadaşı' : 'Bonus Pack Satışında Tüm Mağazalar Arası Top 3 Ekip Arkadaşı');
             }
 
             if (currentRole === 'store' && !isStoreHistorical) renderStoreUI();
@@ -7328,7 +7484,7 @@
                     } else if (!isStoreHistorical) { window.__apSeen = window.__apSeen || {}; window.__apSeen[currentId + '|' + p.id] = p.applause || 0; }
                 } catch (e) {}
                 
-                let rankIndex = isStoreHistorical ? -1 : (window.top3Staff || []).findIndex(t => t.id === p.id);
+                let rankIndex = isStoreHistorical ? -1 : (window.top3StaffView || window.top3Staff || []).findIndex(t => t.id === p.id);
                 let rowClass = "hover:bg-slate-50 border-b border-slate-100 transition-colors";
                 let nameBadge = "";
                 let regionalBadge = ""; 
@@ -7930,6 +8086,7 @@
 
     function renderCentralUI() {
         updateAnnouncementUI();
+        try { window.lgPaint && lgPaint(); } catch (e) {}
 
         let totalSales = 0;
         let totalTarget = 0;
@@ -10855,6 +11012,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.02</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.03</div>
 </body>
 </html>
