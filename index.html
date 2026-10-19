@@ -2403,6 +2403,7 @@
             return alert("Şu an aktif bir odak ürün bulunmuyor.");
         }
         window.currentContestStaffId = stfId;
+        window.__kfx = null;
         document.getElementById('contest-input-name').innerText = stfName;
         renderContestInputList();
         document.getElementById('contest-input-modal').classList.remove('hidden');
@@ -2413,11 +2414,56 @@
         window.currentContestStaffId = null;
     }
 
+    // ===== Ekip arkadaşı giriş ekranı: kişisel KPI hedef barı + odak kutusuna düşen ürün animasyonu =====
+    ;(function kfxInit() { try {
+        const st = document.createElement('style');
+        st.textContent = '@keyframes obDrop{0%{opacity:0;transform:translateY(-80px) rotate(-35deg) scale(.8)}55%{opacity:1;transform:translateY(4px) rotate(8deg) scale(1)}75%{transform:translateY(-6px) rotate(-3deg)}100%{transform:translateY(0) rotate(0)}}.ob-new{animation:obDrop .8s cubic-bezier(.3,1.2,.5,1) both}@keyframes obBump{0%,100%{transform:scale(1)}40%{transform:scale(1.04)}}.ob-bump{animation:obBump .5s .55s ease}.kfx-fill{transition:width .9s cubic-bezier(.2,.8,.2,1)}@media(prefers-reduced-motion:reduce){.ob-new,.ob-bump{animation:none}.kfx-fill{transition:none}}';
+        try { document.head.appendChild(st); } catch (e) {}
+        const tube = (cls) => '<svg class="' + (cls || '') + '" viewBox="0 0 20 42" width="17" height="36" style="flex:none"><rect x="6" y="1" width="8" height="7" rx="2" fill="#0ea5e9"/><path d="M3.5 8h13l-1.2 25H4.7z" fill="#fff" stroke="#7c3aed" stroke-width="1.6" stroke-linejoin="round"/><path d="M5 18h10" stroke="#a78bfa" stroke-width="2.2" stroke-linecap="round"/><path d="M5.5 23h9" stroke="#06b6d4" stroke-width="2.2" stroke-linecap="round"/><rect x="4.8" y="33" width="10.4" height="6" rx="1" fill="#c4b5fd" stroke="#7c3aed" stroke-width="1.2"/></svg>';
+        const star = (cls) => '<span class="' + (cls || '') + '" style="font-size:22px;line-height:1;flex:none">🎁</span>';
+        window.kfxOdakBox = function (brand, count, prev) {
+            const isTube = /opal/i.test(brand), item = isTube ? tube : star;
+            const show = Math.min(count, 12), items = [];
+            for (let i = 0; i < show; i++) items.push(item(i === show - 1 && count > prev ? 'ob-new' : ''));
+            const more = count > 12 ? '<span style="font-size:11px;font-weight:900;color:#6d28d9;align-self:center">+' + (count - 12) + '</span>' : '';
+            const empty = count === 0 ? '<span style="font-size:11px;font-weight:800;color:#a78bfa;align-self:center;margin:auto">' + (isTube ? 'Kutu boş — ilk ürünü düşür 🧴' : 'Kutu boş — ilk ürünü düşür 🎁') + '</span>' : '';
+            return '<div class="' + (count > prev ? 'ob-bump' : '') + '" style="margin:-4px 6px 0;border:2px dashed #c4b5fd;border-top:none;border-radius:0 0 14px 14px;min-height:50px;padding:6px 8px;display:flex;flex-wrap:wrap;align-items:flex-end;gap:3px;background:linear-gradient(#faf5ff,#ede9fe)" title="Odak kutun: bugün ' + count + ' adet">' + items.join('') + more + empty + '</div>';
+        };
+        window.kfxBarHtml = function (stfId, cur, prev) {
+            const gt = window.kpiGoalTotal && kpiGoalTotal(stfId), bars = window.kpiStoreBars ? kpiStoreBars() : [];
+            if (!gt && !bars.length) return '';
+            let h = '<div style="border:2px solid #a5f3fc;background:linear-gradient(135deg,#ecfeff,#f5f3ff);border-radius:18px;padding:11px 12px 10px">';
+            if (gt) {
+                const pct = Math.min(100, gt.done / gt.goal * 100), ok = gt.done >= gt.goal;
+                cur.bar = pct;
+                h += '<div style="display:flex;justify-content:space-between;align-items:baseline;font-weight:900"><span style="font-size:12px;color:#0e7490">🎯 Bugünkü KPI görevin</span><span style="font-size:15px;color:' + (ok ? '#059669' : '#6d28d9') + '">' + gt.done + '/' + gt.goal + ' adet</span></div>' +
+                    '<div style="position:relative;margin-top:6px;height:16px;border-radius:999px;background:#e2e8f0;overflow:hidden"><div class="kfx-fill" data-to="' + pct.toFixed(1) + '" style="height:100%;width:' + (prev.bar || 0).toFixed(1) + '%;border-radius:999px;background:' + (ok ? 'linear-gradient(90deg,#34d399,#10b981)' : 'linear-gradient(90deg,#22d3ee,#8b5cf6)') + '"></div></div>' +
+                    '<div style="margin-top:4px;font-size:11px;font-weight:800;color:#64748b">' + (ok ? 'Görev tamam, harikasın! 🎉' : '%' + Math.round(pct) + ' · hedefe <b style="color:#0f172a">' + (gt.goal - gt.done) + '</b> adet kaldı') + '</div>';
+            }
+            if (bars.length) {
+                h += '<div style="margin-top:' + (gt ? '9' : '0') + 'px;font-size:10px;font-weight:900;color:#7c3aed;text-transform:uppercase;letter-spacing:.04em">Mağaza KPI hedefi — her satışın çubuğu ilerletir</div>';
+                bars.forEach(b => {
+                    cur.st[b.key] = b.pct;
+                    h += '<div style="margin-top:5px"><div style="display:flex;justify-content:space-between;font-size:10px;font-weight:900;color:#334155"><span>' + String(b.name).replace(/[<>&]/g, '') + '</span><span>' + (b.est ? '≈' : '') + '%' + Math.round(b.pct) + '</span></div><div style="height:7px;border-radius:999px;background:#e2e8f0;overflow:hidden"><div class="kfx-fill" data-to="' + Math.min(100, b.pct).toFixed(1) + '" style="height:100%;width:' + Math.min(100, (prev.st[b.key] || 0)).toFixed(1) + '%;border-radius:999px;background:linear-gradient(90deg,#a78bfa,#6366f1)"></div></div></div>';
+                });
+            }
+            return h + '</div>';
+        };
+        window.kfxRun = function () {
+            const run = () => document.querySelectorAll('#contest-input-list .kfx-fill').forEach(el => { el.style.width = el.getAttribute('data-to') + '%'; });
+            if (window.requestAnimationFrame) requestAnimationFrame(() => requestAnimationFrame(run)); else run();
+            window.__kfx = window.__kfxCur;
+        };
+    } catch (e) { console.error('Hedef barı kurulamadı', e); } })();
+
     window.renderContestInputList = function() {
         let container = document.getElementById('contest-input-list');
         container.innerHTML = '';
         let stfId = window.currentContestStaffId;
         if(!stfId) return;
+        const kprev = (window.__kfx && window.__kfx.id === stfId) ? window.__kfx : { bar: 0, st: {}, odak: {} };
+        const kcur = { id: stfId, bar: 0, st: {}, odak: {} }; window.__kfxCur = kcur;
+        try { if (window.kfxBarHtml) container.innerHTML += '<div class="mb-1">' + kfxBarHtml(stfId, kcur, kprev) + '</div>'; } catch (e) {}
         
         let currentStats = globalData.daily?.[ACTIVE_DATE]?.[currentId]?.staff?.[stfId]?.contest || {};
         const kbAll = window.kpiStaffBrands ? window.kpiStaffBrands() : [];
@@ -2438,11 +2484,11 @@
                     </div>
                 </div>
             `;
+            try { const pc = kprev.odak[brand] !== undefined ? kprev.odak[brand] : count; kcur.odak[brand] = count; container.innerHTML += window.kfxOdakBox(brand, count, pc); } catch (e) {}
         });
 
         const kb = window.kpiStaffBrands ? window.kpiStaffBrands() : [];
         if (kb.length) {
-            try { const gt = window.kpiGoalTotal && kpiGoalTotal(stfId); if (gt) container.innerHTML += `<div class="text-center text-sm font-black ${gt.done >= gt.goal ? 'text-emerald-600' : 'text-cyan-600'} mb-1">🎯 Bugünkü KPI görevin: ${gt.done}/${gt.goal} adet${gt.done >= gt.goal ? ' ✅' : ''}</div>`; } catch (e) {}
             container.innerHTML += `<div class="pt-2 mt-1 border-t border-dashed border-slate-300 dark:border-slate-600"><div class="text-[10px] font-black text-cyan-600 uppercase tracking-wider mb-2"><i class="fa-solid fa-trophy mr-1"></i>KPI Ürünleri (ayrı rapor)</div></div>`;
             kb.forEach(b => {
                 const n = window.kpiStaffGet(stfId, b.key);
@@ -2469,6 +2515,7 @@
                 </div>`;
             });
         }
+        try { window.kfxRun && kfxRun(); } catch (e) {}
     }
 
     window.updateContestCount = function(stfId, brand, change) {
@@ -9499,6 +9546,17 @@
                 setTimeout(() => kpiAmbPaint(id), 400); setTimeout(() => kpiAmbPaint(id), 1500);
             } catch (e) {}
         };
+        window.kpiStoreBars = function () {
+            try {
+                const c = ctxGet(); if (!c || !c.live || currentRole !== 'store' || !currentId || !kpiEntryOn()) return [];
+                return selKeys(c).map(k => c.brands.find(b => b.key === k)).filter(Boolean).map(b => {
+                    const T = c.tStore(currentId, b.key); if (!(T > 0)) return null;
+                    const es = kpiEst(c, currentId, b.key) || { est: 0 };
+                    const m = metrics(c.aStore(currentId, b.key) + es.est, T, c);
+                    return { key: b.key, name: b.name, pct: m.pct || 0, est: es.est > 0 };
+                }).filter(Boolean);
+            } catch (e) { return []; }
+        };
         window.kpiGoalTotal = function (id) {
             try { const g = kpiGoalsFor(); if (!g || !g.byId[id]) return null; let G = 0, D = 0; g.brands.forEach(b => { const e = g.byId[id][b.key]; if (e) { G += e.goal; D += kpiStaffGet(id, b.key); } }); return G > 0 ? { goal: G, done: D } : null; } catch (e) { return null; }
         };
@@ -10663,6 +10721,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.95</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.96</div>
 </body>
 </html>
