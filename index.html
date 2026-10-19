@@ -4879,7 +4879,8 @@
                     });
                 });
                 let best = null; Object.keys(by).forEach(id => { if (!best || by[id].v > best.v) best = by[id]; });
-                return { sales, target, n, today, best, pct: target > 0 ? sales / target * 100 : null };
+                let star = null; try { star = starOf(g, act); } catch (e) {}
+                return { sales, target, n, today, best, star, pct: target > 0 ? sales / target * 100 : null };
             };
             const endTxt = Number(act.end) > 0 ? (() => { const d = new Date(Number(act.end)); return d.toLocaleDateString('tr-TR', { weekday: 'long' }) + ' günü ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + "'da bitiyor"; })() : 'Lig devam ediyor';
             const cd = Number(act.end) > 0 ? `<span class="lg-cd font-black tabular-nums text-rose-600" data-end="${Number(act.end)}"></span>` : '';
@@ -4888,7 +4889,7 @@
                 return `<div class="rounded-xl border ${GC[g][0]} p-2.5"><div class="flex items-center justify-between"><div class="text-[11px] font-black ${GC[g][1]}">🏆 ${g} GRUBU</div><div class="text-[10px] font-black text-slate-400">${a.n} mağaza</div></div>
                     <div class="flex items-baseline justify-between mt-1.5"><div class="text-xl font-black text-slate-800 leading-none">${a.pct == null ? '—' : '%' + Math.round(a.pct)}</div><div class="text-[10px] font-black text-slate-500">${a.sales}${a.target ? '<span class="text-slate-400">/' + a.target + '</span>' : ''} adet</div></div>
                     <div class="h-1.5 rounded-full bg-white/80 mt-1.5 overflow-hidden"><div class="h-full rounded-full" style="width:${p}%;background:${GC[g][2]}"></div></div>
-                    <div class="mt-2 text-[10px] font-bold text-slate-500 truncate">⭐ Günün yıldızı: ${a.best ? '<b class="text-slate-800">' + eh(a.best.name) + '</b> · ' + a.best.v + ' adet' : 'henüz satış yok'}</div></div>`;
+                    <div class="mt-2 text-[10px] font-bold text-slate-500 truncate">⭐ Grup yıldızı: ${a.star ? '<b class="text-slate-800">' + eh(a.star.name) + '</b> · ' + a.star.sales + ' adet' : 'henüz satış yok'}</div></div>`;
             };
             return `<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-3 space-y-2"><div class="text-center"><div class="font-black text-slate-700 text-xs"><i class="fa-solid fa-layer-group text-indigo-500 mr-1"></i>Lig Gidişatı</div><div class="text-[10px] font-bold text-slate-400">${endTxt} · kalan ${cd}</div></div><div class="grid grid-cols-1 sm:grid-cols-3 gap-2">${['A', 'B', 'C'].map(box).join('')}</div></div>`;
         };
@@ -11250,6 +11251,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.15</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.16</div>
 </body>
 </html>
