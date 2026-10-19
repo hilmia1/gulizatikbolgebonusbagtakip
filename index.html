@@ -5164,7 +5164,9 @@
             const cellTxt = c => {
                 if (c.querySelector && c.querySelector('.fa-check,.fa-circle-check')) return 'Evet';
                 if (c.querySelector && c.querySelector('.fa-xmark,.fa-times,.fa-circle-xmark')) return 'Hayır';
-                let t = clean(c.textContent);
+                const cl = c.cloneNode(true);   // "MERKEZ/BM/MM" gibi küçük hedef etiketleri dosyaya yazılmasın
+                Array.prototype.forEach.call(cl.querySelectorAll('[class*="text-[7px]"],[class*="text-[8px]"],[title="Merkez Tarafından Kilitlendi"]'), x => x.remove());
+                let t = clean(cl.textContent);
                 if (t === '✓') t = 'Evet'; else if (t === '✕' || t === '✗') t = 'Hayır';
                 return t;
             };
@@ -10577,6 +10579,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.93</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.2.94</div>
 </body>
 </html>
