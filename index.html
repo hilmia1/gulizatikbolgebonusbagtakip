@@ -4896,6 +4896,14 @@
         window.lgBoardPaint = function () {
             try {
                 const role = (typeof currentRole !== 'undefined') ? currentRole : '';
+                // Mağazaya yeni girildiyse (veri zaten yüklüydü) kendi grubuna göre panoları yeniden hesapla
+                try {
+                    if (role === 'store' && currentId && window.__rootCb && window.__lastSnap) {
+                        const L = window.lgStores ? lgStores(currentId) : null;
+                        const exp = L ? lgName(lgOf(currentId)) : '';
+                        if (exp !== (window.lgNowG || '') && Date.now() - (window.__lgRerun || 0) > 1500) { window.__lgRerun = Date.now(); window.__rootCb(window.__lastSnap); return; }
+                    }
+                } catch (e) {}
                 Object.keys(MOUNT).forEach(r => { const h = document.getElementById('lg-board-' + r); if (h && r !== role) { h.innerHTML = ''; h.__lgh = ''; h.className = 'hidden'; } });
                 try { const mb = document.getElementById('bp-league-modal'); if (mb && !mb.classList.contains('hidden')) { const bd = document.getElementById('bp-league-body'); if (bd) setHtml(bd, build(role, true) || ''); } } catch (e) {}
                 const m = MOUNT[role]; if (!m) return;
@@ -6579,7 +6587,8 @@
         initGlobalAnnouncementListener();
         initCentralAnnouncementListener();
 
-        dbRoot.on('value', snap => {
+        dbRoot.on('value', window.__rootCb = snap => {
+            window.__lastSnap = snap;
             globalData = snap.val() || {};
             sanitizeGlobalData();
             try { if (window.kpiOnData) kpiOnData(); } catch (e) { console.error(e); }
@@ -11370,6 +11379,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.19</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.20</div>
 </body>
 </html>
