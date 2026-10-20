@@ -10289,7 +10289,7 @@
                     const m = es.est > 0 ? metrics(c.aStore(currentId, b.key) + es.est, c.tStore(currentId, b.key), c) : m0;
                     const pct = m.pct;
                     const w = Math.min(100, pct || 0), w0 = Math.min(100, m0.pct || 0), wEst = Math.max(0, w - w0);
-                    return `<div class="min-w-0"><div class="flex justify-between items-baseline gap-1"><span class="truncate text-[10px] font-black text-slate-700">${esc(b.name)}</span><span class="text-[10px] font-black ${m.st.txt}">${pct === null ? 'hedef yok' : (es.est > 0 ? '≈' : '') + '%' + Math.round(pct)}</span></div><div class="relative w-full bg-slate-200 rounded-full h-1.5"><div class="h-1.5 rounded-full" style="width:${w0}%;background:${m.st.bar};transition:width .6s"></div>${wEst > 0 ? `<div class="absolute top-0 h-1.5 rounded-r-full kpi-est" style="left:${w0}%;width:${wEst}%;background:${m.st.bar}" title="Bugün ekip arkadaşlarının girdiği adetlerden tahmini ilerleme"></div>` : ''}<div class="absolute top-[-3px] bottom-[-3px] w-[2px] bg-slate-700/70" style="left:${Math.min(100, c.pace * 100)}%" title="Bugün olması gereken seviye: %${Math.round(c.pace * 100)}"></div></div></div>`;
+                    return `<div class="min-w-0"><div class="flex justify-between items-baseline gap-1"><span class="truncate text-[10px] font-black text-slate-700">${esc(b.name)}</span><span class="text-[10px] font-black ${m.st.txt}">${pct === null ? 'hedef yok' : (es.est > 0 ? '≈' : '') + '%' + Math.round(pct)}</span></div><div class="relative w-full bg-slate-200 rounded-full h-1.5"><div class="h-1.5 rounded-full" style="width:${w0}%;background:${m.st.bar};transition:width .6s"></div>${wEst > 0 ? `<div class="absolute top-0 h-1.5 rounded-r-full kpi-est" style="left:${w0}%;width:${wEst}%;background:${m.st.bar}" title="Bugün ekip arkadaşlarının girdiği adetlerden tahmini ilerleme"></div>` : ''}<div class="absolute top-[-3px] bottom-[-3px] w-[2px] bg-slate-700/70" style="left:${Math.min(100, c.pace * 100)}%" title="Bugün olması gereken seviye: %${Math.round(c.pace * 100)}"></div></div><div class="mt-0.5 text-[9px] font-bold text-slate-500 leading-tight">${fmtVal(m0.actual, b.unit)}${m0.target > 0 ? '<span class="text-slate-400"> / ' + fmtVal(m0.target, b.unit) + '</span>' : ''}${m0.need > 0 ? '<br><span class="text-violet-600">Günlük gereken: ' + fmtVal(m0.need, b.unit) + '</span>' : ''}</div></div>`;
                 }).join('');
                 const rk = rankOf(lgSet ? c.rows.filter(r => lgSet.has(r.name)) : c.rows, currentId, 'overall');
                 const rkTxt = rk.rank > 0 ? `<span class="px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 text-[9px] font-black">KPI ${rk.rank}/${rk.total}</span>` : '';
@@ -11379,6 +11379,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.20</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.21</div>
 </body>
 </html>
