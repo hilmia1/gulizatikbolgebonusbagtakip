@@ -9665,6 +9665,22 @@
             const storeList = () => { const o = []; try { Object.keys(effectiveHierarchy || {}).forEach(bm => (effectiveHierarchy[bm] || []).forEach(x => o.push({ store: x, bm }))); } catch (e) {} return o; };
             const nameOf = (st, id) => { try { return ((((globalData.master_staff || {})[st] || {})[id] || {}).name) || findStaffNameGlobal(id) || ''; } catch (e) { return ''; } };
             const ambOfStore = (c, st) => { const o = (c.comp.ambassador && c.comp.ambassador[st]) || {}; return Object.keys(o).filter(k => o[k] && (((globalData.master_staff || {})[st] || {})[k])); };
+            const effRows = () => {
+                const daily = (globalData && globalData.daily) || {}, map = {};
+                storeList().forEach(x => { map[x.store] = { store: x.store, bm: x.bm, sales: 0, target: 0, pd: 0, days: 0 }; });
+                Object.keys(daily).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).forEach(d => {
+                    const day = daily[d] || {};
+                    Object.keys(map).forEach(st => {
+                        const o = day[st]; if (!o || !o.staff) return;
+                        let sa = 0, tg = 0, n = 0;
+                        Object.keys(o.staff).forEach(id => { const q = o.staff[id] || {}, v = Number(q.sales) || 0, t = Number(q.target) || 0; sa += v; tg += t; if (v > 0 || t > 0) n++; });
+                        if (!(sa > 0)) return;
+                        const r = map[st]; r.sales += sa; r.target += (Number(o.target) || tg); r.pd += Math.max(1, n); r.days++;
+                    });
+                });
+                return Object.keys(map).map(k => { const r = map[k]; r.pp = r.pd ? r.sales / r.pd : 0; r.avgN = r.days ? r.pd / r.days : 0; r.pct = r.target > 0 ? r.sales / r.target * 100 : null; return r; });
+            };
+            window.effSort = k => { window.__effSort = k; lastHtml = ''; ambPaint(); };
             const LVN = ['Henüz veri yok', 'Öğreniyor', 'Orta', 'Güçlü'];
             window.__ambTab = window.__ambTab || 'amb'; window.__ambOpen = !!window.__ambOpen;
             let lastHtml = '';
@@ -9674,6 +9690,18 @@
                 const tabBtn = (k, t) => `<button type="button" onclick="ambTab('${k}')" class="px-3 py-1.5 rounded-full text-[11px] font-black ${window.__ambTab === k ? 'bg-amber-400 text-slate-900' : 'bg-white/10 text-white'}">${t}</button>`;
                 let body = '';
                 if (!window.__ambOpen) body = '';
+                else if (window.__ambTab === 'eff') {
+                    const sort = window.__effSort || 'pp';
+                    const rows = effRows().filter(r => r.days >= 3);
+                    const key = r => sort === 'pct' ? (r.pct == null ? -1 : r.pct) : sort === 'tot' ? r.sales : r.pp;
+                    rows.sort((a, b) => key(b) - key(a));
+                    const sb = (k, t) => `<button type="button" onclick="effSort('${k}')" class="px-2.5 py-1 rounded-full text-[10px] font-black ${sort === k ? 'bg-sky-400 text-slate-900' : 'bg-white/10 text-white'}">${t}</button>`;
+                    const medal = i => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1) + '.';
+                    const avgPp = rows.length ? rows.reduce((a, r) => a + r.pp, 0) / rows.length : 0;
+                    body = `<div class="flex items-center gap-1.5 flex-wrap"><span class="text-[10px] font-black text-white/70">Sırala:</span>${sb('pp', 'Kişi başı')}${sb('pct', 'Hedef %')}${sb('tot', 'Toplam')}</div>
+                    <div class="text-[10px] text-white/60">Uygulamanın başladığı günden beri · en az 3 satış günü olan ${rows.length} mağaza · ort. kişi başı ${avgPp.toFixed(2)} adet/gün. "Kişi başı" = toplam satış ÷ (her gün çalışan kişi sayıları toplamı), yani kadro büyüklüğünden bağımsız adil kıyas.</div>
+                    <div class="max-h-96 overflow-y-auto space-y-1">${rows.map((r, i) => `<div class="bg-white/10 rounded-lg px-2.5 py-1.5"><div class="flex items-center justify-between gap-2 text-[11px] font-black"><span class="truncate">${medal(i)} ${E(r.store)} <span class="text-white/50 font-bold">· ${E(r.bm)}</span></span><span class="shrink-0 ${r.pp >= avgPp * 1.2 ? 'text-emerald-300' : r.pp < avgPp * 0.8 ? 'text-rose-300' : 'text-sky-200'}">${r.pp.toFixed(2)} /kişi·gün</span></div><div class="text-[10px] font-bold text-white/70 mt-0.5">👥 ort. ${r.avgN.toFixed(1)} kişi · 🛒 ${r.sales} adet${r.pct != null ? ' · 🎯 %' + Math.round(r.pct) + ' hedef (' + r.target + ')' : ''} · ${r.days} gün</div></div>`).join('') || '<div class="text-[11px] text-white/60">Henüz yeterli veri yok.</div>'}</div>`;
+                }
                 else if (!c) body = '<div class="text-xs text-white/70">Aktif KPI yarışması yok.</div>';
                 else if (window.__ambTab === 'amb') {
                     const rows = storeList().map(x => ({ ...x, a: ambOfStore(c, x.store) }));
@@ -9693,7 +9721,7 @@
                     <div class="max-h-72 overflow-y-auto space-y-1">${rows.map(r => `<div class="flex items-center justify-between gap-2 bg-white/10 rounded-lg px-2.5 py-1.5 text-[11px] font-bold"><span class="truncate">${E(r.store)} <span class="text-white/50">· ${E(r.bm)}</span></span><span class="shrink-0 font-black ${r.l >= 3 ? 'text-emerald-300' : r.l === 2 ? 'text-sky-300' : r.l === 1 ? 'text-amber-300' : 'text-rose-300'}">🧠 ${dots(r.l)} ${LVN[r.l]}</span></div>`).join('')}</div>
                     <div class="text-[10px] text-white/50">Tahmin gücü, mağazanın KPI satış verisi biriktikçe artar (●○○○ → ●●●●).</div>`;
                 }
-                return `<div class="flex items-center justify-between gap-2"><div class="font-black text-sm">🌟 KPI Elçisi · 🧠 Tahmin Gücü</div><button type="button" onclick="ambToggle()" class="px-3 py-1.5 rounded-full bg-white/15 text-white text-[11px] font-black">${window.__ambOpen ? 'Gizle ▲' : 'Göster ▼'}</button></div>${window.__ambOpen ? `<div class="flex gap-1.5">${tabBtn('amb', '🌟 KPI Elçisi')}${tabBtn('lvl', '🧠 Tahmin Gücü')}</div>` : ''}${body}`;
+                return `<div class="flex items-center justify-between gap-2"><div class="font-black text-sm">🌟 KPI Elçisi · 🧠 Tahmin Gücü · 📊 Verimlilik</div><button type="button" onclick="ambToggle()" class="px-3 py-1.5 rounded-full bg-white/15 text-white text-[11px] font-black">${window.__ambOpen ? 'Gizle ▲' : 'Göster ▼'}</button></div>${window.__ambOpen ? `<div class="flex gap-1.5">${tabBtn('amb', '🌟 KPI Elçisi')}${tabBtn('lvl', '🧠 Tahmin Gücü')}${tabBtn('eff', '📊 Verimlilik')}</div>` : ''}${body}`;
             };
             window.ambPaint = function () {
                 try {
@@ -11342,6 +11370,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.18</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.19</div>
 </body>
 </html>
