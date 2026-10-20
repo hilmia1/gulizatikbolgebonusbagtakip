@@ -240,6 +240,7 @@
     #wege-tour { position: fixed; inset: 0; z-index: 9990; background: rgba(2,24,30,.6); display: none; align-items: center; justify-content: center; padding: 16px; }
     #wege-tour.show { display: flex; }
 
+    body.kpi-all-off #topbar-mode-btn, body.kpi-all-off .mode-btn-kpi, body.kpi-all-off .kpi-ui { display: none !important; }
     /* ===== Mod geçiş efekti ve KPI teması ===== */
     .app-topbar { transition: background .6s ease; }
     body.kpi-mode .app-topbar { background: linear-gradient(90deg,#241a63 0%,#4b34c9 55%,#0b6f8a 100%) !important; }
@@ -1004,6 +1005,14 @@
                 </div>
             </details>
 
+            <!-- KPI TEK TUŞ: tüm ekranlardan kaldır -->
+            <div class="bg-gradient-to-r from-rose-950 to-slate-800 p-4 rounded-2xl border border-rose-700/60 shadow-lg flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+                <div class="min-w-0">
+                    <div class="text-rose-100 font-black text-sm"><i class="fa-solid fa-power-off mr-2"></i>KPI'Yİ TÜM EKRANLARDAN KALDIR (TEK TUŞ)</div>
+                    <div class="text-[11px] text-slate-300 mt-0.5">Mağaza, bölge müdürü ve Güliz Atik ekranlarından KPI geçiş butonu, gidişat, elçi, ürün girişi ve mesajlar dahil her şey kalkar; sadece <b>Bonus Pack ve Odak</b> kalır. Sistem Merkezi KPI'yı görmeye devam eder. İstediğin an geri açılır.</div>
+                </div>
+                <button type="button" id="kpi-off-btn" onclick="kpiAllOffToggle()" class="shrink-0 px-4 py-2.5 rounded-xl border font-black text-xs transition"></button>
+            </div>
             <!-- KPI: MAĞAZA EKRANLARINA YANSIT + KPI GİRİŞİ -->
             <div class="bg-gradient-to-r from-violet-950 to-slate-800 p-4 rounded-2xl border border-violet-700/50 shadow-lg space-y-3">
                 <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
@@ -1207,7 +1216,7 @@
                             <button type="button" onclick="openOdakModal()" class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5 w-max">
                                 <i class="fa-solid fa-star animate-pulse text-amber-300"></i> Odak Ürün
                             </button>
-                            <button type="button" onclick="openKpiModal()" class="px-3 py-1.5 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5 w-max">
+                            <button type="button" onclick="openKpiModal()" class="kpi-ui px-3 py-1.5 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5 w-max">
                                 <i class="fa-solid fa-star animate-pulse text-cyan-100"></i> KPI Ürünler
                             </button>
                             <button type="button" id="stockout-btn" onclick="openStockoutModal()" class="px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5 w-max">
@@ -1349,7 +1358,7 @@
                         <button type="button" onclick="openOdakModal()" class="px-2 py-1 bg-purple-500 hover:bg-purple-400 rounded-full shadow-md transition flex items-center gap-1 text-[10px] font-bold border border-purple-300">
                             <i class="fa-solid fa-star text-amber-300"></i> Odak Ürün
                         </button>
-                        <button type="button" onclick="openKpiModal()" class="px-2 py-1 bg-cyan-500 hover:bg-cyan-400 rounded-full shadow-md transition flex items-center gap-1 text-[10px] font-bold border border-cyan-300">
+                        <button type="button" onclick="openKpiModal()" class="kpi-ui px-2 py-1 bg-cyan-500 hover:bg-cyan-400 rounded-full shadow-md transition flex items-center gap-1 text-[10px] font-bold border border-cyan-300">
                             <i class="fa-solid fa-star text-cyan-100"></i> KPI Ürünler
                         </button>
                     </div>
@@ -9230,6 +9239,7 @@
             return 'adet';   // mağazada ciro (TL) girilmez; ekip arkadaşları ADET girer, ciroyu merkez ertesi gün girer
         }
         function ctxGet() {
+            try { if (window.kpiAllOff && kpiAllOff() && currentRole !== 'central' && currentRole !== 'kcentral') return null; } catch (e) {}
             const k = (globalData && globalData.kpi) || {};
             const cid = k.active;
             const comp = cid && k.comps && k.comps[cid];
@@ -9526,6 +9536,7 @@
         window.updateModeButton = updateModeButton;
 
         window.setMode = function (mode) {
+            try { if (mode === 'kpi' && window.kpiAllOff && kpiAllOff() && currentRole !== 'central' && currentRole !== 'kcentral') mode = 'bonus'; } catch (e) {}
             window.kpiMode = (mode === 'kpi');
             if (currentRole === '') {
                 document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
@@ -9535,6 +9546,7 @@
         };
 
         function open(role, id, push) {
+            try { if (window.kpiAllOff && kpiAllOff() && currentRole !== 'central' && currentRole !== 'kcentral') return; } catch (e) {}
             if (kpiLocked()) { showKpiTeaser(); return; }
             if (push && currentRole) navStack.push({ role: currentRole, id: currentId });
             currentRole = role; currentId = id || ''; window.kpiMode = true;
@@ -9664,9 +9676,11 @@
         // MAĞAZA EKRANI: KPI gidişat şeridi + liderler kartı + Sistem Merkezi anahtarları
         // ------------------------------------------------------------------
         const stg = () => (globalData && globalData.settings) || {};
-        window.kpiShowOn = () => stg().kpiShow === true;
-        window.kpiEntryOn = () => stg().kpiEntry === true;
-        window.kpiCoachOn = () => stg().kpiCoach !== false;
+        window.kpiAllOff = () => stg().kpiOff === true;   // Sistem Merkezi tek tuş: KPI her yerden kalksın
+        const kpiHidden = () => window.kpiAllOff() && currentRole !== 'central' && currentRole !== 'kcentral';
+        window.kpiShowOn = () => stg().kpiShow === true && !kpiHidden();
+        window.kpiEntryOn = () => stg().kpiEntry === true && !kpiHidden();
+        window.kpiCoachOn = () => stg().kpiCoach !== false && !kpiHidden();
 
         // ===== SİSTEM MERKEZİ: KPI Elçisi durumu + mağaza bazlı Tahmin Gücü + mağazaya özel mesaj =====
         (function ambMsg() { try {
@@ -9772,6 +9786,7 @@
                     const m = (role === 'store' && currentId && globalData && globalData.storemsg) ? globalData.storemsg[currentId] : null;
                     let show = !!(m && m.text);
                     if (show) { let dis = ''; try { dis = localStorage.getItem('bb_smsg_' + currentId) || ''; } catch (e) {} if (String(dis) === String(m.ts)) show = false; }
+                    if (show && m.kind === 'amb' && window.kpiAllOff && kpiAllOff()) show = false;
                     if (show && m.kind === 'amb') { try { const c = ctxGet(); if (c && ambOfStore(c, currentId).length) show = false; } catch (e) {} }
                     if (!show) { if (h) { h.innerHTML = ''; h.className = 'hidden'; } return; }
                     if (!h) { const a = document.getElementById('lg-board-store') || document.getElementById('store-podium-grid'); if (!a || !a.parentNode) return; h = document.createElement('div'); h.id = 'store-msg'; a.parentNode.insertBefore(h, a); }
@@ -9784,7 +9799,27 @@
                 try { const m = globalData.storemsg && globalData.storemsg[currentId]; if (m) localStorage.setItem('bb_smsg_' + currentId, String(m.ts)); } catch (e) {}
                 storeMsgPaint();
             };
-            setInterval(() => { try { ambPaint(); storeMsgPaint(); } catch (e) {} }, 2500);
+            window.kpiOffApply = function () {
+                try {
+                    const hid = kpiHidden();
+                    if (document.body && document.body.classList) document.body.classList.toggle('kpi-all-off', !!hid);
+                    if (hid && window.kpiMode && window.switchMode) { if (currentRole === '') window.setMode('bonus'); else window.switchMode(); }
+                    const b = document.getElementById('kpi-off-btn');
+                    if (b) {
+                        const off = kpiAllOff();
+                        b.className = 'shrink-0 px-4 py-2.5 rounded-xl border font-black text-xs transition ' + (off ? 'bg-rose-600 text-white border-rose-300 shadow-lg' : 'bg-slate-800 text-slate-200 border-slate-500 hover:bg-slate-700');
+                        b.textContent = off ? '⛔ KPI KALDIRILDI · geri aç' : '🚫 KPI\'yi tüm ekranlardan kaldır';
+                    }
+                } catch (e) {}
+            };
+            window.kpiAllOffToggle = function () {
+                if (!window.__DEMO && currentRole !== 'central') return alert('Bu ayar için Sistem Merkezi girişi gerekir.');
+                const off = kpiAllOff();
+                const msg = off ? 'KPI tekrar açılsın mı? Önceki KPI ayarları (yansıt/giriş/koç) kaldığı gibi geri gelir.' : 'KPI tüm ekranlardan kaldırılsın mı?\n\nMağaza, bölge ve Güliz Atik ekranlarında KPI ile ilgili her şey (geçiş butonu, gidişat, elçi, ürün girişi, mesajlar) gizlenir. Yalnızca Bonus Pack ve Odak kalır. Sistem Merkezi KPI\'yı görmeye devam eder.';
+                if (!confirm(msg)) return;
+                try { const pr = dbRoot.child('settings').update({ kpiOff: !off }); if (pr && pr.catch) pr.catch(() => alert('Kaydedilemedi. database.rules.json dosyasının son halini Firebase Rules bölümünde yayınladınız mı?')); } catch (e) { alert('Kaydedilemedi.'); }
+            };
+            setInterval(() => { try { ambPaint(); storeMsgPaint(); kpiOffApply(); } catch (e) {} }, 2500);
         } catch (e) { console.error('ambMsg', e); } })();
         const selKeys = c => {
             const arr = String(stg().kpiBrands || '').split(',').filter(x => c.brands.some(b => b.key === x));
@@ -10093,6 +10128,26 @@
             const lvl = maxSeen < 1 ? 0 : maxSeen < 4 ? 1 : maxSeen < 8 ? 2 : 3;
             return { items, tl, allDone, lvl, behind: items.some(i => i.st === 'behind') || tl.some(t => t.st === 'behind') };
         }
+        // KPI Mağaza Paneli (mağaza müdürü): mağazanın bugün yapması gereken günlük hedef
+        function dailyTargetHtml(c, st) {
+            try {
+                if (!c || !c.live || !st) return '';
+                const left = Math.max(1, c.daysLeft + 1);
+                const rows = c.brands.map(b => {
+                    const T = c.tStore(st, b.key); if (!(T > 0)) return null;
+                    const A = c.aStore(st, b.key), tv = (c.todayVal[st] && c.todayVal[st][b.key]) || 0;
+                    const before = Math.max(0, T - (A - tv));
+                    const goal = before > 0 ? Math.ceil(before / left) : 0;
+                    return { b, T, A, tv, goal, done: A >= T };
+                }).filter(Boolean);
+                if (!rows.length) return '';
+                const chip = r => {
+                    const p = r.goal > 0 ? Math.min(100, r.tv / r.goal * 100) : 100, ok = r.done || r.tv >= r.goal;
+                    return `<div class="min-w-0 rounded-xl bg-white border ${ok ? 'border-emerald-300' : 'border-teal-200'} px-3 py-2"><div class="flex items-baseline justify-between gap-2"><span class="truncate text-[12px] font-black text-slate-700">${esc(r.b.name)}</span><span class="text-[11px] font-black ${ok ? 'text-emerald-600' : 'text-teal-700'}">${r.done ? '✅ hedef tamam' : fmtVal(r.tv, r.b.unit) + ' / ' + fmtVal(r.goal, r.b.unit)}</span></div><div class="h-1.5 rounded-full bg-slate-100 mt-1.5 overflow-hidden"><div class="h-full rounded-full" style="width:${p}%;background:${ok ? '#10b981' : '#14b8a6'}"></div></div><div class="mt-1 text-[10px] font-bold text-slate-400">Ay hedefi ${fmtVal(r.T, r.b.unit)} · şu an ${fmtVal(r.A, r.b.unit)}</div></div>`;
+                };
+                return `<div class="rounded-2xl border border-teal-200 bg-gradient-to-r from-teal-50 to-emerald-50 p-3"><div class="text-[10px] font-black text-teal-700 uppercase tracking-wider">🎯 Bugünkü günlük hedefin · ${c.daysLeft} gün kaldı</div><div class="text-[11px] font-bold text-slate-500 mb-2">Ay sonunda hedefi yakalamak için mağazanın bugün yapması gereken (her gün kalan hedefe göre güncellenir)</div><div class="grid grid-cols-1 sm:grid-cols-3 gap-2">${rows.map(chip).join('')}</div></div>`;
+            } catch (e) { return ''; }
+        }
         function coachHtml(c, st) {
             try {
                 if (!kpiCoachOn() || !c || !c.live || !st) return '';
@@ -10115,7 +10170,7 @@
             } catch (e) { return ''; }
         }
         window.kpiCoachHtml = coachHtml;
-        window.__kpiT = { ctxGet: ctxGet, coachPlan: coachPlan };
+        window.__kpiT = { ctxGet: ctxGet, coachPlan: coachPlan, dailyTargetHtml: dailyTargetHtml };
 
         // ------------------------------------------------------------------
         // EKİP ARKADAŞI KPI GÖREVLERİ: Bonus Pack hedeflerine göre yapay zeka dağıtır, mağaza değiştirebilir
@@ -10426,7 +10481,7 @@
                 statBox('Genel Başarı', ov === null ? '—' : '%' + Math.round(ov)) +
                 statBox('Genel Sıra', ovRank.rank > 0 ? '#' + ovRank.rank + ' <span class="text-sm text-cyan-100">/ ' + ovRank.total + '</span>' : '—')) +
                 (hasTarget ? '' : `<div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 text-sm font-bold"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Mağazanız için bu yarışmada henüz hedef girilmemiş. Hedef Sistem Merkezi tarafından girilir.</div>`) +
-                podiumHost() + coachHtml(c, st) +
+                podiumHost() + dailyTargetHtml(c, st) + coachHtml(c, st) +
                 `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">${totalCards(ms, c)}${cards}</div>
                 ${staffReport(c, c.staff.filter(r => r.store === st), 'Mağazamın Ekip Arkadaşı Raporu (KPI adet markaları)')}
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4"><h3 class="font-bold text-slate-700 text-sm mb-2"><i class="fa-solid fa-ranking-star text-amber-500 mr-2"></i>Sıralamam (tüm mağazalar arasında)</h3><div class="flex flex-wrap gap-2">${rankChips}</div></div>
@@ -11379,6 +11434,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.21</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.23</div>
 </body>
 </html>
