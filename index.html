@@ -9658,6 +9658,97 @@
         window.kpiShowOn = () => stg().kpiShow === true;
         window.kpiEntryOn = () => stg().kpiEntry === true;
         window.kpiCoachOn = () => stg().kpiCoach !== false;
+
+        // ===== SİSTEM MERKEZİ: KPI Elçisi durumu + mağaza bazlı Tahmin Gücü + mağazaya özel mesaj =====
+        (function ambMsg() { try {
+            const E = v => String(v == null ? '' : v).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+            const storeList = () => { const o = []; try { Object.keys(effectiveHierarchy || {}).forEach(bm => (effectiveHierarchy[bm] || []).forEach(x => o.push({ store: x, bm }))); } catch (e) {} return o; };
+            const nameOf = (st, id) => { try { return ((((globalData.master_staff || {})[st] || {})[id] || {}).name) || findStaffNameGlobal(id) || ''; } catch (e) { return ''; } };
+            const ambOfStore = (c, st) => { const o = (c.comp.ambassador && c.comp.ambassador[st]) || {}; return Object.keys(o).filter(k => o[k] && (((globalData.master_staff || {})[st] || {})[k])); };
+            const LVN = ['Henüz veri yok', 'Öğreniyor', 'Orta', 'Güçlü'];
+            window.__ambTab = window.__ambTab || 'amb'; window.__ambOpen = !!window.__ambOpen;
+            let lastHtml = '';
+            const dots = l => '●'.repeat(l + 1) + '○'.repeat(3 - l);
+            const build = () => {
+                const c = ctxGet();
+                const tabBtn = (k, t) => `<button type="button" onclick="ambTab('${k}')" class="px-3 py-1.5 rounded-full text-[11px] font-black ${window.__ambTab === k ? 'bg-amber-400 text-slate-900' : 'bg-white/10 text-white'}">${t}</button>`;
+                let body = '';
+                if (!window.__ambOpen) body = '';
+                else if (!c) body = '<div class="text-xs text-white/70">Aktif KPI yarışması yok.</div>';
+                else if (window.__ambTab === 'amb') {
+                    const rows = storeList().map(x => ({ ...x, a: ambOfStore(c, x.store) }));
+                    const no = rows.filter(r => !r.a.length), yes = rows.filter(r => r.a.length);
+                    const sm = (globalData && globalData.storemsg) || {};
+                    const txt = window.__ambTxt != null ? window.__ambTxt : '🌟 Lütfen KPI Elçinizi seçiniz!';
+                    body = `<div class="flex flex-wrap gap-2 text-[11px] font-black"><span class="px-2.5 py-1 rounded-full bg-emerald-500/90 text-white">✅ Seçen: ${yes.length}</span><span class="px-2.5 py-1 rounded-full bg-rose-500/90 text-white">⏳ Seçmeyen: ${no.length}</span></div>
+                    <div class="bg-black/20 rounded-xl p-2.5 space-y-2"><div class="text-[10px] font-black text-white/70 uppercase">Seçmeyen mağazalara mesaj (yalnızca o mağazanın ekranında görünür)</div>
+                    <input id="amb-txt" type="text" maxlength="160" value="${E(txt)}" oninput="window.__ambTxt=this.value" class="w-full px-3 py-2 rounded-lg text-xs font-bold text-slate-800">
+                    <div class="flex gap-2 flex-wrap"><button type="button" onclick="ambMsgSend()" class="px-3 py-2 rounded-lg bg-amber-400 text-slate-900 text-xs font-black active:scale-95">📣 Seçmeyen ${no.length} mağazaya gönder</button><button type="button" onclick="ambMsgClear()" class="px-3 py-2 rounded-lg bg-white/10 text-white text-xs font-black active:scale-95">🗑️ Mesajları kaldır</button></div></div>
+                    <div><div class="text-[11px] font-black text-rose-200 mb-1">⏳ Seçmeyenler (${no.length})</div><div class="max-h-56 overflow-y-auto space-y-1">${no.map(r => `<div class="flex items-center justify-between gap-2 bg-white/10 rounded-lg px-2.5 py-1.5 text-[11px] font-bold"><span class="truncate">${E(r.store)} <span class="text-white/50">· ${E(r.bm)}</span></span>${sm[r.store] && sm[r.store].kind === 'amb' ? '<span class="shrink-0 text-amber-300 font-black">📨 gönderildi</span>' : ''}</div>`).join('') || '<div class="text-[11px] text-white/60">Hepsi seçmiş 🎉</div>'}</div></div>
+                    <div><div class="text-[11px] font-black text-emerald-200 mb-1">✅ Seçenler (${yes.length})</div><div class="max-h-56 overflow-y-auto space-y-1">${yes.map(r => `<div class="bg-white/10 rounded-lg px-2.5 py-1.5 text-[11px] font-bold"><span>${E(r.store)}</span> <span class="text-amber-200">🌟 ${r.a.map(id => E(nameOf(r.store, id) || 'Ekip arkadaşı')).join(', ')}</span></div>`).join('') || '<div class="text-[11px] text-white/60">Henüz seçen yok</div>'}</div></div>`;
+                } else {
+                    const rows = storeList().map(x => { let l = 0; try { l = coachPlan(c, x.store).lvl; } catch (e) {} return { ...x, l }; }).sort((a, b) => a.l - b.l || String(a.store).localeCompare(String(b.store), 'tr'));
+                    const cnt = [0, 0, 0, 0]; rows.forEach(r => cnt[r.l]++);
+                    body = `<div class="flex flex-wrap gap-1.5 text-[10px] font-black">${cnt.map((n, i) => `<span class="px-2.5 py-1 rounded-full bg-white/10 text-white">${dots(i)} ${LVN[i]}: ${n}</span>`).join('')}</div>
+                    <div class="max-h-72 overflow-y-auto space-y-1">${rows.map(r => `<div class="flex items-center justify-between gap-2 bg-white/10 rounded-lg px-2.5 py-1.5 text-[11px] font-bold"><span class="truncate">${E(r.store)} <span class="text-white/50">· ${E(r.bm)}</span></span><span class="shrink-0 font-black ${r.l >= 3 ? 'text-emerald-300' : r.l === 2 ? 'text-sky-300' : r.l === 1 ? 'text-amber-300' : 'text-rose-300'}">🧠 ${dots(r.l)} ${LVN[r.l]}</span></div>`).join('')}</div>
+                    <div class="text-[10px] text-white/50">Tahmin gücü, mağazanın KPI satış verisi biriktikçe artar (●○○○ → ●●●●).</div>`;
+                }
+                return `<div class="flex items-center justify-between gap-2"><div class="font-black text-sm">🌟 KPI Elçisi · 🧠 Tahmin Gücü</div><button type="button" onclick="ambToggle()" class="px-3 py-1.5 rounded-full bg-white/15 text-white text-[11px] font-black">${window.__ambOpen ? 'Gizle ▲' : 'Göster ▼'}</button></div>${window.__ambOpen ? `<div class="flex gap-1.5">${tabBtn('amb', '🌟 KPI Elçisi')}${tabBtn('lvl', '🧠 Tahmin Gücü')}</div>` : ''}${body}`;
+            };
+            window.ambPaint = function () {
+                try {
+                    if (typeof currentRole === 'undefined' || currentRole !== 'central') return;
+                    const lg = document.getElementById('lg-card'); if (!lg || !lg.parentNode) return;
+                    let h = document.getElementById('amb-card');
+                    if (!h) { h = document.createElement('div'); h.id = 'amb-card'; h.className = 'bg-gradient-to-r from-amber-900 to-rose-900 text-white p-4 rounded-2xl border border-amber-600/60 shadow-lg space-y-3'; lg.parentNode.insertBefore(h, lg.nextSibling); }
+                    const html = build(); if (html === lastHtml && h.innerHTML) return;
+                    const ae = document.activeElement; if (ae && ae.id === 'amb-txt') return;   // yazarken yenileme
+                    const q = h.querySelectorAll ? Array.from(h.querySelectorAll('.overflow-y-auto')) : [], sc = q.map(n => n.scrollTop);
+                    h.innerHTML = html; lastHtml = html;
+                    if (h.querySelectorAll) h.querySelectorAll('.overflow-y-auto').forEach((n, i) => { if (sc[i]) n.scrollTop = sc[i]; });
+                } catch (e) { console.error('ambPaint', e); }
+            };
+            window.ambToggle = () => { window.__ambOpen = !window.__ambOpen; lastHtml = ''; ambPaint(); };
+            window.ambTab = k => { window.__ambTab = k; lastHtml = ''; ambPaint(); };
+            window.ambMsgSend = function () {
+                try {
+                    const c = ctxGet(); if (!c) return alert('Aktif KPI yarışması yok.');
+                    const txt = String((document.getElementById('amb-txt') || {}).value || window.__ambTxt || '').trim().slice(0, 160);
+                    if (!txt) return alert('Mesaj boş olamaz.');
+                    const no = storeList().filter(x => !ambOfStore(c, x.store).length).map(x => x.store);
+                    if (!no.length) return alert('Tüm mağazalar KPI Elçisini seçmiş 🎉');
+                    if (!confirm(no.length + ' mağazanın ekranına şu mesaj gönderilsin mi?\n\n' + txt)) return;
+                    const upd = {}, ts = Date.now(); no.forEach(x => { upd[x] = { text: txt, ts, by: 'merkez', kind: 'amb' }; });
+                    const pr = dbRoot.child('storemsg').update(upd);
+                    const ok = () => { lastHtml = ''; ambPaint(); alert('Mesaj ' + no.length + ' mağazaya gönderildi.'); };
+                    if (pr && pr.then) pr.then(ok).catch(() => alert('Gönderilemedi (yetki/kural).')); else ok();
+                } catch (e) { alert('Gönderilemedi.'); }
+            };
+            window.ambMsgClear = function () {
+                try { if (!confirm('Mağaza ekranlarındaki tüm merkez mesajları kaldırılsın mı?')) return; const pr = dbRoot.child('storemsg').remove(); const ok = () => { lastHtml = ''; ambPaint(); }; if (pr && pr.then) pr.then(ok).catch(() => alert('Kaldırılamadı.')); else ok(); } catch (e) {}
+            };
+            // Mağaza ekranı: yalnızca o mağazaya gönderilen mesaj; elçi seçilince kendiliğinden kalkar
+            window.storeMsgPaint = function () {
+                try {
+                    const role = typeof currentRole !== 'undefined' ? currentRole : '';
+                    let h = document.getElementById('store-msg');
+                    const m = (role === 'store' && currentId && globalData && globalData.storemsg) ? globalData.storemsg[currentId] : null;
+                    let show = !!(m && m.text);
+                    if (show) { let dis = ''; try { dis = localStorage.getItem('bb_smsg_' + currentId) || ''; } catch (e) {} if (String(dis) === String(m.ts)) show = false; }
+                    if (show && m.kind === 'amb') { try { const c = ctxGet(); if (c && ambOfStore(c, currentId).length) show = false; } catch (e) {} }
+                    if (!show) { if (h) { h.innerHTML = ''; h.className = 'hidden'; } return; }
+                    if (!h) { const a = document.getElementById('lg-board-store') || document.getElementById('store-podium-grid'); if (!a || !a.parentNode) return; h = document.createElement('div'); h.id = 'store-msg'; a.parentNode.insertBefore(h, a); }
+                    h.className = 'rounded-2xl p-3 sm:p-4 shadow-lg border-2 border-amber-300 bg-gradient-to-r from-amber-100 to-yellow-50 flex items-center gap-3';
+                    const html = '<div class="text-2xl shrink-0">📣</div><div class="min-w-0 flex-1"><div class="text-[10px] font-black uppercase tracking-wide text-amber-700">Merkezden mesaj</div><div class="text-sm font-black text-slate-800 leading-snug">' + E(m.text) + '</div></div><button type="button" onclick="storeMsgDismiss()" class="shrink-0 px-3 py-1.5 rounded-lg bg-amber-500 text-white text-xs font-black active:scale-95">Tamam</button>';
+                    if (h.__h !== html) { h.innerHTML = html; h.__h = html; }
+                } catch (e) {}
+            };
+            window.storeMsgDismiss = function () {
+                try { const m = globalData.storemsg && globalData.storemsg[currentId]; if (m) localStorage.setItem('bb_smsg_' + currentId, String(m.ts)); } catch (e) {}
+                storeMsgPaint();
+            };
+            setInterval(() => { try { ambPaint(); storeMsgPaint(); } catch (e) {} }, 2500);
+        } catch (e) { console.error('ambMsg', e); } })();
         const selKeys = c => {
             const arr = String(stg().kpiBrands || '').split(',').filter(x => c.brands.some(b => b.key === x));
             return arr.length ? arr : c.brands.map(b => b.key);
@@ -11251,6 +11342,6 @@
 
 
 </script>
-    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.16</div>
+    <div id="build-stamp" style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.45;padding:14px 0 18px">W•EGE · Ege Bölgesi · v10.3.17</div>
 </body>
 </html>
