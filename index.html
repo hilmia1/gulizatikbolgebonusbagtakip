@@ -302,6 +302,7 @@ button.htile{cursor:pointer} button.htile:hover{border-color:var(--accent)}
 .refl{display:inline-flex;align-items:center;gap:3px}
 .refl-inp{width:58px;min-height:28px!important;padding:2px 6px!important;text-align:right;font-family:var(--f-num)}
 .refl-reset{margin-left:4px;min-height:26px!important;padding:2px 7px!important}
+.src.part{background:var(--gold-soft);color:var(--gold)}
 .login{position:fixed;inset:0;z-index:60;background:var(--bg);display:grid;place-items:center;padding:16px}
 .login-card{width:min(420px,100%);display:grid;gap:12px}
 .print-only{display:none}
@@ -831,8 +832,8 @@ const DEF = { target: 0.35, kdv: 1, hasPct: 80, digPct: 50, sayim: 0, startWeek:
 let settings = { ...DEF };
 let state = { store: null, week: null, period: 'all', tab: 'panel', rowLimit: 60 };
 let sliders = {};
-try { const s = JSON.parse(localStorage.getItem('kt-ui') || '{}'); Object.assign(state, { store: s.store || null, period: s.period || 'all', tab: s.tab || 'panel', dScope: s.dScope || 'week', mxMode: s.mxMode || 'fis' }); } catch (e) {}
-const saveUi = () => { try { localStorage.setItem('kt-ui', JSON.stringify({ store: state.store, period: state.period, tab: state.tab, dScope: state.dScope, mxMode: state.mxMode })); } catch (e) {} };
+try { const s = JSON.parse(localStorage.getItem('kt-ui') || '{}'); Object.assign(state, { store: s.store || null, period: s.period || 'all', tab: s.tab || 'panel', dScope: s.dScope || 'week', mxMode: s.mxMode || 'fis', cntSeen: s.cntSeen || null }); } catch (e) {}
+const saveUi = () => { try { localStorage.setItem('kt-ui', JSON.stringify({ store: state.store, period: state.period, tab: state.tab, dScope: state.dScope, mxMode: state.mxMode, cntSeen: state.cntSeen })); } catch (e) {} };
 
 /* ---------- derived ---------- */
 function isoWeekRange(yyyyww) {
@@ -872,8 +873,8 @@ function periodWeeks(sw) {
   if (state.period === '1') return sw.filter(w => w.week === state.week);
   if (state.period === 'cnt' || state.period === 'pcnt') {
     const cs = storeCounts(); if (!cs.length) return sw;
-    if (state.period === 'cnt') return sw.filter(w => weekInRange(w, cs.at(-1).date, null));
-    const c = cs.at(-1), p = cs.at(-2); return sw.filter(w => weekInRange(w, c.prevDate || p?.date || null, c.date));
+    if (state.period === 'cnt') return sliceWeeks(sw, cs.at(-1).date, null);
+    const c = cs.at(-1), p = cs.at(-2); return sliceWeeks(sw, c.prevDate || p?.date || null, c.date);
   }
   return sw.slice(-(+state.period));
 }
@@ -890,6 +891,7 @@ function render() {
   const sw = storeWeeks();
   if (!sw.some(w => w.week === state.week)) state.week = sw.at(-1).week;
   $('storeLine').textContent = `${sw[0].storeNo} · ${sw[0].storeName} · ${sw.length} hafta kayıtlı`;
+  try { ensureCounts(); const lcx = lastCount(); if (lcx && state.cntSeen !== countId(lcx)) { state.cntSeen = countId(lcx); state.period = 'cnt'; saveUi(); } } catch (e) {}
   $('periodSel').value = state.period;
   setTab(state.tab, true);
   renderMatrix(sw);
@@ -945,9 +947,9 @@ function renderMatrix(sw) {
   $('mxHead').innerHTML = `<tr>${r1}</tr><tr class="g2">${r2}</tr>`;
   const target = Math.abs(+settings.target || 0);
   const max = Math.max(1, ...sw.flatMap(w => { const s = weekStats(w); return cols.map(c => Math.abs(s.c[c.k] * fx(c.k))); }));
-  const __rev = sw.slice().reverse(); $('mxBody').innerHTML = __rev.map((w, __i) => {
+  const rowsSrc = (state.period === 'cnt' || state.period === 'pcnt') ? pw : sw; const __rev = rowsSrc.slice().reverse(); $('mxBody').innerHTML = __rev.map((w, __i) => {
     const s0 = weekStats(w), s = SAY ? simStats(s0) : s0; const id = docId(w); const inPeriod = pw.includes(w);
-    const editable = canWrite;
+    const editable = canWrite && !w.partial;
     const cell = c => {
       const v = s.c[c.k];
       const editableCell = editable && !SAY && (c.manual || (w.manualWeek && c.k !== 'dig'));
@@ -957,15 +959,16 @@ function renderMatrix(sw) {
     };
     const sales = editable && !SAY ? `<input class="cin sales" data-id="${esc(id)}" data-k="sales" value="${s.sales ? fmt(s.sales) : ''}" placeholder="0" inputmode="decimal" aria-label="Net satış H${wkNo(w.week)}">` : fmt(s.sales);
     const bad = s.pct != null && s.pct < 0 && Math.abs(s.pct) > target;
-    return countMarkers(w, __rev[__i - 1], cols.length + 6) + `<tr data-week="${esc(w.week)}" class="${w.week === state.week ? 'sel' : ''}" style="${inPeriod ? '' : 'opacity:.5'}">
-      <td class="stk s1" style="text-align:center">${pendingDelete === id ? `<button class="del" data-del-yes="${esc(id)}" type="button">Sil?</button> <button class="del" data-del-no type="button">×</button>` : (canWrite ? `<button class="del" data-del="${esc(id)}" type="button" aria-label="Haftayı sil">✕</button>` : '')}</td>
+    return (rowsSrc === sw ? countMarkers(w, __rev[__i - 1], cols.length + 6) : '') + `<tr data-week="${esc(w.week)}" class="${w.week === state.week ? 'sel' : ''}" style="${inPeriod ? '' : 'opacity:.5'}">
+      <td class="stk s1" style="text-align:center">${pendingDelete === id ? `<button class="del" data-del-yes="${esc(id)}" type="button">Sil?</button> <button class="del" data-del-no type="button">×</button>` : (canWrite && !w.partial ? `<button class="del" data-del="${esc(id)}" type="button" aria-label="Haftayı sil">✕</button>` : '')}</td>
       <td class="stk s2">${sales}</td>
-      <td class="wk stk s3">${wkNo(w.week)}<span class="src">${w.manualWeek ? 'EL' : 'PDF'}</span></td>
-      <td class="dt">${shortRange(w.week)}</td>
+      <td class="wk stk s3">${wkNo(w.week)}<span class="src">${w.manualWeek ? 'EL' : 'PDF'}</span>${w.partial ? `<span class="src part" title="Sayım tarihi bu haftanın içine düştü; sadece ${w.partDays} günü bu döneme ait">${w.partDays} gün</span>` : ''}</td>
+      <td class="dt">${w.partial ? fmtDate(w.partFrom.toISOString().slice(0, 10)).slice(0, 5) + '–' + fmtDate(w.partTo.toISOString().slice(0, 10)).slice(0, 5) : shortRange(w.week)}</td>
       ${cols.map(cell).join('')}
       <td class="tot ${sgnCls(s.net)}">${fmtS(s.net)}</td>
       <td class="rate-td">${ratePill(s.pct, target)}</td></tr>`;
   }).join('');
+  if (!__rev.length) { const lc0 = lastCount(); $('mxBody').innerHTML = `<tr><td colspan="${cols.length + 6}" class="empty" style="text-align:center!important;padding:22px!important">${state.period === 'cnt' && lc0 ? `Yeni sayım dönemi <b>${fmtDate(lc0.date)}</b> tarihinde başladı. Bu döneme ait fiş listesi yüklendikçe burada görünecek. Önceki haftalar için Dönem: <b>Önceki sayım dönemi</b> ya da <b>Tüm haftalar</b>.` : 'Bu dönemde hafta yok.'}</td></tr>`; }
   const T0 = totals(pw), T = SAY ? simStats(T0) : T0;
   $('mxFoot').innerHTML = `<tr><td class="stk s1"></td><td class="stk s2">${fmt(T.sales)}</td><td class="stk s3" style="text-align:center;font-family:var(--f-display)">TOPLAM</td><td></td>${cols.map(c => `<td class="${sgnCls(T.c[c.k])}">${fmtS(T.c[c.k])}</td>`).join('')}<td class="${sgnCls(T.net)}">${fmtS(T.net)}</td><td class="${T.pct != null && T.pct < 0 && Math.abs(T.pct) > target ? 'neg' : ''}">${T.pct == null ? '–' : '%' + fmt(T.pct)}</td></tr>`;
   // phone cards
@@ -2301,6 +2304,8 @@ function parseCountReport(items) {
   r.bench.rank = pick(/Kay[ıi]p s[ıi]ralamas[ıi]ndaki yeri\s*(\d+)/i);
   r.bench.counts = pick(/Y[ıi]l i[çc]inde yap[ıi]lan say[ıi]m adedi\s*(\d+)/i);
   if (r.unknown != null && r.knownNet != null && r.sales) { r.total = +(r.unknown + r.knownNet).toFixed(2); r.totalPct = +(r.total / r.sales * 100).toFixed(2); }
+  { const m = all.match(/Toplam Kay[ıi]p Oran[ıi][\s\S]{0,160}?(-?\s*\d+,\d+)\s*%/i); const v = m ? trNum(m[1]) : null; if (v != null && Math.abs(v) < 50) { r.officialPct = v; r.totalPct = v; } }
+  { const m = all.match(/-?\s*TRY\s*([\d.]+,\d{2})/i); if (m) { const v = trNum(m[1]); if (v != null) r.officialTotal = -Math.abs(v); } }
   return r.date && r.unknown != null ? r : null;
 }
 
@@ -2325,6 +2330,22 @@ function ensureCounts() {
 const storeCounts = () => Object.values(counts).filter(c => c.storeNo === state.store).sort((a, b) => String(a.date).localeCompare(String(b.date)));
 const lastCount = () => storeCounts().at(-1) || null;
 const weekInRange = (w, from, to) => { const t = thursdayOf(w.week); return (!from || t > dUTC(from)) && (!to || t <= dUTC(to)); };
+function weekMonday(yyyyww) { const d = sundayOf(yyyyww); d.setUTCDate(d.getUTCDate() - 6); return d; }
+function partOfWeek(w, from, to) {
+  const mon = weekMonday(w.week); const F = from ? dUTC(from) : null, TT = to ? dUTC(to) : null;
+  const inside = d => (!F || d > F) && (!TT || d <= TT);
+  let days = 0, first = null, last = null;
+  for (let i = 0; i < 7; i++) { const d = new Date(mon); d.setUTCDate(mon.getUTCDate() + i); if (inside(d)) { days++; first = first || d; last = d; } }
+  if (!days) return null; if (days === 7) return w;
+  const rows = (w.rows || []).filter(r => { const d = rowDate(r.date); return d ? inside(d) : inside(thursdayOf(w.week)); });
+  const fr = days / 7;
+  const part = { ...w, partial: true, partDays: days, partFrom: first, partTo: last, rows, types: null, netSales: salesOf(w) * fr, salesOverride: null };
+  if (w.manualWeek) part.cats = Object.fromEntries(Object.entries(w.cats || {}).map(([k, v]) => [k, (+v || 0) * fr]));
+  if (w.manual) part.manual = { manP: (+w.manual.manP || 0) * fr, manN: (+w.manual.manN || 0) * fr };
+  return part;
+}
+function sliceWeeks(sw, from, to) { return sw.map(w => partOfWeek(w, from, to)).filter(Boolean); }
+const dataDays = list => list.reduce((a, w) => a + (w.partDays || 7), 0);
 function defaultStartWeek(sw) { const lc = lastCount(); if (!lc) return null; return sw.find(w => thursdayOf(w.week) > dUTC(lc.date))?.week || null; }
 function isoWeeksBetween(fromDate, toWeek) {
   // all yyyyww whose Thursday is after fromDate, up to toWeek inclusive
@@ -2360,7 +2381,7 @@ function renderCounts(sw) {
   }
   const lc = cs.at(-1);
   // open period
-  const openW = sw.filter(w => weekInRange(w, lc.date, null));
+  const openW = sliceWeeks(sw, lc.date, null);
   const T = totals(openW);
   const expect = sw.length ? isoWeeksBetween(lc.date, sw.at(-1).week) : [];
   const have = new Set(openW.map(w => w.week));
@@ -2427,7 +2448,7 @@ function knownUnknownPie(absK, absU, c) {
 function countCard(c, prev, sw) {
   const from = c.prevDate || prev?.date || null;
   const target = Math.abs(+settings.target || 0);
-  const wk = sw.filter(w => weekInRange(w, from, c.date));
+  const wk = sliceWeeks(sw, from, c.date);
   const T = totals(wk);
   const expect = from && sw.length ? isoWeeksBetween(from, (() => { const d = dUTC(c.date); const t = new Date(d); const dow = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - dow); const yr = t.getUTCFullYear(); const jan4 = new Date(Date.UTC(yr, 0, 4)); const wn = 1 + Math.round(((t - jan4) / 864e5 - 3 + ((jan4.getUTCDay() + 6) % 7)) / 7); return `${yr}${String(wn).padStart(2, '0')}`; })()) : [];
   const total = c.total ?? ((c.unknown || 0) + (c.knownNet || 0));
@@ -2486,7 +2507,7 @@ function openCountForm() {
     if (!date || !sales) { $('cfMsg').innerHTML = '<div class="msg err">Tarih ve satış gerekli.</div>'; return; }
     const unkTxt = $('cfUnk').value.trim(); const unknown = /^\+/.test(unkTxt) ? Math.abs(parseIn(unkTxt)) : sgnNeg(unkTxt);
     let knownNet = $('cfKnown').value.trim() ? (/^\+/.test($('cfKnown').value.trim()) ? Math.abs(parseIn($('cfKnown').value)) : sgnNeg($('cfKnown').value)) : null;
-    if (knownNet == null) { const from = prevDate || lastCountBefore(date)?.date || null; knownNet = +totals(sw.filter(w => weekInRange(w, from, date))).net.toFixed(2); }
+    if (knownNet == null) { const from = prevDate || lastCountBefore(date)?.date || null; knownNet = +totals(sliceWeeks(sw, from, date)).net.toFixed(2); }
     const doc = { storeNo: state.store || st.storeNo || '', storeName: st.storeName || '', date, prevDate, sales, unknown, qty: $('cfQty').value.trim() ? parseInt($('cfQty').value, 10) : null, knownNet, known: [], categories: [], bench: { company: $('cfComp').value.trim() ? sgnNeg($('cfComp').value) : null }, note: $('cfNote').value.trim(), source: 'manual', createdAt: new Date().toISOString() };
     doc.unknownPct = +(unknown / sales * 100).toFixed(2); doc.total = +(unknown + knownNet).toFixed(2); doc.totalPct = +(doc.total / sales * 100).toFixed(2);
     try { await store.setCount(countId(doc), doc); toast('Sayım eklendi'); render(); } catch (err) { $('cfMsg').innerHTML = '<div class="msg err">Kaydedilemedi.</div>'; }
@@ -2530,7 +2551,7 @@ function learnFactors(sw, cs = storeCounts()) {
   const acc = {};
   for (let i = 0; i < cs.length; i++) {
     const c = cs[i], from = c.prevDate || cs[i - 1]?.date || null; if (!from || !(c.known || []).length) continue;
-    const wk = sw.filter(w => weekInRange(w, from, c.date)); if (!wk.length) continue;
+    const wk = sliceWeeks(sw, from, c.date); if (!wk.length) continue;
     const T = totals(wk); const R = reportByCat(c);
     for (const k of OFF_CATS) { if (Math.abs(T.c[k]) < 200) continue; const ratio = (R[k] || 0) / T.c[k]; if (!isFinite(ratio)) continue; (acc[k] = acc[k] || []).push({ ratio: Math.max(0, Math.min(1.5, ratio)), date: c.date, n: wk.length }); }
     const exp = isoWeeksBetween(from, wk.at(-1).week).length;
@@ -2555,9 +2576,9 @@ function countProjection(sw) { return projectCore(sw, storeCounts(), settings.sa
 function projectCore(sw, cs, targetDate) {
   if (!cs.length || !sw.length) return null;
   const lc = cs.at(-1); const target = Math.abs(+settings.target || 0);
-  const openW = sw.filter(w => weekInRange(w, lc.date, null));
+  const openW = sliceWeeks(sw, lc.date, null);
   const T = totals(openW);
-  const S4 = openW.slice(-4).map(weekStats);
+  const S4 = openW.slice(-4).map(w => { const st = weekStats(w), k = 7 / (w.partDays || 7); return { ...st, sales: st.sales * k, c: Object.fromEntries(Object.entries(st.c).map(([a, v]) => [a, v * k])) }; });
   const avgC = {}; for (const k of OFF_CATS) avgC[k] = S4.length ? S4.reduce((a, s) => a + s.c[k], 0) / S4.length : 0;
   const avgSales = S4.length ? S4.reduce((a, s) => a + s.sales, 0) / S4.length : 0;
   const lastEnd = openW.length ? sundayOf(openW.at(-1).week) : dUTC(lc.date);
@@ -2668,7 +2689,7 @@ function backtest(c, sw) {
   const prior = storeCounts().filter(x => x.date < c.date);
   if (!prior.length) return { reason: 'ilk' };
   const p = prior.at(-1);
-  const wk = sw.filter(w => weekInRange(w, p.date, c.date));
+  const wk = sliceWeeks(sw, p.date, c.date);
   if (!wk.length) return { reason: 'veri', prior: p };
   const pts = [];
   for (const w of wk) {
@@ -2846,17 +2867,44 @@ function gaugeSVG(val, target) {
 function rateLevel(pct, target) { if (pct == null) return 'na'; const v = -pct; return v <= target ? 'good' : v <= target * 1.5 ? 'warn' : 'bad'; }
 function ratePill(pct, target) { const l = rateLevel(pct, target); return `<span class="rpill ${l}" title="${l === 'good' ? 'Hedef içinde' : l === 'warn' ? 'Hedefe yakın' : l === 'bad' ? 'Hedefin üstünde' : ''}">${pct == null ? '–' : '%' + fmt(pct)}</span>`; }
 function headlineHtml(sw) {
+  const lcH = (() => { try { return lastCount(); } catch (e) { return null; } })();
+  if (lcH) return headlinePeriod(sw, lcH);
+  return headlineWeek(sw);
+}
+function headlinePeriod(sw, lc) {
+  const target = Math.abs(+settings.target || 0);
+  const openW = sliceWeeks(sw, lc.date, null); const days = dataDays(openW);
+  const lcl = rateLevel(lc.totalPct, target);
+  const col = l => l === 'good' ? 'var(--gain)' : l === 'warn' ? 'var(--gold)' : 'var(--loss)';
+  const lvTxt = l => l === 'good' ? 'hedef içinde' : l === 'warn' ? 'hedefe yakın' : 'hedefin üstünde';
+  const parts = [];
+  if (days < 7) {
+    parts.push(`<b>${esc(lc.storeName || lc.storeNo)}</b> için <b>yeni sayım dönemi ${fmtDate(lc.date)}</b> tarihinde başladı. Son sayım sonucu <b class="${lcl}">%${fmt(Math.abs(lc.totalPct ?? 0))}</b> (hedef %${fmt(target)}, <b class="${lcl}">${lvTxt(lcl)}</b>).`);
+    parts.push(days ? `Bu döneme ait şimdilik ${days} günlük fiş var; oran ilk tam haftadan sonra anlamlı olur.` : 'Bu döneme ait fiş listesi henüz yüklenmedi.');
+    return `<div class="headline" style="--hl:${col(lcl)}"><div class="ht">${parts.join(' ')}</div>${ckeyHtml()}</div>`;
+  }
+  let P = null; try { P = countProjection(sw); } catch (e) {}
+  const T = totals(openW);
+  const negs = CATS.filter(c => T.c[c.k] < 0).map(c => ({ c, v: -T.c[c.k] })).sort((a, b) => b.v - a.v); const negSum = negs.reduce((a, x) => a + x.v, 0);
+  const pr = P && P.rate != null ? P.rate : null; const pl = rateLevel(pr, target);
+  parts.push(`<b>${esc(lc.storeName || lc.storeNo)}</b> · sayım dönemi <b>${fmtDate(lc.date)}</b>'den beri ${openW.length} hafta.`);
+  if (pr != null) parts.push(`Bu gidişle sonraki sayımda toplam kayıp oranı <b class="${pl}">%${fmt(Math.abs(pr))}</b> bekleniyor; hedef %${fmt(target)}, <b class="${pl}">${lvTxt(pl)}</b> (son sayım %${fmt(Math.abs(lc.totalPct ?? 0))}).`);
+  if (negs[0]) parts.push(`Bu dönemde kaybın <b>%${fmt(negs[0].v / negSum * 100, 0)}</b>${trPoss(fmt(negs[0].v / negSum * 100, 0))} <b>${esc(negs[0].c.label.toLocaleLowerCase('tr'))}</b>${negs[1] ? `, <b>%${fmt(negs[1].v / negSum * 100, 0)}</b>${trPoss(fmt(negs[1].v / negSum * 100, 0))} ${esc(negs[1].c.label.toLocaleLowerCase('tr'))}` : ''} kaleminden.`);
+  return `<div class="headline" style="--hl:${col(pl)}"><div class="ht">${parts.join(' ')}</div>${ckeyHtml()}</div>`;
+}
+function ckeyHtml() { return `<div class="ckey" aria-label="Renklerin anlamı"><span><i style="background:var(--loss)"></i>Kayıp · hedefin üstünde</span><span><i style="background:var(--gold)"></i>Hedefe yakın</span><span><i style="background:var(--gain)"></i>Fazla · hedef içinde</span><span><i style="background:var(--accent)"></i>Bilgi · seçili</span><span>Oranlar: kaybın satışa oranı; eksi işaret kayıp demek.</span></div>`; }
+function headlineWeek(sw) {
   const target = Math.abs(+settings.target || 0);
   const cur = sw.at(-1); const cs = weekStats(cur);
   const lvl = rateLevel(cs.pct, target);
   let P = null; try { P = countProjection(sw); } catch (e) {}
   const lc = (() => { try { return lastCount(); } catch (e) { return null; } })();
-  const scope = lc ? sw.filter(w => weekInRange(w, lc.date, null)) : sw.slice(-8);
+  const scope = lc ? sliceWeeks(sw, lc.date, null) : sw.slice(-8);
   const T = totals(scope);
   const negs = CATS.filter(c => T.c[c.k] < 0).map(c => ({ c, v: -T.c[c.k] })).sort((a, b) => b.v - a.v); const negSum = negs.reduce((a, x) => a + x.v, 0);
   const times = target ? Math.abs(cs.pct ?? 0) / target : null;
   const parts = [];
-  parts.push(`<b>${esc(cur.storeName || cur.storeNo)}</b> mağazasında son hafta (${wkNo(cur.week)}. hafta) kayıp oranı <b class="${lvl}">%${fmt(Math.abs(cs.pct ?? 0))}</b>; hedef %${fmt(target)}. ${lvl === 'good' ? '<b class="good">Hedef içinde.</b>' : lvl === 'warn' ? '<b class="warn">Hedefe yakın.</b>' : `<b class="bad">Hedefin ${times >= 2 ? fmt(times, 1) + ' katı' : 'üstünde'}.</b>`}`);
+  parts.push(`<b>${esc(cur.storeName || cur.storeNo)}</b> mağazasında son hafta (${wkNo(cur.week)}. hafta) ${(cs.pct ?? 0) > 0 ? 'net fazla' : 'kayıp oranı'} <b class="${lvl}">%${fmt(Math.abs(cs.pct ?? 0))}</b>; hedef %${fmt(target)}. ${lvl === 'good' ? '<b class="good">Hedef içinde.</b>' : lvl === 'warn' ? '<b class="warn">Hedefe yakın.</b>' : `<b class="bad">Hedefin ${times >= 2 ? fmt(times, 1) + ' katı' : 'üstünde'}.</b>`}`);
   if (negs[0]) parts.push(`${lc ? 'Son sayımdan bu yana' : 'Son 8 haftada'} kaybın <b>%${fmt(negs[0].v / negSum * 100, 0)}</b>${trPoss(fmt(negs[0].v / negSum * 100, 0))} <b>${esc(negs[0].c.label.toLocaleLowerCase('tr'))}</b>${negs[1] ? `, <b>%${fmt(negs[1].v / negSum * 100, 0)}</b>${trPoss(fmt(negs[1].v / negSum * 100, 0))} ${esc(negs[1].c.label.toLocaleLowerCase('tr'))}` : ''} kaleminden geliyor.`);
   if (P && P.rate != null) { const pl = rateLevel(P.rate, target); parts.push(`Bu gidişle sonraki sayımda toplam kayıp oranı <b class="${pl}">%${fmt(Math.abs(P.rate))}</b> civarında bekleniyor${lc?.totalPct != null ? ` (son sayım %${fmt(Math.abs(lc.totalPct))})` : ''}.`); }
   const col = lvl === 'good' ? 'var(--gain)' : lvl === 'warn' ? 'var(--gold)' : 'var(--loss)';
@@ -2869,23 +2917,27 @@ function renderHero(sw) {
   const target = Math.abs(+settings.target || 0);
   let P = null; try { P = countProjection(sw); } catch (e) {}
   const T = totals(periodWeeks(sw));
-  const gVal = P && P.rate != null ? -P.rate : (T.pct != null ? -T.pct : 0);
-  const gLabel = P && P.rate != null ? 'Sonraki sayım tahmini' : 'Dönem kayıp oranı';
-  const gSub = P && P.rate != null ? (settings.sayimDate ? `${fmtDate(settings.sayimDate)} sayımı · ${fmt(P.rem, 1)} hafta` : 'sonraki sayım tarihini gir') : (state.period === 'all' ? 'tüm haftalar' : 'seçili dönem');
+  const lc0 = (() => { try { return lastCount(); } catch (e) { return null; } })();
+  const open0 = lc0 ? sliceWeeks(sw, lc0.date, null) : []; const fresh = lc0 && dataDays(open0) < 7;
+  let gVal, gLabel, gSub;
+  if (fresh) { gVal = -(lc0.totalPct ?? 0); gLabel = 'Son sayım sonucu'; gSub = `${fmtDate(lc0.date)} sayımı · yeni dönem ${dataDays(open0)} günlük veri`; }
+  else if (P && P.rate != null) { gVal = -P.rate; gLabel = 'Sonraki sayım tahmini'; gSub = settings.sayimDate ? `${fmtDate(settings.sayimDate)} sayımı · ${fmt(P.rem, 1)} hafta` : 'sonraki sayım tarihini gir'; }
+  else { gVal = T.pct != null ? -T.pct : 0; gLabel = 'Dönem kayıp oranı'; gSub = state.period === 'all' ? 'tüm haftalar' : 'seçili dönem'; }
   const status = gVal <= target ? ['good', 'Hedef içinde'] : gVal <= target * 1.5 ? ['warn', 'Hedefe yakın'] : ['bad', 'Hedefin üstünde'];
-  const cur = sw.find(w => w.week === state.week) || sw.at(-1); const cs = weekStats(cur); const ix = sw.indexOf(cur); const ps = ix > 0 ? weekStats(sw[ix - 1]) : null;
+  const curSrc = lc0 && open0.length ? open0 : sw; const cur = lc0 && open0.length ? open0.at(-1) : (sw.find(w => w.week === state.week) || sw.at(-1)); const cs = weekStats(cur); const ix = curSrc.indexOf(cur); const ps = ix > 0 ? weekStats(curSrc[ix - 1]) : null;
   const d = ps && ps.pct != null && cs.pct != null ? cs.pct - ps.pct : null;
-  const last8 = sw.slice(Math.max(0, ix - 7), ix + 1).map(weekStats);
+  const last8 = curSrc.slice(Math.max(0, ix - 7), ix + 1).map(weekStats);
   const lc = (() => { try { return lastCount(); } catch (e) { return null; } })();
-  const openW = lc ? sw.filter(w => weekInRange(w, lc.date, null)) : [];
+  const openW = lc ? sliceWeeks(sw, lc.date, null) : [];
   const OT = lc ? totals(openW) : null;
   let note = '';
-  if (P && P.perWeekAllowed != null) note = P.room >= 0 ? `Hedef %${fmt(target)} bu sayım dönemi için aşıldı; kalan haftalarda kaybı azaltmak sonucu iyileştirir.` : `Hedefte kalmak için haftalık resmî kayıp en fazla <b>${fmt(-P.perWeekAllowed, 0)} ₺</b> olmalı; şu an <b>${fmt(-P.paceOff, 0)} ₺</b>/hafta.`;
+  if (fresh) note = `Yeni sayım dönemi başladı. Önceki dönemin haftaları için tabloda Dönem → “Önceki sayım dönemi”ni seçebilirsin; sayım sonucunun ayrıntısı Sayımlar sekmesinde.`;
+  else if (P && P.perWeekAllowed != null) note = P.room >= 0 ? `Hedef %${fmt(target)} bu sayım dönemi için aşıldı; kalan haftalarda kaybı azaltmak sonucu iyileştirir.` : `Hedefte kalmak için haftalık resmî kayıp en fazla <b>${fmt(-P.perWeekAllowed, 0)} ₺</b> olmalı; şu an <b>${fmt(-P.paceOff, 0)} ₺</b>/hafta.`;
   else if (P && !settings.sayimDate) note = 'Sonraki sayım tarihini Sayım projeksiyonu bölümüne girersen hedefe kalan pay hesaplanır.';
   else if (!lc) note = 'Genel sayım raporunu PDF olarak yüklediğinde sonraki sayım tahmini burada görünür.';
   el.innerHTML = headlineHtml(sw) + `<div class="gauge-card"><span class="gl">${gLabel}</span>${gaugeSVG(gVal, target)}<span class="gv ${status[0] === 'good' ? 'pos' : status[0] === 'bad' ? 'neg' : ''}">%${fmt(-gVal)}</span><span class="gs"><span class="chip ${status[0] === 'good' ? 'ok' : 'rep'}">${status[1]}</span> hedef %${fmt(target)}</span><span class="gs">${gSub}</span></div>
     <div class="hero-tiles">
-      <button class="htile" type="button" data-go="detay" style="--tc:${rateLevel(cs.pct, target) === 'good' ? 'var(--gain)' : rateLevel(cs.pct, target) === 'warn' ? 'var(--gold)' : 'var(--loss)'}"><span class="k">${esc(weekLabel(cur.week))}</span><span class="v ${cs.pct < 0 && Math.abs(cs.pct) > target ? 'neg' : 'pos'}">%${fmt(cs.pct)}</span><span class="h">${fmtS(cs.net, 0)} ₺ · ${d == null ? 'önceki hafta yok' : (d < 0 ? '▼ ' : '▲ ') + fmt(Math.abs(d)) + ' puan'}</span>${sparkSVG(last8.map(x => x.pct == null ? null : -x.pct), { color: 'var(--loss)', ref: target })}</button>
+      <button class="htile" type="button" data-go="detay" style="--tc:${rateLevel(cs.pct, target) === 'good' ? 'var(--gain)' : rateLevel(cs.pct, target) === 'warn' ? 'var(--gold)' : 'var(--loss)'}"><span class="k">${esc(weekLabel(cur.week))}${cur.partial ? ` · ${cur.partDays} gün` : ''}${lc0 && !open0.length ? ' · önceki dönem' : ''}</span><span class="v ${cs.pct < 0 && Math.abs(cs.pct) > target ? 'neg' : 'pos'}">%${fmt(cs.pct)}</span><span class="h">${fmtS(cs.net, 0)} ₺ · ${d == null ? 'önceki hafta yok' : (d < 0 ? '▼ ' : '▲ ') + fmt(Math.abs(d)) + ' puan'}</span>${sparkSVG(last8.map(x => x.pct == null ? null : -x.pct), { color: 'var(--loss)', ref: target })}</button>
       ${lc ? `<button class="htile" type="button" data-go="sayim" style="--tc:${rateLevel(OT.pct, target) === 'good' ? 'var(--gain)' : rateLevel(OT.pct, target) === 'warn' ? 'var(--gold)' : 'var(--loss)'}"><span class="k">Bu sayım dönemi</span><span class="v ${sgnCls(OT.net)}">${fmtS(OT.net, 0)} ₺</span><span class="h">${openW.length} hafta fiş · %${fmt(OT.pct)} · ${fmtDate(lc.date)}'den beri</span>${sparkSVG(openW.map(w => -weekStats(w).net), { color: 'var(--accent)' })}</button>
       <button class="htile" type="button" data-go="sayim" style="--tc:${rateLevel(lc.totalPct, target) === 'good' ? 'var(--gain)' : rateLevel(lc.totalPct, target) === 'warn' ? 'var(--gold)' : 'var(--loss)'}"><span class="k">Son sayım · ${fmtDate(lc.date)}</span><span class="v ${lc.totalPct < 0 && Math.abs(lc.totalPct) > target ? 'neg' : 'pos'}">%${fmt(lc.totalPct)}</span><span class="h">bilinmeyen ${fmtS(lc.unknown, 0)} ₺${lc.bench?.company != null ? ` · şirket %${fmt(lc.bench.company)}` : ''}</span></button>`
       : `<button class="htile" type="button" data-go="gidisat"><span class="k">Dönem toplamı</span><span class="v ${sgnCls(T.net)}">${fmtS(T.net, 0)} ₺</span><span class="h">%${fmt(T.pct)} · ${periodWeeks(sw).length} hafta</span></button>`}
