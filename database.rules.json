@@ -15,8 +15,71 @@
         "kpiGate": {
           ".validate": "newData.isBoolean()"
         },
+        "wegi": {
+          ".validate": "newData.isBoolean()"
+        },
+        "ege": {
+          ".validate": "newData.isBoolean()"
+        },
+        "maintBonus": {
+          ".validate": "newData.isBoolean()"
+        },
+        "maintOdak": {
+          ".validate": "newData.isBoolean()"
+        },
+        "bio": {
+          ".validate": "newData.isBoolean()"
+        },
+        "saleBand": {
+          ".validate": "newData.isBoolean()"
+        },
+        "recParty": {
+          ".validate": "newData.isBoolean()"
+        },
+        "recBrands": {
+          ".validate": "newData.isString() && newData.val().length <= 200"
+        },
+        "kpiShow": {
+          ".validate": "newData.isBoolean()"
+        },
+        "kpiEntry": {
+          ".validate": "newData.isBoolean()"
+        },
+        "kpiUnits": {
+          ".validate": "newData.isString() && newData.val().length <= 60"
+        },
+        "kpiBasket": {
+          ".validate": "newData.isString() && newData.val().length <= 80"
+        },
+        "kpiBrands": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
         "$other": {
           ".validate": false
+        },
+        "kpiCoach": {
+          ".validate": "newData.isBoolean()"
+        },
+        "kpiOff": {
+          ".validate": "newData.isBoolean()"
+        },
+        "koreGate": {
+          ".validate": "newData.isBoolean()"
+        },
+        "koreShow": {
+          ".validate": "newData.isBoolean()"
+        },
+        "wheelOn": {
+          ".validate": "newData.isBoolean()"
+        },
+        "wheelPrizes": {
+          ".validate": "newData.isString() && newData.val().length <= 520"
+        },
+        "featOff": {
+          ".validate": "newData.isString() && newData.val().length <= 120"
+        },
+        "prfOn": {
+          ".validate": "newData.isBoolean()"
         }
       },
       "central_announcement": {
@@ -74,6 +137,9 @@
             "name": {
               ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 60 && newData.val().matches(/^[^<>\"'`]+$/)"
             },
+            "avatar": {
+              ".validate": "newData.isString() && newData.val().length <= 8 && newData.val().matches(/^[^<>\"'`&]+$/)"
+            },
             "$other": {
               ".validate": false
             }
@@ -86,11 +152,11 @@
           "$store": {
             ".validate": "$store.matches(/^[0-9]{1,4}-[^<>\"'`]{1,60}$/)",
             "target": {
-              ".write": "(auth != null && auth.token.email == 'merkez@bonusbag.app') || data.parent().child('targetBy').val() != 'MERKEZ'",
+              ".write": "(auth != null && (auth.token.email == 'merkez@bonusbag.app' || auth.token.email == 'bolge@bonusbag.app')) || data.parent().child('targetBy').val() != 'MERKEZ'",
               ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
             },
             "targetBy": {
-              ".write": "(auth != null && auth.token.email == 'merkez@bonusbag.app') || (data.val() != 'MERKEZ' && newData.val() != 'MERKEZ')",
+              ".write": "(auth != null && auth.token.email == 'merkez@bonusbag.app') || (auth != null && auth.token.email == 'bolge@bonusbag.app' && newData.val() == 'BM') || (data.val() != 'MERKEZ' && newData.val() != 'MERKEZ')",
               ".validate": "newData.isString() && (newData.val() == 'MM' || newData.val() == 'BM' || newData.val() == 'MERKEZ')"
             },
             "isLocked": {
@@ -116,18 +182,70 @@
                 "applause": {
                   ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
                 },
+                "applauseBy": {
+                  ".validate": "newData.isString() && newData.val().length <= 40"
+                },
+                "heart": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100"
+                },
                 "contest": {
                   "$brand": {
                     ".validate": "$brand.matches(/^[^<>\"'`]{1,40}$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 5000"
                   }
                 },
+                "red": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 5000"
+                },
                 "$other": {
                   ".validate": false
+                },
+                "perf": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 5000"
                 }
               }
             },
             "$other": {
               ".validate": false
+            },
+            "sends": {
+              "$slot": {
+                ".write": true,
+                ".validate": "$slot.matches(/^(1630|2200)$/)",
+                "ts": {
+                  ".validate": "newData.isNumber()"
+                },
+                "bb": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
+                },
+                "pf": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
+                },
+                "a": {
+                  ".validate": "newData.isNumber()"
+                },
+                "$o": {
+                  ".validate": false
+                },
+                "tl": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000000"
+                }
+              }
+            },
+            "redo": {
+              "$slot": {
+                ".write": "auth != null && (auth.token.email == 'merkez@bonusbag.app' || auth.token.email == 'guliz@bonusbag.app')",
+                ".validate": "$slot.matches(/^(1630|2200)$/) && newData.isNumber()"
+              }
+            },
+            "ofPf": {
+              "$id": {
+                ".write": "auth != null && (auth.token.email == 'merkez@bonusbag.app' || auth.token.email == 'guliz@bonusbag.app')",
+                ".validate": "$id.matches(/^[A-Za-z0-9_-]{1,40}$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000000"
+              }
+            },
+            "ofTl": {
+              ".write": "auth != null && (auth.token.email == 'merkez@bonusbag.app' || auth.token.email == 'guliz@bonusbag.app')",
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000000"
             }
           }
         }
@@ -231,7 +349,7 @@
                     ".write": true,
                     ".validate": "$id.matches(/^[A-Za-z0-9_-]{1,40}$/)",
                     "$bk": {
-                      ".validate": "$bk.matches(/^b[1-6]$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 5000"
+                      ".validate": "$bk.matches(/^b[1-6]$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000"
                     }
                   }
                 }
@@ -239,6 +357,70 @@
             },
             "$other": {
               ".validate": false
+            },
+            "staffgoal": {
+              "$date": {
+                ".validate": "$date.matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)",
+                "$store": {
+                  ".validate": "$store.matches(/^[0-9]{1,4}-[^<>\"'`]{1,60}$/)",
+                  "$id": {
+                    ".write": true,
+                    ".validate": "$id.matches(/^[A-Za-z0-9_-]{1,40}$/)",
+                    "$bk": {
+                      ".validate": "$bk.matches(/^b[1-6]$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000"
+                    }
+                  }
+                }
+              }
+            },
+            "ambassador": {
+              "$store": {
+                ".validate": "$store.matches(/^[0-9]{1,4}-[^<>\"'`]{1,60}$/)",
+                "$id": {
+                  ".write": true,
+                  ".validate": "$id.matches(/^[A-Za-z0-9_-]{1,40}$/) && newData.isBoolean()"
+                }
+              }
+            },
+            "lastsend": {
+              "$store": {
+                ".validate": "$store.matches(/^[0-9]{1,4}-[^<>\"'`]{1,60}$/)",
+                ".write": true,
+                "$bk": {
+                  ".validate": "$bk.matches(/^b[1-6]$/) && newData.isNumber()"
+                }
+              }
+            },
+            "hist": {
+              ".write": "auth != null && (auth.token.email == 'merkez@bonusbag.app' || auth.token.email == 'guliz@bonusbag.app')",
+              "$id": {
+                ".validate": "$id.matches(/^[0-9]{10,14}$/)",
+                "ts": {
+                  ".validate": "newData.isNumber()"
+                },
+                "d": {
+                  ".validate": "newData.isString() && newData.val().matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)"
+                },
+                "k": {
+                  ".validate": "newData.isString() && newData.val().length <= 8"
+                },
+                "n": {
+                  ".validate": "newData.isNumber()"
+                },
+                "a": {
+                  "$bk": {
+                    ".validate": "$bk.matches(/^b[1-6]$/) && newData.isNumber()"
+                  }
+                },
+                "t": {
+                  "$bk": {
+                    ".validate": "$bk.matches(/^b[1-6]$/) && newData.isNumber()"
+                  }
+                },
+                "$other": {
+                  ".validate": false
+                }
+              }
             }
           }
         }
@@ -389,8 +571,932 @@
             }
           }
         },
+        "last": {
+          ".write": true,
+          ".validate": "newData.hasChildren(['name','store','time'])",
+          "name": {
+            ".validate": "newData.isString() && newData.val().length <= 60 && !newData.val().matches(/[<>\"'`]/)"
+          },
+          "store": {
+            ".validate": "newData.isString() && newData.val().matches(/^[0-9]{1,4}-[^<>\"'`]{1,60}$/)"
+          },
+          "staffId": {
+            ".validate": "newData.isString() && newData.val().matches(/^[A-Za-z0-9_-]{1,40}$/)"
+          },
+          "date": {
+            ".validate": "newData.isString() && newData.val().matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)"
+          },
+          "time": {
+            ".validate": "newData.isNumber()"
+          },
+          "$other": {
+            ".validate": false
+          }
+        },
         "$other": {
           ".validate": false
+        }
+      },
+      "bio_devices": {
+        "$kind": {
+          "$dev": {
+            ".write": "($kind == 'region' || $kind == 'general' || $kind == 'kpi') && $dev.matches(/^[A-Za-z0-9]{4,24}$/)",
+            ".validate": "newData.hasChildren(['t']) && newData.child('t').isNumber() && newData.val() != null",
+            "t": {
+              ".validate": "newData.isNumber()"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        }
+      },
+      "history": {
+        ".write": "auth != null && auth.token.email == 'merkez@bonusbag.app'",
+        "$store": {
+          "$date": {
+            ".validate": "$date.matches(/^20[0-9]{2}-[0-9]{2}-[0-9]{2}$/)",
+            "b": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000"
+            },
+            "o": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        }
+      },
+      "deletions": {
+        "$date": {
+          ".validate": "$date.matches(/^20[0-9]{2}-[0-9]{2}-[0-9]{2}$/)",
+          "$id": {
+            ".write": "!data.exists() || auth != null && auth.token.email == 'merkez@bonusbag.app'",
+            ".validate": "newData.hasChildren(['t','k','s','i','a'])",
+            "t": {
+              ".validate": "newData.isNumber()"
+            },
+            "k": {
+              ".validate": "newData.isString() && (newData.val() == 'b' || newData.val() == 'o' || newData.val() == 'k')"
+            },
+            "s": {
+              ".validate": "newData.isString() && newData.val().length <= 80"
+            },
+            "i": {
+              ".validate": "newData.isString() && newData.val().length <= 40"
+            },
+            "n": {
+              ".validate": "newData.isString() && newData.val().length <= 60"
+            },
+            "p": {
+              ".validate": "newData.isString() && newData.val().length <= 60"
+            },
+            "a": {
+              ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= 1000000"
+            },
+            "f": {
+              ".validate": "newData.isNumber()"
+            },
+            "to": {
+              ".validate": "newData.isNumber()"
+            },
+            "r": {
+              ".validate": "newData.isString() && newData.val().length <= 12"
+            },
+            "dv": {
+              ".validate": "newData.isString() && newData.val().length <= 12"
+            },
+            "$other": {
+              ".validate": false
+            },
+            "dn": {
+              ".validate": "newData.isString() && newData.val().length <= 60"
+            }
+          }
+        }
+      },
+      "staffhour": {
+        "$date": {
+          ".validate": "$date.matches(/^20[0-9]{2}-[0-9]{2}-[0-9]{2}$/)",
+          "$id": {
+            ".write": true,
+            ".validate": "$id.matches(/^[A-Za-z0-9_-]{1,40}$/)",
+            "s": {
+              ".validate": "newData.isString() && newData.val().length <= 80"
+            },
+            "$k": {
+              ".validate": "$k.matches(/^[bok]_[0-2][0-9]$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000"
+            },
+            "dn": {
+              ".validate": "newData.isString() && newData.val().length <= 60"
+            }
+          }
+        }
+      },
+      "stafflog": {
+        "$date": {
+          ".validate": "$date.matches(/^20[0-9]{2}-[0-9]{2}-[0-9]{2}$/)",
+          "$id": {
+            ".write": "!data.exists() || auth != null && auth.token.email == 'merkez@bonusbag.app'",
+            ".validate": "newData.hasChildren(['t','a','s','i'])",
+            "t": {
+              ".validate": "newData.isNumber()"
+            },
+            "a": {
+              ".validate": "newData.isString() && (newData.val() == 'del' || newData.val() == 'ren' || newData.val() == 'trf' || newData.val() == 'add')"
+            },
+            "s": {
+              ".validate": "newData.isString() && newData.val().length <= 80"
+            },
+            "i": {
+              ".validate": "newData.isString() && newData.val().length <= 40"
+            },
+            "n": {
+              ".validate": "newData.isString() && newData.val().length <= 60"
+            },
+            "x": {
+              ".validate": "newData.isString() && newData.val().length <= 80"
+            },
+            "v": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000"
+            },
+            "r": {
+              ".validate": "newData.isString() && newData.val().length <= 12"
+            },
+            "dv": {
+              ".validate": "newData.isString() && newData.val().length <= 12"
+            },
+            "$other": {
+              ".validate": false
+            },
+            "dn": {
+              ".validate": "newData.isString() && newData.val().length <= 60"
+            }
+          }
+        }
+      },
+      "campaign": {
+        ".write": "auth != null && (auth.token.email == 'merkez@bonusbag.app' || auth.token.email == 'guliz@bonusbag.app')",
+        "date": {
+          ".validate": "newData.isString() && newData.val().matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)"
+        },
+        "title": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "hide": {
+          ".validate": "newData.isBoolean()"
+        },
+        "ts": {
+          ".validate": "newData.isNumber()"
+        },
+        "by": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "ov": {
+          "$store": {
+            ".validate": "$store.matches(/^[0-9]{1,4}-[^<>\"'`]{1,60}$/)",
+            "$i": {
+              ".validate": "$i.matches(/^[0-5]$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
+            }
+          },
+          ".write": "auth != null && auth.token.email == 'bolge@bonusbag.app'"
+        },
+        "items": {
+          "$i": {
+            "n": {
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40"
+            },
+            "t": {
+              ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= 100000"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+        "stock": {
+          "$store": {
+            ".validate": "$store.matches(/^[0-9]{1,4}-[^<>\\\"'`]{1,60}$/)",
+            "$i": {
+              ".write": true,
+              ".validate": "$i.matches(/^[0-5]$/) && newData.isNumber()"
+            }
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
+      },
+      "staffmsg": {
+        "$id": {
+          ".write": "!data.exists() || auth != null && (auth.token.email == 'merkez@bonusbag.app' || auth.token.email == 'guliz@bonusbag.app' || auth.token.email == 'bolge@bonusbag.app')",
+          ".validate": "newData.hasChildren(['sid','s','t','ts','k'])",
+          "sid": {
+            ".validate": "newData.isString() && newData.val().length <= 40"
+          },
+          "n": {
+            ".validate": "newData.isString() && newData.val().length <= 60"
+          },
+          "s": {
+            ".validate": "newData.isString() && newData.val().length <= 80"
+          },
+          "t": {
+            ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 300"
+          },
+          "ts": {
+            ".validate": "newData.isNumber()"
+          },
+          "k": {
+            ".validate": "newData.isString() && (newData.val() == 'bm' || newData.val() == 'gm' || newData.val() == 'pe' || newData.val() == 'mu' || newData.val() == 'sm')"
+          },
+          "by": {
+            ".validate": "newData.isString() && newData.val().length <= 60"
+          },
+          "bmn": {
+            ".validate": "newData.isString() && newData.val().length <= 40"
+          },
+          "st": {
+            ".validate": "newData.isString() && (newData.val() == 'ok' || newData.val() == 'no') && auth != null && (auth.token.email == 'merkez@bonusbag.app' || auth.token.email == 'guliz@bonusbag.app' || auth.token.email == 'bolge@bonusbag.app')"
+          },
+          "ats": {
+            ".validate": "newData.isNumber()"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      "suggestions": {
+        "$id": {
+          ".write": "!data.exists() || auth != null && auth.token.email == 'merkez@bonusbag.app'",
+          ".validate": "newData.hasChildren(['sid','s','t','ts'])",
+          "sid": {
+            ".validate": "newData.isString() && newData.val().length <= 40"
+          },
+          "n": {
+            ".validate": "newData.isString() && newData.val().length <= 60"
+          },
+          "s": {
+            ".validate": "newData.isString() && newData.val().length <= 80"
+          },
+          "t": {
+            ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 300"
+          },
+          "ts": {
+            ".validate": "newData.isNumber()"
+          },
+          "st": {
+            ".validate": "newData.isString() && (newData.val() == 'ok' || newData.val() == 'no') && auth != null && auth.token.email == 'merkez@bonusbag.app'"
+          },
+          "ats": {
+            ".validate": "newData.isNumber() && auth != null && auth.token.email == 'merkez@bonusbag.app'"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      "blocked": {
+        ".write": "auth != null && auth.token.email == 'merkez@bonusbag.app'",
+        "$code": {
+          ".validate": "$code.matches(/^[A-Za-z0-9]{3,12}$/) && newData.hasChildren(['t'])",
+          "t": {
+            ".validate": "newData.isNumber()"
+          },
+          "n": {
+            ".validate": "newData.isString() && newData.val().length <= 60"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      "leagues": {
+        "active": {
+          ".write": "auth != null && auth.token.email == 'merkez@bonusbag.app'",
+          ".validate": "newData.hasChildren(['sc','assign'])",
+          "sc": {
+            ".validate": "newData.isString() && newData.val().matches(/^s[1-4]$/)"
+          },
+          "pm": {
+            ".validate": "newData.isString() && newData.val().length <= 10"
+          },
+          "from": {
+            ".validate": "newData.isString() && newData.val().length <= 10"
+          },
+          "to": {
+            ".validate": "newData.isString() && newData.val().length <= 10"
+          },
+          "ts": {
+            ".validate": "newData.isNumber()"
+          },
+          "by": {
+            ".validate": "newData.isString() && newData.val().length <= 20"
+          },
+          "assign": {
+            "$store": {
+              ".validate": "newData.isString() && (newData.val() == 'A' || newData.val() == 'B' || newData.val() == 'C')"
+            }
+          },
+          "$other": {
+            ".validate": false
+          },
+          "start": {
+            ".validate": "newData.isString() && newData.val().length <= 10"
+          },
+          "end": {
+            ".validate": "newData.isNumber()"
+          }
+        }
+      },
+      "storemsg": {
+        ".write": "auth != null && (auth.token.email == 'merkez@bonusbag.app' || auth.token.email == 'bolge@bonusbag.app')",
+        "$store": {
+          "text": {
+            ".validate": "newData.isString() && newData.val().length <= 200"
+          },
+          "ts": {
+            ".validate": "newData.isNumber()"
+          },
+          "by": {
+            ".validate": "newData.isString() && newData.val().length <= 20"
+          },
+          "kind": {
+            ".validate": "newData.isString() && newData.val().length <= 10"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      "kore": {
+        "config": {
+          ".write": "auth != null && auth.token.email == 'merkez@bonusbag.app'",
+          "hero": {
+            ".validate": "newData.isString() && newData.val().length <= 40"
+          },
+          "brands": {
+            ".validate": "newData.isString() && newData.val().length <= 150"
+          },
+          "on": {
+            ".validate": "newData.isBoolean()"
+          },
+          "$other": {
+            ".validate": false
+          },
+          "stops": {
+            ".validate": "newData.isString() && newData.val().length <= 150"
+          },
+          "bms": {
+            ".validate": "newData.isString() && newData.val().length <= 300"
+          },
+          "deftarget": {
+            ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 9999"
+          },
+          "start": {
+            ".validate": "newData.isString() && newData.val().matches(/^20[0-9]{2}-[0-9]{2}-[0-9]{2}$/)"
+          },
+          "end": {
+            ".validate": "newData.isString() && newData.val().matches(/^20[0-9]{2}-[0-9]{2}-[0-9]{2}$/)"
+          },
+          "tsent": {
+            ".validate": "newData.isNumber()"
+          }
+        },
+        "days": {
+          "$date": {
+            ".validate": "$date.matches(/^20[0-9]{2}-[0-9]{2}-[0-9]{2}$/)",
+            "$store": {
+              ".validate": "$store.matches(/^[0-9]{1,4}-[^<>\"'`]{1,60}$/)",
+              "$id": {
+                ".validate": "$id.matches(/^[A-Za-z0-9_-]{1,40}$/)",
+                "$k": {
+                  ".write": true,
+                  ".validate": "$k.matches(/^(h|o[0-7])$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 9999"
+                }
+              }
+            }
+          }
+        },
+        "targets": {
+          ".write": "auth != null && auth.token.email == 'merkez@bonusbag.app'",
+          "$store": {
+            ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 9999"
+          }
+        },
+        "feed": {
+          "$id": {
+            ".write": true,
+            ".validate": "newData.hasChildren(['n','s','t'])",
+            "n": {
+              ".validate": "newData.isString() && newData.val().length <= 60"
+            },
+            "s": {
+              ".validate": "newData.isString() && newData.val().length <= 70"
+            },
+            "b": {
+              ".validate": "newData.isString() && newData.val().length <= 40"
+            },
+            "t": {
+              ".validate": "newData.isNumber()"
+            },
+            "$o": {
+              ".validate": false
+            }
+          }
+        },
+        "duels": {
+          ".write": "auth != null && (auth.token.email == 'merkez@bonusbag.app' || auth.token.email == 'bolge@bonusbag.app')",
+          "$id": {
+            ".validate": "newData.hasChildren(['a','b','t'])",
+            "a": {
+              ".validate": "newData.isString() && newData.val().length <= 70"
+            },
+            "b": {
+              ".validate": "newData.isString() && newData.val().length <= 70"
+            },
+            "t": {
+              ".validate": "newData.isNumber()"
+            },
+            "by": {
+              ".validate": "newData.isString() && newData.val().length <= 20"
+            },
+            "$o": {
+              ".validate": false
+            },
+            "ta": {
+              ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 9999"
+            },
+            "tb": {
+              ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 9999"
+            },
+            "s": {
+              ".validate": "newData.isString() && newData.val().matches(/^20[0-9]{2}-[0-9]{2}-[0-9]{2}$/)"
+            },
+            "n": {
+              ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 60"
+            }
+          }
+        },
+        "pilot": {
+          ".write": "auth != null && auth.token.email == 'merkez@bonusbag.app'",
+          "$store": {
+            ".validate": "$store.matches(/^[0-9]{1,4}-[^<>\"'`]{1,60}$/) && newData.isBoolean()"
+          }
+        }
+      },
+      "wheel": {
+        "$date": {
+          ".validate": "$date.matches(/^20[0-9]{2}-[0-9]{2}-[0-9]{2}$/)",
+          "$store": {
+            ".validate": "$store.matches(/^[0-9]{1,4}-[^<>\\\"'`]{1,60}$/)",
+            ".write": "(!data.exists() && newData.exists()) || (auth != null && auth.token.email == 'merkez@bonusbag.app')",
+            "prize": {
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40 && newData.val().matches(/^[^<>\\\"'`]+$/)"
+            },
+            "ts": {
+              ".validate": "newData.isNumber()"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        }
+      },
+      "powerhour": {
+        ".write": "auth != null && (auth.token.email == 'merkez@bonusbag.app' || auth.token.email == 'guliz@bonusbag.app')",
+        "cfg": {
+          "id": {
+            ".validate": "newData.isString() && newData.val().length <= 20"
+          },
+          "start": {
+            ".validate": "newData.isNumber()"
+          },
+          "end": {
+            ".validate": "newData.isNumber()"
+          },
+          "title": {
+            ".validate": "newData.isString() && newData.val().length <= 30 && newData.val().matches(/^[^<>\\\"'`]*$/)"
+          },
+          "by": {
+            ".validate": "newData.isString() && newData.val().length <= 12"
+          },
+          "$other": {
+            ".validate": false
+          }
+        },
+        "sales": {
+          "$store": {
+            ".validate": "$store.matches(/^[0-9]{1,4}-[^<>\\\"'`]{1,60}$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000",
+            ".write": true
+          }
+        }
+      },
+      "lvopen": {
+        "$date": {
+          ".validate": "$date.matches(/^20[0-9]{2}-[0-9]{2}-[0-9]{2}$/)",
+          "$role": {
+            ".write": true,
+            ".validate": "$role.matches(/^(store|region|general|central|other)$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000"
+          }
+        }
+      },
+      "devcheck": {
+        ".write": "auth != null && (auth.token.email == 'merkez@bonusbag.app' || auth.token.email == 'guliz@bonusbag.app')",
+        "cfg": {
+          "on": {
+            ".validate": "newData.isBoolean()"
+          },
+          "under": {
+            ".validate": "newData.isBoolean()"
+          },
+          "from": {
+            ".validate": "newData.isString() && (newData.val() == '' || newData.val().matches(/^20[0-9]{2}-[0-9]{2}-[0-9]{2}$/))"
+          },
+          "tol": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100"
+          },
+          "warn": {
+            ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 500"
+          },
+          "high": {
+            ".validate": "newData.isNumber() && newData.val() >= 2 && newData.val() <= 1000"
+          },
+          "streak": {
+            ".validate": "newData.isNumber() && newData.val() >= 2 && newData.val() <= 14"
+          },
+          "win": {
+            ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 60"
+          },
+          "ts": {
+            ".validate": "newData.isNumber()"
+          },
+          "$other": {
+            ".validate": false
+          }
+        },
+        "central": {
+          "$store": {
+            ".validate": "$store.matches(/^[0-9]{1,4}-[^<>\\\"'`]{1,60}$/)",
+            "$date": {
+              ".validate": "$date.matches(/^20[0-9]{2}-[0-9]{2}-[0-9]{2}$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
+            }
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
+      },
+      "awards": {
+        ".write": "auth != null && (auth.token.email == 'merkez@bonusbag.app' || auth.token.email == 'guliz@bonusbag.app')",
+        "cfg": {
+          "rev": {
+            ".validate": "newData.isString() && newData.val().length <= 60"
+          },
+          "uc": {
+            ".validate": "newData.isString() && newData.val().length <= 60"
+          },
+          "ts": {
+            ".validate": "newData.isNumber()"
+          },
+          "$o": {
+            ".validate": false
+          }
+        },
+        "rows": {
+          "$c": {
+            "rg": {
+              ".validate": "newData.isNumber()"
+            },
+            "rh": {
+              ".validate": "newData.isNumber()"
+            },
+            "rk": {
+              ".validate": "newData.isNumber()"
+            },
+            "ug": {
+              ".validate": "newData.isNumber()"
+            },
+            "uh": {
+              ".validate": "newData.isNumber()"
+            },
+            "uk": {
+              ".validate": "newData.isNumber()"
+            },
+            "$o": {
+              ".validate": false
+            },
+            "ru": {
+              ".validate": "newData.isNumber()"
+            },
+            "uu": {
+              ".validate": "newData.isNumber()"
+            },
+            "rd": {
+              ".validate": "newData.isNumber()"
+            },
+            "ud": {
+              ".validate": "newData.isNumber()"
+            }
+          }
+        },
+        "upd": {
+          "date": {
+            ".validate": "newData.isString()"
+          },
+          "ts": {
+            ".validate": "newData.isNumber()"
+          },
+          "n": {
+            ".validate": "newData.isNumber()"
+          },
+          "$o": {
+            ".validate": false
+          }
+        },
+        "$other": {
+          ".validate": false
+        },
+        "meta": {
+          "cutDate": {
+            ".validate": "newData.isString()"
+          },
+          "cut": {
+            "$g": {
+              ".validate": "newData.isNumber()"
+            }
+          },
+          "$o": {
+            ".validate": false
+          }
+        },
+        "trs": {
+          "$c": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000000"
+          }
+        },
+        "trt": {
+          "$c": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000000"
+          }
+        },
+        "prev": {
+          "date": {
+            ".validate": "newData.isString()"
+          },
+          "rows": {
+            "$c": {
+              "rk": {
+                ".validate": "newData.isNumber()"
+              },
+              "$o": {
+                ".validate": false
+              }
+            }
+          },
+          "$o": {
+            ".validate": false
+          }
+        }
+      },
+      "perfume": {
+        ".write": "auth != null && (auth.token.email == 'merkez@bonusbag.app' || auth.token.email == 'guliz@bonusbag.app')",
+        "rows": {
+          "$c": {
+            "h": {
+              ".validate": "newData.isNumber()"
+            },
+            "k": {
+              ".validate": "newData.isNumber()"
+            },
+            "$o": {
+              ".validate": false
+            }
+          }
+        },
+        "meta": {
+          "h3": {
+            ".validate": "newData.isNumber()"
+          },
+          "h30": {
+            ".validate": "newData.isNumber()"
+          },
+          "n": {
+            ".validate": "newData.isNumber()"
+          },
+          "$o": {
+            ".validate": false
+          }
+        },
+        "upd": {
+          "date": {
+            ".validate": "newData.isString()"
+          },
+          "ts": {
+            ".validate": "newData.isNumber()"
+          },
+          "n": {
+            ".validate": "newData.isNumber()"
+          },
+          "$o": {
+            ".validate": false
+          }
+        },
+        "$other": {
+          ".validate": false
+        },
+        "goal": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
+        },
+        "goals": {
+          "$s": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
+          }
+        },
+        "avgprice": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
+        },
+        "tlgoal": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000000"
+        },
+        "tlgoals": {
+          "$s": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000000"
+          }
+        }
+      },
+      "prftr": {
+        ".write": "auth != null && (auth.token.email == 'merkez@bonusbag.app' || auth.token.email == 'guliz@bonusbag.app')",
+        "s": {
+          "$c": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000000"
+          }
+        },
+        "date": {
+          ".validate": "newData.isString()"
+        },
+        "ts": {
+          ".validate": "newData.isNumber()"
+        },
+        "prev": {
+          "date": {
+            ".validate": "newData.isString()"
+          },
+          "r": {
+            "$c": {
+              ".validate": "newData.isNumber()"
+            }
+          },
+          "$o": {
+            ".validate": false
+          }
+        },
+        "$o": {
+          ".validate": false
+        }
+      },
+      "promo": {
+        ".write": "auth != null && (auth.token.email == 'merkez@bonusbag.app' || auth.token.email == 'guliz@bonusbag.app')",
+        "on": {
+          ".validate": "newData.isBoolean()"
+        },
+        "url": {
+          ".validate": "newData.isString() && newData.val().length <= 200 && newData.val().matches(/^[A-Za-z0-9_.\\/-]+$/)"
+        },
+        "poster": {
+          ".validate": "newData.isString() && newData.val().length <= 200"
+        },
+        "title": {
+          ".validate": "newData.isString() && newData.val().length <= 60"
+        },
+        "sub": {
+          ".validate": "newData.isString() && newData.val().length <= 100"
+        },
+        "ts": {
+          ".validate": "newData.isNumber()"
+        },
+        "$o": {
+          ".validate": false
+        }
+      },
+      "dlbase": {
+        ".write": "auth != null && auth.token.email == 'merkez@bonusbag.app'",
+        "from": {
+          ".validate": "newData.isString() && newData.val().matches(/^20[0-9]{2}-[0-9]{2}-[0-9]{2}$/)"
+        }
+      },
+      "atv": {
+        ".write": "auth != null && (auth.token.email == 'merkez@bonusbag.app' || auth.token.email == 'guliz@bonusbag.app')",
+        "s": {
+          "$c": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000000"
+          }
+        },
+        "ts": {
+          ".validate": "newData.isNumber()"
+        },
+        "cfg": {
+          ".validate": "newData.hasChildren()"
+        },
+        "f": {
+          "$c": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000000"
+          }
+        },
+        "d": {
+          ".validate": "newData.isString() && newData.val().length <= 10"
+        },
+        "t": {
+          ".validate": "newData.isString() && newData.val().length <= 8"
+        },
+        "per": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "src": {
+          ".validate": "newData.isString() && newData.val().length <= 10"
+        },
+        "p": {
+          "d": {
+            ".validate": "newData.isString()"
+          },
+          "s": {
+            "$c": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000000"
+            }
+          },
+          "f": {
+            "$c": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000000"
+            }
+          }
+        },
+        "b": {
+          "d": {
+            ".validate": "newData.isString()"
+          },
+          "s": {
+            "$c": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000000"
+            }
+          },
+          "f": {
+            "$c": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000000"
+            }
+          }
+        },
+        "nm": {
+          "$c": {
+            ".validate": "newData.isString() && newData.val().length <= 60"
+          }
+        }
+      },
+      "atvk": {
+        "$code": {
+          ".validate": "$code.matches(/^[0-9]{1,4}$/)",
+          "$date": {
+            ".write": true,
+            ".validate": "$date.matches(/^20[0-9]{2}-[0-9]{2}-[0-9]{2}(_20[0-9]{2}-[0-9]{2}-[0-9]{2})?$/) && newData.hasChildren(['rows','at'])",
+            "n": {
+              ".validate": "newData.isString() && newData.val().length <= 60"
+            },
+            "from": {
+              ".validate": "newData.isString() && newData.val().length <= 10"
+            },
+            "to": {
+              ".validate": "newData.isString() && newData.val().length <= 10"
+            },
+            "by": {
+              ".validate": "newData.isString() && newData.val().length <= 80"
+            },
+            "at": {
+              ".validate": "newData.isNumber()"
+            },
+            "rows": {
+              "$i": {
+                ".validate": "$i.matches(/^[0-9]{1,2}$/) && newData.hasChildren(['n','v','c','i'])",
+                "n": {
+                  ".validate": "newData.isString() && newData.val().length <= 40"
+                },
+                "v": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000000"
+                },
+                "c": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000"
+                },
+                "i": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000000"
+                },
+                "$o": {
+                  ".validate": false
+                }
+              }
+            },
+            "$o": {
+              ".validate": false
+            }
+          }
         }
       }
     },
@@ -456,6 +1562,31 @@
           "$other": {
             ".validate": false
           }
+        }
+      }
+    },
+    "watsons_v7_push": {
+      ".read": "auth != null && (auth.token.email == 'merkez@bonusbag.app' || auth.token.email == 'guliz@bonusbag.app')",
+      "$k": {
+        ".write": true,
+        ".validate": "$k.matches(/^[A-Za-z0-9_-]{20,64}$/) && newData.hasChildren(['t','ts'])",
+        "t": {
+          ".validate": "newData.isString() && newData.val().length >= 60 && newData.val().length <= 400"
+        },
+        "role": {
+          ".validate": "newData.isString() && newData.val().matches(/^[a-z]{0,10}$/)"
+        },
+        "store": {
+          ".validate": "newData.isString() && newData.val().length <= 70 && !newData.val().matches(/[<>\"'`]/)"
+        },
+        "bm": {
+          ".validate": "newData.isString() && newData.val().length <= 70 && !newData.val().matches(/[<>\"'`]/)"
+        },
+        "ts": {
+          ".validate": "newData.isNumber()"
+        },
+        "$other": {
+          ".validate": false
         }
       }
     }
