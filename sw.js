@@ -1,6 +1,6 @@
 // W•EGE - basit servis çalışanı
 // Önce ağdan dener (her zaman güncel sayfa), internet yoksa son kaydedilen sayfayı gösterir.
-const CACHE = 'wege-v2';
+const CACHE = 'wege-v3';
 const SHELL = ['./', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -30,3 +30,16 @@ self.addEventListener('notificationclick', e => {
     return self.clients.openWindow('./');
   }));
 });
+
+// ---- Telefona bildirim (Firebase Cloud Messaging): uygulama kapalıyken gelen bildirimi gösterir ----
+try {
+  importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js', 'https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
+  firebase.initializeApp({ apiKey: 'AIzaSyB-KkoAiXqLZnzelcUrjrFkMe_JOpHqFJU', authDomain: 'wattodolive.firebaseapp.com', projectId: 'wattodolive', storageBucket: 'wattodolive.firebasestorage.app', messagingSenderId: '799554263472', appId: '1:799554263472:web:db2881199271bb86e31e75' });
+  const messaging = firebase.messaging();
+  // Konsoldan "bildirim" olarak gönderilenleri SDK kendisi gösterir; yalnızca veri (data) mesajlarını biz gösteririz
+  messaging.onBackgroundMessage(m => {
+    if (m && m.notification) return;
+    const d = (m && m.data) || {};
+    return self.registration.showNotification(d.title || 'W•EGE', { body: d.body || '', icon: 'icon-192.png', badge: 'icon-192.png', lang: 'tr', tag: d.tag || undefined });
+  });
+} catch (e) {}
