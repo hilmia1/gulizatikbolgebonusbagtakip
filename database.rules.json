@@ -355,9 +355,6 @@
                 }
               }
             },
-            "$other": {
-              ".validate": false
-            },
             "staffgoal": {
               "$date": {
                 ".validate": "$date.matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)",
@@ -421,6 +418,23 @@
                   ".validate": false
                 }
               }
+            },
+            "stk": {
+              ".write": "auth != null && (auth.token.email == 'merkez@bonusbag.app' || auth.token.email == 'guliz@bonusbag.app')",
+              "ts": {
+                ".validate": "newData.isNumber()"
+              },
+              "d": {
+                "$store": {
+                  ".validate": "$store.matches(/^[0-9]{1,4}-[^<>\"'`]{1,60}$/) && newData.isString() && newData.val().length <= 4000"
+                }
+              },
+              "$other": {
+                ".validate": false
+              }
+            },
+            "$other": {
+              ".validate": false
             }
           }
         }
