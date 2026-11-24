@@ -433,6 +433,24 @@
                 ".validate": false
               }
             },
+            "stkok": {
+              "$store": {
+                ".write": true,
+                ".validate": "$store.matches(/^[0-9]{1,4}-[^<>\"'`]{1,60}$/) && newData.hasChildren(['ts','d'])",
+                "ts": {
+                  ".validate": "newData.isNumber()"
+                },
+                "d": {
+                  ".validate": "newData.isString() && newData.val().length <= 12"
+                },
+                "n": {
+                  ".validate": "newData.isString() && newData.val().length <= 40 && !newData.val().matches(/[<>\"'`]/)"
+                },
+                "$other": {
+                  ".validate": false
+                }
+              }
+            },
             "$other": {
               ".validate": false
             }
