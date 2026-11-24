@@ -157,7 +157,7 @@
             },
             "targetBy": {
               ".write": "(auth != null && auth.token.email == 'merkez@bonusbag.app') || (auth != null && auth.token.email == 'bolge@bonusbag.app' && newData.val() == 'BM') || (data.val() != 'MERKEZ' && newData.val() != 'MERKEZ')",
-              ".validate": "newData.isString() && (newData.val() == 'MM' || newData.val() == 'BM' || newData.val() == 'MERKEZ')"
+              ".validate": "newData.isString() && (newData.val() == 'MM' || newData.val() == 'BM' || newData.val() == 'MERKEZ' || newData.val() == 'OTO')"
             },
             "isLocked": {
               ".write": true,
