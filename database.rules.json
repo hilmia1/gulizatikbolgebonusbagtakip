@@ -140,6 +140,9 @@
             "avatar": {
               ".validate": "newData.isString() && newData.val().length <= 8 && newData.val().matches(/^[^<>\"'`&]+$/)"
             },
+            "burc": {
+              ".validate": "newData.isString() && newData.val().matches(/^(koc|boga|ikizler|yengec|aslan|basak|terazi|akrep|yay|oglak|kova|balik)$/)"
+            },
             "$other": {
               ".validate": false
             }
