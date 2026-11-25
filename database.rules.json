@@ -1549,6 +1549,30 @@
             }
           }
         }
+      },
+      "bmlog": {
+        "$date": {
+          ".validate": "$date.matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)",
+          "$id": {
+            ".write": "auth != null && (auth.token.email == 'bolge@bonusbag.app' || auth.token.email == 'merkez@bonusbag.app') && !data.exists()",
+            ".validate": "newData.hasChildren(['bm','ts'])",
+            "bm": {
+              ".validate": "newData.isString() && newData.val().length <= 40"
+            },
+            "ts": {
+              ".validate": "newData.isNumber()"
+            },
+            "k": {
+              ".validate": "newData.isString() && newData.val().length <= 2"
+            },
+            "dv": {
+              ".validate": "newData.isString() && newData.val().length <= 10"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        }
       }
     },
     "watsons_v7_visits": {
