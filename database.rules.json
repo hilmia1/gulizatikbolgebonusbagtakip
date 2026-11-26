@@ -3,7 +3,7 @@
     ".read": false,
     ".write": false,
     "watsons_v7": {
-      ".read": true,
+      ".read": "auth != null",
       "settings": {
         ".write": "auth != null && auth.token.email == 'merkez@bonusbag.app'",
         "contestBrands": {
@@ -132,7 +132,7 @@
         "$store": {
           ".validate": "$store.matches(/^[0-9]{1,4}-[^<>\"'`]{1,60}$/)",
           "$id": {
-            ".write": true,
+            ".write": "auth != null",
             ".validate": "$id.matches(/^[A-Za-z0-9_-]{1,40}$/) && newData.hasChildren(['name'])",
             "name": {
               ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 60 && newData.val().matches(/^[^<>\"'`]+$/)"
@@ -163,18 +163,18 @@
               ".validate": "newData.isString() && (newData.val() == 'MM' || newData.val() == 'BM' || newData.val() == 'MERKEZ' || newData.val() == 'OTO')"
             },
             "isLocked": {
-              ".write": true,
+              ".write": "auth != null",
               ".validate": "newData.isBoolean()"
             },
             "hourly": {
               "$hr": {
-                ".write": true,
+                ".write": "auth != null",
                 ".validate": "$hr.matches(/^[0-9]{2}$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000"
               }
             },
             "staff": {
               "$id": {
-                ".write": true,
+                ".write": "auth != null",
                 ".validate": "$id.matches(/^[A-Za-z0-9_-]{1,40}$/)",
                 "sales": {
                   ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 5000"
@@ -212,7 +212,7 @@
             },
             "sends": {
               "$slot": {
-                ".write": true,
+                ".write": "auth != null",
                 ".validate": "$slot.matches(/^(1630|2200)$/)",
                 "ts": {
                   ".validate": "newData.isNumber()"
@@ -335,7 +335,7 @@
               "$date": {
                 ".validate": "$date.matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)",
                 "$store": {
-                  ".write": true,
+                  ".write": "auth != null",
                   ".validate": "$store.matches(/^[0-9]{1,4}-[^<>\"'`]{1,60}$/)",
                   "$bk": {
                     ".validate": "$bk.matches(/^b[1-6]$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000000"
@@ -349,7 +349,7 @@
                 "$store": {
                   ".validate": "$store.matches(/^[0-9]{1,4}-[^<>\"'`]{1,60}$/)",
                   "$id": {
-                    ".write": true,
+                    ".write": "auth != null",
                     ".validate": "$id.matches(/^[A-Za-z0-9_-]{1,40}$/)",
                     "$bk": {
                       ".validate": "$bk.matches(/^b[1-6]$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000"
@@ -364,7 +364,7 @@
                 "$store": {
                   ".validate": "$store.matches(/^[0-9]{1,4}-[^<>\"'`]{1,60}$/)",
                   "$id": {
-                    ".write": true,
+                    ".write": "auth != null",
                     ".validate": "$id.matches(/^[A-Za-z0-9_-]{1,40}$/)",
                     "$bk": {
                       ".validate": "$bk.matches(/^b[1-6]$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000"
@@ -377,7 +377,7 @@
               "$store": {
                 ".validate": "$store.matches(/^[0-9]{1,4}-[^<>\"'`]{1,60}$/)",
                 "$id": {
-                  ".write": true,
+                  ".write": "auth != null",
                   ".validate": "$id.matches(/^[A-Za-z0-9_-]{1,40}$/) && newData.isBoolean()"
                 }
               }
@@ -385,7 +385,7 @@
             "lastsend": {
               "$store": {
                 ".validate": "$store.matches(/^[0-9]{1,4}-[^<>\"'`]{1,60}$/)",
-                ".write": true,
+                ".write": "auth != null",
                 "$bk": {
                   ".validate": "$bk.matches(/^b[1-6]$/) && newData.isNumber()"
                 }
@@ -438,7 +438,7 @@
             },
             "stkok": {
               "$store": {
-                ".write": true,
+                ".write": "auth != null",
                 ".validate": "$store.matches(/^[0-9]{1,4}-[^<>\"'`]{1,60}$/) && newData.hasChildren(['ts','d'])",
                 "ts": {
                   ".validate": "newData.isNumber()"
@@ -478,7 +478,7 @@
           "$store": {
             ".validate": "$store.matches(/^[0-9]{1,4}-[^<>\"'`]{1,60}$/)",
             "$pid": {
-              ".write": true,
+              ".write": "auth != null",
               ".validate": "$pid.matches(/^[A-Za-z0-9_-]{1,30}$/) && root.child('watsons_v7/stockout/products/' + $pid).exists() && newData.hasChildren(['ts'])",
               "ts": {
                 ".validate": "newData.isNumber()"
@@ -543,7 +543,7 @@
       },
       "records": {
         "region": {
-          ".write": true,
+          ".write": "auth != null",
           ".validate": "newData.hasChildren(['value','date','time','staffName','store'])",
           "value": {
             ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000"
@@ -575,7 +575,7 @@
         },
         "odak": {
           "$brand": {
-            ".write": true,
+            ".write": "auth != null",
             ".validate": "$brand.matches(/^[^<>\"'`]{1,40}$/) && newData.hasChildren(['value','date','time','staffName','store'])",
             "value": {
               ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000"
@@ -607,7 +607,7 @@
           }
         },
         "last": {
-          ".write": true,
+          ".write": "auth != null",
           ".validate": "newData.hasChildren(['name','store','time'])",
           "name": {
             ".validate": "newData.isString() && newData.val().length <= 60 && !newData.val().matches(/[<>\"'`]/)"
@@ -635,7 +635,7 @@
       "bio_devices": {
         "$kind": {
           "$dev": {
-            ".write": "($kind == 'region' || $kind == 'general' || $kind == 'kpi') && $dev.matches(/^[A-Za-z0-9]{4,24}$/)",
+            ".write": "auth != null && (($kind == 'region' || $kind == 'general' || $kind == 'kpi') && $dev.matches(/^[A-Za-z0-9]{4,24}$/))",
             ".validate": "newData.hasChildren(['t']) && newData.child('t').isNumber() && newData.val() != null",
             "t": {
               ".validate": "newData.isNumber()"
@@ -715,7 +715,7 @@
         "$date": {
           ".validate": "$date.matches(/^20[0-9]{2}-[0-9]{2}-[0-9]{2}$/)",
           "$id": {
-            ".write": true,
+            ".write": "auth != null",
             ".validate": "$id.matches(/^[A-Za-z0-9_-]{1,40}$/)",
             "s": {
               ".validate": "newData.isString() && newData.val().length <= 80"
@@ -814,7 +814,7 @@
           "$store": {
             ".validate": "$store.matches(/^[0-9]{1,4}-[^<>\\\"'`]{1,60}$/)",
             "$i": {
-              ".write": true,
+              ".write": "auth != null",
               ".validate": "$i.matches(/^[0-5]$/) && newData.isNumber()"
             }
           }
@@ -1007,7 +1007,7 @@
               "$id": {
                 ".validate": "$id.matches(/^[A-Za-z0-9_-]{1,40}$/)",
                 "$k": {
-                  ".write": true,
+                  ".write": "auth != null",
                   ".validate": "$k.matches(/^(h|o[0-7])$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 9999"
                 }
               }
@@ -1022,7 +1022,7 @@
         },
         "feed": {
           "$id": {
-            ".write": true,
+            ".write": "auth != null",
             ".validate": "newData.hasChildren(['n','s','t'])",
             "n": {
               ".validate": "newData.isString() && newData.val().length <= 60"
@@ -1124,7 +1124,7 @@
         "sales": {
           "$store": {
             ".validate": "$store.matches(/^[0-9]{1,4}-[^<>\\\"'`]{1,60}$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000",
-            ".write": true
+            ".write": "auth != null"
           }
         }
       },
@@ -1132,7 +1132,7 @@
         "$date": {
           ".validate": "$date.matches(/^20[0-9]{2}-[0-9]{2}-[0-9]{2}$/)",
           "$role": {
-            ".write": true,
+            ".write": "auth != null",
             ".validate": "$role.matches(/^(store|region|general|central|other)$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000"
           }
         }
@@ -1507,7 +1507,7 @@
         "$code": {
           ".validate": "$code.matches(/^[0-9]{1,4}$/)",
           "$date": {
-            ".write": true,
+            ".write": "auth != null",
             ".validate": "$date.matches(/^20[0-9]{2}-[0-9]{2}-[0-9]{2}(_20[0-9]{2}-[0-9]{2}-[0-9]{2})?$/) && newData.hasChildren(['rows','at'])",
             "n": {
               ".validate": "newData.isString() && newData.val().length <= 60"
@@ -1580,7 +1580,7 @@
       "$date": {
         ".validate": "$date.matches(/^20[0-9]{2}-[0-9]{2}-[0-9]{2}$/)",
         "$cid": {
-          ".write": true,
+          ".write": "auth != null",
           ".validate": "$cid.matches(/^[A-Za-z0-9_-]{8,40}$/)",
           "first": {
             ".validate": "newData.isNumber()"
@@ -1643,7 +1643,7 @@
     "watsons_v7_push": {
       ".read": "auth != null && (auth.token.email == 'merkez@bonusbag.app' || auth.token.email == 'guliz@bonusbag.app')",
       "$k": {
-        ".write": true,
+        ".write": "auth != null",
         ".validate": "$k.matches(/^[A-Za-z0-9_-]{20,64}$/) && newData.hasChildren(['t','ts'])",
         "t": {
           ".validate": "newData.isString() && newData.val().length >= 60 && newData.val().length <= 400"
